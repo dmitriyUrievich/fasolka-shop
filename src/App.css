@@ -1,0 +1,345 @@
+/* src/App.css */
+
+:root {
+    --farm-green: #4CAF50; /* Насыщенный зеленый */
+    --farm-dark-green: #2E7D32; /* Темно-зеленый */
+    --farm-yellow: #FFEB3B; /* Яркий желтый */
+    --farm-brown: #795548; /* Землистый коричневый */
+    --farm-cream: #FFFDE7; /* Светлый кремовый */
+    --text-color: #333;
+    --light-gray: #f5f5f5;
+    --border-color: #ddd;
+
+    /* RGB версии для rgba() */
+    --farm-dark-green-rgb: 46, 125, 50;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--farm-cream); /* Кремовый фон для всего приложения */
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+/* Новый класс для body, чтобы предотвратить прокрутку страницы при открытом модальном окне */
+body.modal-open {
+    overflow: hidden; /* Скрывает полосу прокрутки body */
+    padding-right: 15px; /* Компенсация исчезнувшей полосы прокрутки, чтобы избежать "прыжка" контента */
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: var(--farm-cream);
+}
+
+.app-header {
+    background: linear-gradient(to right, var(--farm-dark-green), #4CAF50); /* Градиент зеленого */
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 20px 0;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.app-title {
+    font-size: 3em;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+    color: var(--farm-yellow); /* Желтый заголовок */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.app-title-icon {
+    height: 45px;
+    width: 45px;
+    margin-right: 15px;
+    color: var(--farm-yellow);
+}
+
+.header-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    max-width: 600px;
+    position: relative; /* Для позиционирования иконки корзины */
+}
+
+.search-container, .sort-container {
+    position: relative;
+    width: 100%;
+}
+
+.search-input, .sort-select {
+    width: 100%;
+    padding: 12px 15px 12px 45px; /* Увеличено левое заполнение для иконки */
+    border-radius: 25px; /* Скругленные края */
+    border: 2px solid var(--farm-dark-green);
+    background-color: white;
+    color: var(--text-color);
+    font-size: 1em;
+    outline: none;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.search-input::placeholder {
+    color: #888;
+}
+
+.search-input:focus, .sort-select:focus {
+    border-color: var(--farm-yellow);
+    box-shadow: 0 0 0 3px rgba(255, 235, 59, 0.5); /* Мягкая желтая тень при фокусе */
+}
+
+.search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 20px;
+    width: 20px;
+    color: var(--farm-brown); /* Коричневая иконка поиска */
+}
+
+.sort-select {
+    padding-right: 45px; /* Место для стрелки выпадающего списка */
+    appearance: none; /* Убирает стандартную стрелку */
+    cursor: pointer;
+}
+
+.select-arrow {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none; /* Чтобы клики проходили на select */
+    color: var(--farm-brown); /* Коричневая стрелка */
+}
+
+.select-arrow-icon {
+    height: 20px;
+    width: 20px;
+    fill: currentColor;
+}
+
+/* Стили для иконки корзины */
+.cart-icon-button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    position: relative;
+    padding: 0;
+    margin-left: 15px; /* Отступ от других элементов управления */
+    transition: transform 0.2s ease;
+}
+
+.cart-icon-button:hover {
+    transform: scale(1.1);
+}
+
+.cart-icon {
+    width: 30px;
+    height: 30px;
+    stroke-width: 2;
+}
+
+.cart-item-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: var(--farm-yellow); /* Желтый кружок */
+    color: var(--farm-dark-green); /* Темно-зеленый текст */
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 0.7em;
+    font-weight: bold;
+    min-width: 20px;
+    text-align: center;
+    line-height: 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+
+.app-main {
+    flex-grow: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex; /* Используем flexbox для app-main */
+    gap: 30px; /* Отступ между списком товаров и корзиной */
+    align-items: flex-start; /* Выравнивание элементов по верху */
+}
+
+/* Стили для футера */
+.app-footer {
+    background-color: var(--farm-dark-green);
+    color: white;
+    padding: 40px 20px; /* Увеличенный отступ */
+    margin-top: auto;
+    box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center; /* Центрируем текст по умолчанию */
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid; /* Используем Grid для более гибкого макета */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* 250px - минимальная ширина колонки */
+    gap: 30px; /* Отступы между секциями */
+    text-align: left; /* Текст внутри секций выравниваем по левому краю */
+}
+
+.footer-section h3 {
+    font-size: 1.5em;
+    color: var(--farm-yellow); /* Желтые заголовки секций */
+    margin-bottom: 15px;
+    font-weight: bold;
+    border-bottom: 2px solid rgba(255, 235, 59, 0.5); /* Подчеркивание заголовков */
+    padding-bottom: 5px;
+}
+
+.footer-section p {
+    font-size: 0.95em;
+    line-height: 1.6;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start; /* Для выравнивания иконок и текста */
+}
+
+.footer-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    flex-shrink: 0; /* Чтобы иконка не сжималась */
+    color: var(--farm-yellow); /* Желтые иконки */
+}
+
+.social-links {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.social-icon {
+    display: block;
+    width: 35px;
+    height: 35px;
+    color: white;
+    background-color: rgba(255, 255, 255, 0.2); /* Полупрозрачный фон */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.social-icon:hover {
+    background-color: var(--farm-yellow); /* Желтый фон при наведении */
+    color: var(--farm-dark-green); /* Темно-зеленая иконка при наведении */
+    transform: translateY(-3px);
+}
+
+.social-icon svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 20px;
+    margin-top: 30px;
+    font-size: 0.85em;
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+}
+
+/* Адаптивность */
+@media (min-width: 768px) {
+    .header-content {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .app-title {
+        margin-bottom: 0;
+    }
+
+    .header-controls {
+        flex-direction: row;
+        max-width: none;
+        width: auto;
+    }
+
+    .search-container, .sort-container {
+        width: auto; /* Позволяем им сжиматься */
+        min-width: 250px; /* Минимальная ширина для больших экранов */
+    }
+
+    /* На десктопе app-main становится flex-контейнером для списка и сайдбара */
+    .app-main {
+        display: flex;
+        flex-direction: row; /* Элементы располагаются в ряд */
+        align-items: flex-start; /* Выравнивание по верху */
+        gap: 30px; /* Отступ между списком и сайдбаром */
+    }
+
+    .cart-sidebar {
+        flex-shrink: 0; /* Не сжимать сайдбар */
+        width: 350px; /* Фиксированная ширина сайдбара */
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        padding: 20px;
+        position: sticky; /* Прилипает при прокрутке */
+        top: 20px; /* Отступ от верха */
+        max-height: calc(100vh - 40px); /* Максимальная высота, чтобы поместиться на экране */
+        overflow-y: auto; /* Скролл внутри сайдбара */
+    }
+
+    .app-footer {
+      text-align: left; /* Выравнивание всего футера по левому краю на больших экранах */
+    }
+
+    .footer-content {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Корректировка ширины колонок для больших экранов */
+    }
+}
+
+@media (max-width: 767px) {
+    .footer-content {
+        grid-template-columns: 1fr; /* Одна колонка на мобильных */
+        text-align: center; /* Центрируем текст каждой секции на мобильных */
+    }
+
+    .footer-section h3 {
+        text-align: center; /* Центрируем заголовки на мобильных */
+    }
+
+    .footer-section p {
+        justify-content: center; /* Центрируем текст с иконками */
+    }
+
+    .social-links {
+        justify-content: center; /* Центрируем иконки соцсетей */
+    }
+}

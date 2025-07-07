@@ -1,0 +1,87 @@
+.product-card {
+    background-color: white;
+    border-radius: 15px; /* Более округлые углы */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(var(--farm-dark-green-rgb), 0.1); /* Мягкая зеленая рамка */
+}
+
+.product-card:hover {
+    transform: translateY(-8px); /* Легкий подъем при наведении */
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2); /* Более выраженная тень */
+}
+
+.product-card__image {
+    width: 100%;
+    height: 180px; /* Фиксированная высота для изображения */
+    object-fit: cover;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+.product-card__content {
+    padding: 15px;
+    flex-grow: 1; /* Позволяет содержимому занимать оставшееся пространство */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.product-card__name {
+    font-size: 1.3em; /* Слегка уменьшен размер шрифта для лучшего размещения в 2 ряда */
+    font-weight: bold;
+    color: var(--farm-dark-green); /* Темно-зеленый цвет для названия */
+    margin-bottom: 5px; /* Уменьшен отступ снизу */
+    white-space: normal; /* Разрешаем тексту переноситься на новую строку */
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Ограничиваем название двумя строками */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Добавляем многоточие, если текст не помещается в 2 строки */
+    line-height: 1.3; /* Корректируем межстрочный интервал для плотности */
+    min-height: 2.6em; /* Гарантируем минимальную высоту для 2 строк (1.3em * 2) */
+}
+
+.product-card__price {
+    font-size: 1.7em; /* Слегка уменьшен размер шрифта цены */
+    font-weight: bolder;
+    color: var(--farm-green); /* Насыщенный зеленый для цены */
+    margin-bottom: 5px; /* Уменьшен отступ снизу */
+}
+
+.product-card__quantity {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 15px; /* Уменьшен отступ снизу */
+}
+
+.product-card__button {
+    width: 100%;
+    padding: 10px 15px; /* Слегка уменьшен внутренний отступ кнопки */
+    border: none;
+    border-radius: 30px; /* Полностью скругленная кнопка */
+    background: linear-gradient(to right, var(--farm-green), #689F38); /* Градиент для кнопки */
+    color: white;
+    font-size: 1em; /* Слегка уменьшен размер шрифта кнопки */
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.product-card__button:hover:not(:disabled) {
+    background: linear-gradient(to right, #689F38, var(--farm-dark-green));
+    transform: translateY(-2px); /* Легкий эффект нажатия */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.product-card__button:disabled {
+    background-color: #BDBDBD; /* Серый для недоступных товаров */
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.8;
+}

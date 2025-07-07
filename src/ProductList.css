@@ -1,0 +1,77 @@
+/* src/ProductList.css */
+
+.product-list-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%; /* Занимает всю доступную высоту в app-main */
+    background-color: white; /* Белый фон для списка товаров */
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    width: 100%; /* Гарантируем, что занимает всю ширину родителя */
+    box-sizing: border-box; /* Включаем padding в расчет ширины */
+}
+
+.status-message {
+    text-align: center;
+    font-size: 1.2em;
+    padding: 40px 0;
+    font-weight: 500;
+}
+
+.status-message.loading {
+    color: var(--farm-brown); /* Землистый цвет для загрузки */
+}
+
+.status-message.error-message {
+    color: #D32F2F; /* Красный для ошибок */
+    font-weight: bold;
+}
+
+.no-products-message {
+    text-align: center;
+    font-size: 1.2em;
+    color: #666;
+    padding: 40px 0;
+}
+
+.product-grid {
+    display: grid;
+    /* По умолчанию на очень маленьких экранах одна колонка */
+    grid-template-columns: 1fr; /* Явно одна колонка для мобильных */
+    gap: 20px; /* Отступы между карточками */
+    padding: 15px 0;
+    justify-content: center; /* Центрируем всю сетку */
+    justify-items: center; /* Центрируем каждую карточку в ячейке */
+}
+
+/* Адаптивность для сетки */
+@media (min-width: 600px) { /* Две колонки на небольших планшетах */
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr); /* Две равные колонки */
+        gap: 25px;
+    }
+}
+
+@media (min-width: 900px) { /* Три колонки на планшетах побольше / маленьких десктопах */
+    .product-grid {
+        grid-template-columns: repeat(3, 1fr); /* Три равные колонки */
+        gap: 25px;
+    }
+}
+
+@media (min-width: 1200px) { /* Четыре колонки на больших десктопах */
+    .product-grid {
+        grid-template-columns: repeat(5, 1fr); /* Четыре равные колонки */
+        gap: 25px;
+    }
+}
+
+/* На очень узких экранах, убедимся, что всегда одна колонка (этот медиазапрос теперь может быть избыточен, но оставлен для явности) */
+@media (max-width: 480px) {
+    .product-grid {
+        grid-template-columns: 1fr;
+        padding: 10px 0;
+        gap: 20px;
+    }
+}

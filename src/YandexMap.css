@@ -1,0 +1,18 @@
+/* src/components/YandexMap.css */
+
+.yandex-map-container {
+    width: 100%;
+    height: 400px; /* Фиксированная высота карты */
+    border-radius: 12px; /* Скругленные углы */
+    overflow: hidden; /* Обрезает содержимое по скругленным углам */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Мягкая тень */
+    margin: 20px 0; /* Отступ сверху и снизу от карты */
+    border: 1px solid var(--border-color); /* Небольшая рамка */
+}
+
+/* Адаптивность для карты, если нужно изменить высоту на мобильных */
+@media (max-width: 768px) {
+    .yandex-map-container {
+        height: 300px; /* Меньшая высота на мобильных устройствах */
+    }
+}
