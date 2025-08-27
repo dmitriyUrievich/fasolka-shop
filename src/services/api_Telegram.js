@@ -6,21 +6,38 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-const card = {
-  "id": "ORDER6",
-  "customer_name": "Лиза",
-  "phone": "+79998887766",
-  "address": "г. Москва, ул. Пушкина, д. 1, кв. 2",
-  "total": 1780,
-  "cart": [
-    { "name": "Кофе", "quantity": 1, "price": 580 },
-    { "name": "Печенье", "quantity": 2, "price": 600 }
-  ]
-}
+// const card = {
+//   "id": "ORDER6",
+//   "customer_name": "Лиза",
+//   "phone": "+79998887766",
+//   "address": "г. Москва, ул. Пушкина, д. 1, кв. 2",
+//   "total": 1780,
+//   "cart": [
+//     { "name": "Кофе", "quantity": 1, "price": 580 },
+//     { "name": "Печенье", "quantity": 2, "price": 600 }
+//   ]
+// }
 
 const PORT = 3000;
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+// Парсим список разрешённых CHAT_ID
+const ALLOWED_CHAT_IDS = (process.env.TELEGRAM_CHAT_IDS || '')
+  .split(',')
+  .map(id => id.trim())
+  .filter(id => id);
+
+if (ALLOWED_CHAT_IDS.length === 0) {
+  console.warn('⚠️ ВНИМАНИЕ: Не заданы разрешённые CHAT_ID');
+}
+
+console.log('TOKEN:', TOKEN);
+console.log('Разрешённые CHAT_ID:', ALLOWED_CHAT_IDS);
+
+// Проверка авторизации пользователя
+function isAuthorized(chatId) {
+  return ALLOWED_CHAT_IDS.includes(chatId.toString());
+}
 
 const bot = new TelegramBot(TOKEN, { polling: true });
 const orders = new Map();
@@ -32,45 +49,59 @@ const STATUS_LABEL = {
   completed: 'Завершён'
 };
 
-// Бот отвечает только вам
-bot.on('message', async msg => {
-  if (msg.chat.id.toString() !== CHAT_ID) {
-    return bot.sendMessage(msg.chat.id, '🚫 Доступ запрещён');
+// Обработка всех текстовых сообщений
+bot.on('message', async (msg) => {
+  const chatId = msg.chat.id.toString();
+
+  if (!isAuthorized(chatId)) {
+    return bot.sendMessage(chatId, '🚫 Доступ запрещён. Обратитесь к администратору.');
+  }
+
+  if (msg.text === '/start') {
+    const keyboard = [
+      ['Все заказы'],
+      ['Новые заказы', 'В работе']
+    ];
+    bot.sendMessage(chatId, 'Привет! Выберите действие:', {
+      reply_markup: {
+        keyboard,
+        resize_keyboard: true
+      }
+    });
   }
 });
 
-// /start — клавиатура на русском
-bot.onText(/\/start/, msg => {
-  const chatId = msg.chat.id;
-  const keyboard = [
-    ['Все заказы'],
-    ['Новые заказы', 'В работе']
-  ];
-  bot.sendMessage(chatId, 'Привет! Выберите действие:', {
-    reply_markup: { keyboard, resize_keyboard: true }
-  });
-});
+// Команда: Все заказы (new + in_progress)
+bot.onText(/^Все заказы$/, (msg) => {
+  const chatId = msg.chat.id.toString();
+  if (!isAuthorized(chatId)) {
+    return bot.sendMessage(chatId, '🚫 Доступ запрещён.');
+  }
 
-// «Все заказы» — показываем только new и in_progress
-bot.onText(/^Все заказы$/, msg => {
-  const chatId = msg.chat.id;
-  const list = Array.from(orders.values()).filter(o => o.status === 'new' || o.status === 'in_progress');
-  if (!list.length) {
+  const list = Array.from(orders.values()).filter(o => 
+    o.status === 'new' || o.status === 'in_progress'
+  );
+
+  if (list.length === 0) {
     return bot.sendMessage(chatId, 'Заказов нет.');
   }
+
   list.forEach(o => {
-    const text =
-      `📋 Заказ ${o.id}\n` +
-      `Имя: ${o.customer_name}\n` +
-      `Адрес: ${o.address}\n` +
-      `Телефон: ${o.phone}\n` +
-      `Статус: ${STATUS_LABEL[o.status]}`;
+    const text = `
+📋 Заказ ${o.id}
+Имя: ${o.customer_name}
+Адрес: ${o.address}
+Телефон: ${o.phone}
+Статус: ${STATUS_LABEL[o.status]}
+    `.trim();
+
     const buttons = [];
     if (o.status === 'new') {
       buttons.push([{ text: 'Взять в работу', callback_data: `get_${o.id}` }]);
     } else {
       buttons.push([{ text: 'Завершить заказ', callback_data: `done_${o.id}` }]);
     }
+
     bot.sendMessage(chatId, text, {
       parse_mode: 'HTML',
       reply_markup: { inline_keyboard: buttons }
@@ -78,20 +109,27 @@ bot.onText(/^Все заказы$/, msg => {
   });
 });
 
-// «Новые заказы»
-bot.onText(/^Новые заказы$/, msg => {
-  const chatId = msg.chat.id;
+// Команда: Новые заказы
+bot.onText(/^Новые заказы$/, (msg) => {
+  const chatId = msg.chat.id.toString();
+  if (!isAuthorized(chatId)) {
+    return bot.sendMessage(chatId, '🚫 Доступ запрещён.');
+  }
+
   const list = Array.from(orders.values()).filter(o => o.status === 'new');
-  if (!list.length) {
+  if (list.length === 0) {
     return bot.sendMessage(chatId, 'Нет новых заказов.');
   }
+
   list.forEach(o => {
-    const text =
-      `📋 Заказ ${o.id}\n` +
-      `Имя: ${o.customer_name}\n` +
-      `Адрес: ${o.address}\n` +
-      `Телефон: ${o.phone}\n` +
-      `Статус: ${STATUS_LABEL[o.status]}`;
+    const text = `
+📋 Заказ ${o.id}
+Имя: ${o.customer_name}
+Адрес: ${o.address}
+Телефон: ${o.phone}
+Статус: ${STATUS_LABEL[o.status]}
+    `.trim();
+
     bot.sendMessage(chatId, text, {
       parse_mode: 'HTML',
       reply_markup: {
@@ -101,20 +139,27 @@ bot.onText(/^Новые заказы$/, msg => {
   });
 });
 
-// «В работе»
-bot.onText(/^В работе$/, msg => {
-  const chatId = msg.chat.id;
+// Команда: В работе
+bot.onText(/^В работе$/, (msg) => {
+  const chatId = msg.chat.id.toString();
+  if (!isAuthorized(chatId)) {
+    return bot.sendMessage(chatId, '🚫 Доступ запрещён.');
+  }
+
   const list = Array.from(orders.values()).filter(o => o.status === 'in_progress');
-  if (!list.length) {
+  if (list.length === 0) {
     return bot.sendMessage(chatId, 'Нет заказов в работе.');
   }
+
   list.forEach(o => {
-    const text =
-      `📋 Заказ ${o.id}\n` +
-      `Имя: ${o.customer_name}\n` +
-      `Адрес: ${o.address}\n` +
-      `Телефон: ${o.phone}\n` +
-      `Статус: ${STATUS_LABEL[o.status]}`;
+    const text = `
+📋 Заказ ${o.id}
+Имя: ${o.customer_name}
+Адрес: ${o.address}
+Телефон: ${o.phone}
+Статус: ${STATUS_LABEL[o.status]}
+    `.trim();
+
     bot.sendMessage(chatId, text, {
       parse_mode: 'HTML',
       reply_markup: {
@@ -124,52 +169,75 @@ bot.onText(/^В работе$/, msg => {
   });
 });
 
-// inline‑кнопка «Взять в работу» и «Завершить заказ»
-bot.on('callback_query', async q => {
+// Обработка нажатий на inline-кнопки
+bot.on('callback_query', async (q) => {
+  const chatId = q.message.chat.id.toString();
+  if (!isAuthorized(chatId)) {
+    return bot.answerCallbackQuery(q.id, {
+      text: 'У вас нет доступа к этому боту.',
+      show_alert: true
+    });
+  }
+
   const [action, id] = q.data.split('_');
   const o = orders.get(id);
+
   if (!o) {
-    return bot.answerCallbackQuery(q.id, { text: 'Заказ не найден', show_alert: true });
+    return bot.answerCallbackQuery(q.id, {
+      text: 'Заказ не найден',
+      show_alert: true
+    });
   }
+
   if (action === 'get' && o.status === 'new') {
     o.status = 'in_progress';
   } else if (action === 'done' && o.status === 'in_progress') {
     o.status = 'completed';
   } else {
-    return bot.answerCallbackQuery(q.id, { text: 'Невозможно выполнить', show_alert: true });
+    return bot.answerCallbackQuery(q.id, {
+      text: 'Невозможно выполнить',
+      show_alert: true
+    });
   }
+
   orders.set(id, o);
 
-  // обновлённый текст
-  const text =
-    `📋 Заказ ${o.id}\n` +
-    `Имя: ${o.customer_name}\n` +
-    `Адрес: ${o.address}\n` +
-    `Телефон: ${o.phone}\n` +
-    `Статус: ${STATUS_LABEL[o.status]}` +
-    (o.status === 'completed' ? ' ✅' : '');
-  // кнопки
+  const text = `
+📋 Заказ ${o.id}
+Имя: ${o.customer_name}
+Адрес: ${o.address}
+Телефон: ${o.phone}
+Статус: ${STATUS_LABEL[o.status]}${o.status === 'completed' ? ' ✅' : ''}
+  `.trim();
+
   const buttons = [];
   if (o.status === 'new') {
-    buttons.push([{ text: 'Взять в работу',   callback_data: `get_${o.id}` }]);
+    buttons.push([{ text: 'Взять в работу', callback_data: `get_${o.id}` }]);
   } else if (o.status === 'in_progress') {
     buttons.push([{ text: 'Завершить заказ', callback_data: `done_${o.id}` }]);
   }
+
   await bot.editMessageText(text, {
     chat_id: q.message.chat.id,
     message_id: q.message.message_id,
     parse_mode: 'HTML',
-    reply_markup: { inline_keyboard: buttons }
+    reply_markup: buttons.length > 0 ? { inline_keyboard: buttons } : undefined
   });
+
   bot.answerCallbackQuery(q.id);
 });
 
-// HTTP‑эндпоинт для новых заказов
+// HTTP-эндпоинт для приёма новых заказов
 app.post('/order', async (req, res) => {
   const o = req.body;
+
   if (!o?.id || !o.customer_name || !o.phone || !o.address || !o.total || !Array.isArray(o.cart)) {
-    return res.status(400).json({ success: false, message: 'Неверный формат заказа' });
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Неверный формат заказа' 
+    });
   }
+
   o.status = 'new';
   orders.set(o.id, o);
 
@@ -178,23 +246,40 @@ app.post('/order', async (req, res) => {
     cartText += `${i + 1}) ${it.name} — ${it.quantity}×${it.price}₽ = ${it.quantity * it.price}₽\n`;
   });
 
-  const msg =
-    `🛒 Новый заказ\n\n` +
-    `Номер: ${o.id}\n` +
-    `Имя: ${o.customer_name}\n` +
-    `Адрес: ${o.address}\n` +
-    `Телефон: ${o.phone}\n\n` +
-    `Корзина:\n${cartText}\n` +
-    `Итого: ${o.total}₽\n` +
-    `Статус: ${STATUS_LABEL[o.status]}`;
+  const msg = `
+🛒 Новый заказ
+
+Номер: ${o.id}
+Имя: ${o.customer_name}
+Адрес: ${o.address}
+Телефон: ${o.phone}
+
+Корзина:
+${cartText}
+
+Итого: ${o.total}₽
+Статус: ${STATUS_LABEL[o.status]}
+  `.trim();
 
   try {
-    await bot.sendMessage(CHAT_ID, msg, { parse_mode: 'HTML' });
-    res.json({ success: true });
+    // Отправляем сообщение всем разрешённым чатам
+    await Promise.all(
+      ALLOWED_CHAT_IDS.map(chatId =>
+        bot.sendMessage(chatId, msg, { parse_mode: 'HTML' }).catch(err => {
+          console.error(`Ошибка отправки в чат ${chatId}:`, err.message);
+        })
+      )
+    );
+
+    res.status(200).json({ message: 'Заказ успешно обработан' });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ success: false, message: 'Ошибка отправки' });
+    console.error('Ошибка отправки сообщения:', e);
+    res.status(500).json({ success: false, message: 'Ошибка отправки уведомления' });
   }
 });
 
-app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+// Запуск сервера
+app.listen(PORT, () => {
+  console.log(`✅ Сервер запущен на порту ${PORT}`);
+  console.log(`🤖 Бот запущен. Доступно для: ${ALLOWED_CHAT_IDS.join(', ')}`);
+});

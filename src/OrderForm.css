@@ -1,0 +1,97 @@
+/* src/components/OrderForm.css */
+.order-form-container {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: 20px auto;
+  box-sizing: border-box;
+}
+
+.order-form-container h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 25px;
+  font-size: 1.8em;
+}
+
+.order-form-container .form-group {
+  margin-bottom: 18px;
+}
+
+.order-form-container label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #555;
+}
+
+.order-form-container input[type="text"],
+.order-form-container input[type="tel"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1em;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease-in-out;
+}
+.order-form-container input[type="tel"] {
+  font-family: 'Courier New', monospace; /* Цифры по ровнее */
+}
+.order-form-container input[type="text"]:focus-visible,
+.order-form-container input[type="tel"]:focus-visible {
+  border-color: #72a450; 
+  outline: none;
+}
+
+.order-form-container .input-error {
+  border-color: #e74c3c; /* Цвет ошибки */
+}
+
+.order-form-container .error-message {
+  color: #e74c3c;
+  font-size: 0.85em;
+  margin-top: 5px;
+  display: block;
+}
+
+.order-form-container .form-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.order-form-container .submit-button,
+.order-form-container .cancel-button {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.1em;
+  cursor: pointer;
+  min-height: 40px; 
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+  flex: 1; /* Чтобы кнопки занимали равное пространство */
+}
+
+.order-form-container .submit-button {
+  background-color: #8bc34a; /* Зеленый цвет */
+  color: white;
+}
+
+.order-form-container .submit-button:hover {
+  background-color: #72a450;
+  transform: translateY(-1px);
+}
+
+.order-form-container .cancel-button {
+  background-color: #ccc;
+  color: #333;
+}
+
+.order-form-container .cancel-button:hover {
+  background-color: #bbb;
+  transform: translateY(-1px);
+}

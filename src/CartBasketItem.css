@@ -1,0 +1,173 @@
+/* Стили для отдельного товара в корзине */
+.cart-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    align-items: flex-start;
+    transition: background-color 0.2s ease;
+}
+
+.cart-item:hover {
+    background-color: #f0f8f0;
+}
+
+/* Изображение товара */
+.cart-item-image {
+    width: 60px;
+    height: 60px;
+    min-width: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+/* Блок с названием, ценой и количеством */
+.cart-item-details {
+    min-width: 0;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Название товара */
+.cart-item-name {
+    font-size: 0.95em;
+    font-weight: bold;
+    color: var(--farm-dark-green);
+    margin: 0 0 4px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2em;
+    max-height: 2.4em;
+}
+
+/* Цена за единицу */
+.cart-item-price {
+    font-size: 0.85em;
+    color: #555;
+    margin: 0 0 6px 0;
+}
+
+/* Блок управления количеством */
+.cart-item-quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cart-item-quantity-control button {
+    background-color: var(--farm-green);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 0.9em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.cart-item-quantity-control button:hover:not(:disabled) {
+    background-color: var(--farm-dark-green);
+    transform: translateY(-1px);
+}
+
+.cart-item-quantity-control button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.cart-item-quantity-control span {
+    font-size: 0.95em;
+    font-weight: 600;
+    color: var(--text-color);
+    min-width: 24px;
+    text-align: center;
+}
+
+/* Кнопка "Удалить" — компактная, не широкая */
+.cart-item-remove {
+    background-color: #EF5350;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 0.8em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    align-self:center;
+    margin-top: 4px;
+    min-width: 70px;
+    max-width: 80px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cart-item-remove:hover:not(:disabled) {
+    background-color: #D32F2F;
+    transform: translateY(-1px);
+}
+
+.cart-item-remove:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Адаптивность — на узких экранах */
+@media (max-width: 480px) {
+    .cart-item {
+        gap: 10px;
+        padding: 8px;
+    }
+
+    .cart-item-image {
+        width: 55px;
+        height: 55px;
+        min-width: 55px;
+    }
+
+    .cart-item-name {
+        font-size: 0.9em;
+    }
+
+    .cart-item-price {
+        font-size: 0.8em;
+    }
+
+    .cart-item-quantity-control {
+        gap: 4px;
+    }
+
+    .cart-item-quantity-control button {
+        width: 22px;
+        height: 22px;
+        font-size: 0.8em;
+    }
+
+    .cart-item-quantity-control span {
+        font-size: 0.85em;
+    }
+
+    .cart-item-remove {
+        padding: 5px 8px;
+        font-size: 0.75em;
+        min-width: 60px;
+    }
+}

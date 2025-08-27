@@ -1,71 +1,69 @@
-// src/ProductList.js
-import React, { useState, useEffect } from 'react';
+// src/components/ProductList.jsx
+import React, { useState, useMemo,useEffect } from 'react';
 import ProductCard from './ProductCard';
 import Pagination from './Pagination';
-import YandexMap from './YandexMap'; // Импорт компонента карты
-import { fetchProductsWithRests } from '../services/konturMarketApi';
-import '../ProductList.css'; // Импорт стилей для ProductList
+import Map from './Map';
+import '../ProductList.css';
 
-const ProductList = ({ searchTerm, sortOption, addToCart }) => { // Принимаем addToCart
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const storageKey = 'ageConfirmedGlobal';
 
+const ProductList = ({
+  products,
+  loading,
+  searchTerm,
+  sortOption,
+  cartItems,
+  updateCartQuantity,
+  addToCart,
+  selectedCategoryId,
+}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 24;
 
+  const [ageConfirmed, setAgeConfirmed] = useState(() => localStorage.getItem(storageKey) === 'true');
+
+  const handleConfirmAge = () => {
+    setAgeConfirmed(true);
+    localStorage.setItem(storageKey, 'true');
+  };
+
   useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await fetchProductsWithRests();
-        setProducts(data);
-      } catch (err) {
-        setError(err.message || 'Не удалось загрузить товары. Проверьте соединение и настройки API.');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadProducts();
+    const saved = localStorage.getItem(storageKey);
+    if (saved === 'true') setAgeConfirmed(true);
   }, []);
 
-  // Фильтрация товаров: сначала по поисковому запросу, затем по наличию (quantity > 0)
-  const filteredProducts = products.filter(product => {
-    // Добавляем проверку на существование product перед доступом к его свойствам
-    if (!product) {
-      console.warn('Обнаружен неопределенный/null продукт в списке, пропускаем.');
-      return false; // Пропускаем неопределенные или null продукты
-    }
-    const matchesSearch = searchTerm
-      ? product.name.toLowerCase().includes(searchTerm.toLowerCase())
-      : true;
-    // Добавляем условие: показывать только товары с количеством > 0
-    const isInStock = product.rests > 0; // Используем product.rests для проверки наличия
-    return matchesSearch && isInStock;
-  });
+  // 🔹 Фильтрация
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      if (!product) return false;
+      const matchesCategory = selectedCategoryId
+        ? product.groupId === selectedCategoryId
+        : true;
+      const matchesSearch = searchTerm
+        ? product.name.toLowerCase().includes(searchTerm.toLowerCase())
+        : true;
+      return matchesCategory && matchesSearch && product.rests > 0;
+    });
+  }, [products, selectedCategoryId, searchTerm]);
 
-  // Сортировка товаров (логика сохранена)
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    switch (sortOption) {
-      case 'price-asc':
-        return a.sellPricePerUnit - b.sellPricePerUnit; // Используем sellPricePerUnit
-      case 'price-desc':
-        return b.sellPricePerUnit - a.sellPricePerUnit; // Используем sellPricePerUnit
-      case 'quantity-asc':
-        return a.rests - b.rests; // Используем rests
-      case 'quantity-desc':
-        return b.rests - a.rests; // Используем rests
-      default:
-        return 0;
-    }
-  });
+  const sortedProducts = useMemo(() => {
+    return [...filteredProducts].sort((a, b) => {
+      switch (sortOption) {
+        case 'price-asc':
+          return a.sellPricePerUnit - b.sellPricePerUnit;
+        case 'price-desc':
+          return b.sellPricePerUnit - a.sellPricePerUnit;
+        case 'quantity-asc':
+          return a.rests - b.rests;
+        case 'quantity-desc':
+          return b.rests - a.rests;
+        default:
+          return 0;
+      }
+    });
+  }, [filteredProducts, sortOption]);
 
-  // Сброс страницы при изменении фильтров или сортировки (логика сохранена)
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, sortOption]);
+  useEffect(() => setCurrentPage(1), [searchTerm, sortOption, selectedCategoryId]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -73,57 +71,58 @@ const ProductList = ({ searchTerm, sortOption, addToCart }) => { // Приним
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  // Сообщения о состоянии загрузки или ошибке
   if (loading) {
     return <div className="status-message loading">Загрузка товаров...</div>;
   }
 
-  if (error) {
-    return <div className="status-message error-message">Ошибка: {error}</div>;
+  if (sortedProducts.length === 0) {
+    return (
+      <div className="no-products-message">
+        <p>Ничего не найдено.</p>
+        <p>Попробуйте изменить запрос.</p>
+      </div>
+    );
   }
 
   return (
     <>
       <div className="product-list-container">
-        {/* Если отфильтрованных и отсортированных товаров нет */}
-        {sortedProducts.length === 0 ? (
-          <div className="no-products-message">
-            Товары по вашему запросу не найдены или отсутствуют в наличии.
-          </div>
-        ) : (
-          <div className="product-grid">
-            {currentItems.map(product => (
-              // Дополнительная проверка перед рендерингом ProductCard
-              product ? (
-                <ProductCard key={product.id} product={product} addToCart={addToCart} onClose={() => setIsCartOpen(false)}/>
-              ) : (
-                console.warn('Пропущен неопределенный/null продукт при рендеринге.')
-              )
-            ))}
-          </div>
-        )}
+        <div className="product-grid">
+          {currentItems.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              addToCart={addToCart}
+              ageConfirmed={ageConfirmed}
+              onConfirmAge={handleConfirmAge}
+              cartItems={cartItems}
+              updateCartQuantity={updateCartQuantity}
+            />
+          ))}
+        </div>
+
         <div className="pagination-footer">
           <Pagination
             itemsPerPage={itemsPerPage}
-            totalItems={sortedProducts.length} // Общее количество для пагинации теперь - отфильтрованные товары
+            totalItems={sortedProducts.length}
             paginate={paginate}
             currentPage={currentPage}
           />
         </div>
       </div>
-      {/* Добавляем компонент Яндекс.Карт после списка товаров */}
-      <div className="map-section">
+
+      {/* <div className="map-section">
         <h2 className="map-title">Наш Магазин на Карте</h2>
-        <YandexMap
-          center={[44.7335, 37.7479]} // Координаты Южной Озереевки
+        <Map
+          center={[44.675898, 37.642492]}
           zoom={12}
-          placemark={[44.7335, 37.7479]} // Координаты метки (тоже Южная Озереевка)
+          placemark={[44.675898, 37.642492]}
           placemarkHint="Фасолька - Фермерский Рынок"
           placemarkBalloon="Свежие продукты от местных фермеров!"
         />
-      </div>
+      </div> */}
     </>
   );
 };
 
-export default ProductList;
+export default React.memo(ProductList);

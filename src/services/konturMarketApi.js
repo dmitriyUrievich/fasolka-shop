@@ -4,7 +4,7 @@ const apiClient = axios.create({
   baseURL: '/api', // Используем относительный путь, который перехватит прокси
 });
 
-const getShops = async () => {
+export const getShops = async () => {
   try {
     const response = await apiClient.get('/shops');
     // console.log('[API] Ответ shops:', response.data); // Логируем полный ответ
@@ -18,11 +18,21 @@ const getShops = async () => {
 const getProducts = async (shopId) => {
   try {
     const response = await apiClient.get(`/shops/${shopId}/products`);
-    console.log(`[API] Ответ products для магазина ${shopId}:`, response.data); // Логируем полный ответ
-   
+    // console.log(`[API] Ответ products для магазина ${shopId}:`, response.data.items.);
     return response.data.items || [];
   } catch (error) {
     console.error(`[API Error] Ошибка при получении товаров для магазина ${shopId}:`, error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const getCatalog = async (shopId) => {
+  try {
+    const response = await apiClient.get(`/shops/${shopId}/product-groups`);
+    console.log(`[API] Ответ product-groups для магазина ${shopId}:`, response.data);
+    return response.data.items || [];
+  } catch (error) {
+    console.error(`[API Error] Ошибка при получении каталога для магазина ${shopId}:`, error.response?.data || error.message);
     throw error;
   }
 };
@@ -98,8 +108,6 @@ export const fetchProductsWithRests = async () => {
         sellPrice: sellPrice // Гарантируем, что sellPrice всегда присутствует
       };
     });
-
-    console.log("Итоговый список товаров с остатками:", mergedProducts);
     return mergedProducts;
 
   } catch (error) {

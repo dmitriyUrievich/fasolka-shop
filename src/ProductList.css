@@ -1,32 +1,25 @@
-/* src/ProductList.css */
+/* src/ProductList.css
+   Исправленная, mobile-first версия для блока списка продуктов и сетки карточек.
+   Убраны конфликты, добавлены защитные правила против overflow. */
 
 .product-list-container {
     display: flex;
     flex-direction: column;
-    min-height: 100%; /* Занимает всю доступную высоту в app-main */
-    background-color: white; /* Белый фон для списка товаров */
+    min-height: 100%;
+    background-color: #ffffff;
+    scroll-behavior: smooth;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    padding: 20px;
-    width: 100%; /* Гарантируем, что занимает всю ширину родителя */
-    box-sizing: border-box; /* Включаем padding в расчет ширины */
+    padding: 15px;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    min-width: 0;
 }
 
-.status-message {
-    text-align: center;
-    font-size: 1.2em;
-    padding: 40px 0;
-    font-weight: 500;
-}
-
-.status-message.loading {
-    color: var(--farm-brown); /* Землистый цвет для загрузки */
-}
-
-.status-message.error-message {
-    color: #D32F2F; /* Красный для ошибок */
-    font-weight: bold;
-}
+.status-message.loading { color: var(--farm-brown); }
+.status-message.error-message { color: #D32F2F; font-weight: bold; }
 
 .no-products-message {
     text-align: center;
@@ -34,44 +27,134 @@
     color: #666;
     padding: 40px 0;
 }
-
+/* Основная сетка карточек */
+/* Используем auto-fit + minmax, чтобы кол-во колонок подбиралось автоматически и не ломало макет */
 .product-grid {
     display: grid;
-    /* По умолчанию на очень маленьких экранах одна колонка */
-    grid-template-columns: 1fr; /* Явно одна колонка для мобильных */
-    gap: 20px; /* Отступы между карточками */
-    padding: 15px 0;
-    justify-content: center; /* Центрируем всю сетку */
-    justify-items: center; /* Центрируем каждую карточку в ячейке */
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* auto-fit подберёт кол-во колонок */
+    grid-auto-rows: minmax(320px, auto);
+    gap: 18px;
+    padding: 12px 0;
+    justify-content: center;
+    justify-items: stretch;
+    box-sizing: border-box;
+}
+.status-message.loading-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #555;
+  font-size: 1.1rem;
 }
 
-/* Адаптивность для сетки */
-@media (min-width: 600px) { /* Две колонки на небольших планшетах */
-    .product-grid {
-        grid-template-columns: repeat(2, 1fr); /* Две равные колонки */
-        gap: 25px;
-    }
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
 }
 
-@media (min-width: 900px) { /* Три колонки на планшетах побольше / маленьких десктопах */
-    .product-grid {
-        grid-template-columns: repeat(3, 1fr); /* Три равные колонки */
-        gap: 25px;
-    }
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+/* Гарантия: каждая карточка занимает всю ширину своей колонки и не выходит за неё */
+
+.product-card {
+    width: 100%;
+    min-width: var(--card-min-width);
+    min-height: 320px;
+    box-sizing: border-box;
+    border-radius: 15px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(var(--farm-dark-green-rgb), 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeInUp 0.5s ease forwards;
+    animation-delay: calc(var(--card-delay, 0) * 0.1s);
 }
 
-@media (min-width: 1200px) { /* Четыре колонки на больших десктопах */
-    .product-grid {
-        grid-template-columns: repeat(5, 1fr); /* Четыре равные колонки */
-        gap: 25px;
-    }
+.status-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+  font-size: 1.2em;
+  font-weight: 500;
 }
 
-/* На очень узких экранах, убедимся, что всегда одна колонка (этот медиазапрос теперь может быть избыточен, но оставлен для явности) */
-@media (max-width: 480px) {
+.status-message.no-results {
+  color: #888;
+}
+
+.status-message.no-results p {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+/* На экранах < 340px — гарантируем 1 колонку */
+@media (max-width: 339px) {
     .product-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; /* Только 1 карточка в ряду */
+        gap: 16px;
         padding: 10px 0;
+    }
+}
+
+/* На экранах ≥ 340px — разрешаем 2+ колонки */
+@media (min-width: 340px) {
+    .product-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 18px;
+    }
+
+    .product-card__image-wrapper {
+        height: var(--card-image-height, 140px);
+    }
+
+    .product-card__name {
+        font-size: 0.95em;
+    }
+
+    .product-card__price {
+        font-size: 1.1rem;
+    }
+}
+
+/* Планшет: 768px — 2 колонки (если ширина позволяет) */
+@media (min-width: 768px) and (max-width: 899px) {
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr);
         gap: 20px;
+    }
+}
+
+/* Десктоп: 900px — 3 колонки */
+@media (min-width: 900px) and (max-width: 1199px) {
+    .product-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+    }
+}
+
+/* Большой десктоп: 1200px — 4 колонки */
+@media (min-width: 1200px) {
+    .product-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 26px;
+    }
+}
+
+/* Очень большой экран: 1400px — 5 колонок */
+@media (min-width: 1400px) {
+    .product-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 28px;
     }
 }

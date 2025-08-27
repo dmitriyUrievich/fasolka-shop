@@ -1,87 +1,316 @@
+/* ========== Исправленные стили карточки ========== */
+
 .product-card {
-    background-color: white;
-    border-radius: 15px; /* Более округлые углы */
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: 1px solid rgba(var(--farm-dark-green-rgb), 0.1); /* Мягкая зеленая рамка */
+  background-color: #fff;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  overflow: hidden;
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(var(--farm-dark-green-rgb), 0.1);
+  width: 100%;                  /* карточка занимает ширину колонки */
+  max-width: var(--card-max-width, 360px);
+  min-height: 320px;            /* минимальная высота, можно подогнать */
+  box-sizing: border-box;
+  animation: fadeInUp 0.5s ease forwards;
+  animation-delay: calc(var(--card-delay, 0) * 0.1s);
 }
 
-.product-card:hover {
-    transform: translateY(-8px); /* Легкий подъем при наведении */
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2); /* Более выраженная тень */
+/* Обёртка изображения: используем одну переменную высоты и фиксируем её */
+.product-card__image-wrapper {
+  width: 100%;
+  height: var(--card-image-height, 180px);
+  min-height: var(--card-image-height, 180px);
+  max-height: var(--card-image-height, 180px);
+  overflow: hidden;
+  position: relative;
+  display: flex;               /* центрирует <img> внутри */
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  padding: 6px;                /* небольшой отступ, чтобы не было "прижатости" */
+  box-sizing: border-box;
 }
 
+/* Само изображение — cover, чтобы одинаково кадрироваться и не менять размеры контейнера */
 .product-card__image {
-    width: 100%;
-    height: 180px; /* Фиксированная высота для изображения */
-    object-fit: cover;
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
+  width: auto;                 /* сохраняем пропорции (ширина авто) */
+  max-width: 100%;             /* не вылезает за ширину контейнера */
+  height: auto;                /* высота авто, не принудительно 100% */
+  max-height: 100%;            /* не больше контейнера */
+  object-fit: cover;         /* НЕ обрезаем изображение */
+  object-position: center;
+  display: block;
+  transition: filter .24s ease, transform .24s ease;
+}
+.product-card:hover .product-card__image {
+  transform: scale(1.1); /* Легкое увеличение при наведении */
+}
+.product-card__image--blur {
+  filter: blur(2px) grayscale(.25) contrast(.9);
+  transform: scale(1.02); /* немного масштабируем, чтобы заполнить "letterbox" */
 }
 
+/* шум/затемнение поверх картинки */
+.product-card__age-overlay {
+  position: absolute;
+  inset: 0; /* top:0; right:0; bottom:0; left:0; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* по умолчанию не ловим клики */
+  z-index: 10;
+  /* шум: тонкий repeating-linear-gradient + полупрозрачный чёрный слой */
+  background-image:
+    linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)),
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 1px, rgba(0,0,0,0.02) 1px 2px);
+  color: #fff;
+  text-align: center;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+/* текст и кнопка внутри оверлея */
+.product-card__age-overlay .age-text {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+
+/* Контент: flex-контейнер с распределением пространства.
+   Это гарантирует, что кнопка остаётся внизу карточки и не "выталкивается". */
 .product-card__content {
-    padding: 15px;
-    flex-grow: 1; /* Позволяет содержимому занимать оставшееся пространство */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;          /* занимает оставшееся пространство */
+  box-sizing: border-box;
+  min-height: 0;         /* важно для корректного сжатия внутри grid/flex */
 }
 
+/* Название/текст оставляем как есть (указыв. одно правило), можно падать в 2-3 строки */
 .product-card__name {
-    font-size: 1.3em; /* Слегка уменьшен размер шрифта для лучшего размещения в 2 ряда */
-    font-weight: bold;
-    color: var(--farm-dark-green); /* Темно-зеленый цвет для названия */
-    margin-bottom: 5px; /* Уменьшен отступ снизу */
-    white-space: normal; /* Разрешаем тексту переноситься на новую строку */
-    display: -webkit-box;
-    -webkit-line-clamp: 2; /* Ограничиваем название двумя строками */
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis; /* Добавляем многоточие, если текст не помещается в 2 строки */
-    line-height: 1.3; /* Корректируем межстрочный интервал для плотности */
-    min-height: 2.6em; /* Гарантируем минимальную высоту для 2 строк (1.3em * 2) */
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--farm-dark-green);
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 2.5em;
 }
 
-.product-card__price {
-    font-size: 1.7em; /* Слегка уменьшен размер шрифта цены */
-    font-weight: bolder;
-    color: var(--farm-green); /* Насыщенный зеленый для цены */
-    margin-bottom: 5px; /* Уменьшен отступ снизу */
-}
+/* Цена/количество — компактные блоки */
+.product-card__price { font-size: 1.35rem; font-weight: 700; color: var(--farm-green); margin: 0; }
+.product-card__quantity { font-size: .95rem; color:#666; margin: 0; }
 
-.product-card__quantity {
-    font-size: 0.9em;
-    color: #666;
-    margin-bottom: 15px; /* Уменьшен отступ снизу */
-}
-
+/* Кнопка: занять нижнюю часть контента (margin-top:auto),
+   фиксированная высота/внутренний отступ, не даём ей сжиматься */
 .product-card__button {
-    width: 100%;
-    padding: 10px 15px; /* Слегка уменьшен внутренний отступ кнопки */
-    border: none;
-    border-radius: 30px; /* Полностью скругленная кнопка */
-    background: linear-gradient(to right, var(--farm-green), #689F38); /* Градиент для кнопки */
-    color: white;
-    font-size: 1em; /* Слегка уменьшен размер шрифта кнопки */
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  margin-top: auto;        /* толкает кнопку к низу карточки */
+  flex-shrink: 0;          /* не сжимается */
+  padding: 10px 14px;
+  border: none;
+  border-radius: 15px;
+  background: linear-gradient(to right, var(--farm-green), #689F38);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  min-height: 44px;        /* удобный размер для тача */
+  box-sizing: border-box;
 }
 
+.product-card__button:disabled { 
+  background: #BDBDBD; 
+  cursor: not-allowed; 
+}
 .product-card__button:hover:not(:disabled) {
-    background: linear-gradient(to right, #689F38, var(--farm-dark-green));
-    transform: translateY(-2px); /* Легкий эффект нажатия */
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+   transform: translateY(-2px); 
 }
 
-.product-card__button:disabled {
-    background-color: #BDBDBD; /* Серый для недоступных товаров */
-    cursor: not-allowed;
-    box-shadow: none;
-    opacity: 0.8;
+.product-card__confirm-button:hover {
+  background: #dd2222;
+}
+
+.product-card__overlay-text {
+ position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.45); /* более прозрачный фон только под текстом */
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+  max-width: 80%;
+  white-space: normal; /* разрешаем перенос строки */
+}
+.quantity-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* кнопки по краям */
+  margin-top: 10px;
+  gap: 8px;
+}
+
+.btn-quantity {
+  background: linear-gradient(90deg, var(--farm-green), var(--farm-dark-green));
+  border: none;
+  color: #fff;
+  font-size: 18px; /* Чуть меньше на мобиле */
+  width: var(--btn-quantity-size);
+  height: var(--btn-quantity-size);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  box-shadow: 0 2px 5px rgba(46, 125, 50, 0.5);
+  touch-action: manipulation;
+}
+
+.btn-quantity:disabled {
+  color: #666666; /* серый цвет текста */
+  cursor: not-allowed; /* курсор "запрещено" */
+  pointer-events: none; /* запретить все события */
+  background-color: #A5D6A7; /* более светлый зелёный для disabled */
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+.btn-quantity:not(:disabled):hover {
+  background: linear-gradient(90deg, #388E3C, #1B5E20);
+  box-shadow: 0 4px 12px rgba(27, 94, 32, 0.7);
+}
+
+.quantity-info {
+  display: flex;
+  font-weight: 600;
+  flex-direction: column;
+  align-items: center;
+  min-width: var(--quantity-info-min-width);
+  user-select: none;
+  font-size: 0.8em; /* Уменьшаем шрифт */
+  line-height: 1.2;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.quantity-info .quantity {
+  font-size: 0.85rem;       /* уменьшенный размер */
+  font-weight: 600;
+  color: #666;              /* серый цвет */
+  line-height: 1.2;
+}
+
+.quantity-info .total-price {
+  font-size: 1em;        /* увеличенный размер */
+  font-weight: 700;
+  color: var(--farm-green);
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+@media (max-width: 420px) {
+  .product-card__triangle::before { border-left-width: 48px; border-bottom-width: 48px; }
+  .product-card__triangle span { top: 4px; right: -6px; font-size: 11px; width: 84px; }
+}
+@media (max-width: 480px) {
+  :root {
+    --card-width: 150px;           /* Уменьшаем минимальную ширину */
+    --btn-quantity-size: 32px;     /* Меньше кнопки */
+    --quantity-info-min-width: 56px;
+  }
+
+  .product-card__name {
+    font-size: 0.95em;
+    -webkit-line-clamp: 2;
+    min-height: 2.2em;
+  }
+
+  .product-card__price {
+    font-size: 1.1em;
+  }
+
+  .quantity-control {
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .btn-quantity {
+    width: var(--btn-quantity-size);
+    height: var(--btn-quantity-size);
+    font-size: 16px;
+  }
+
+  .quantity-info {
+    min-width: var(--quantity-info-min-width);
+  }
+
+  .quantity-info .total-price {
+    font-size: 0.95em;
+  }
+
+  .product-card__content {
+    padding: 10px 12px;
+  }
+}
+
+/* === Маленькие мобильные (320px – 420px) — экстремальный случай === */
+@media (max-width: 420px) {
+  :root {
+    --card-width: 140px;
+    --card-min-width: 140px;
+    --btn-quantity-size: 30px;
+    --quantity-info-min-width: 52px;
+  }
+
+  .product-card__image-wrapper {
+    height: 130px;
+  }
+
+  .product-card__name {
+    font-size: 0.9em;
+    -webkit-line-clamp: 1; /* Один ряд на очень узких экранах */
+    min-height: 1.4em;
+  }
+
+  .product-card__price {
+    font-size: 1em;
+  }
+
+  .quantity-control {
+    gap: 4px;
+    margin-top: 6px;
+  }
+
+  .btn-quantity {
+    width: var(--btn-quantity-size);
+    height: var(--btn-quantity-size);
+    font-size: 14px;
+  }
+
+  .quantity-info {
+    min-width: var(--quantity-info-min-width);
+  }
+
+  .quantity-info .quantity,
+  .quantity-info .total-price {
+    font-size: 0.8em;
+  }
 }

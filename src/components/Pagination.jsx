@@ -1,43 +1,40 @@
-import React from 'react';
-import '../Pagination.css'; // Импорт стилей для Pagination
+// src/components/Pagination.js
+import React, { useMemo } from 'react';
+import '../Pagination.css';
 
 const Pagination = ({ itemsPerPage, totalItems, paginate, currentPage }) => {
-  const pageNumbers = [];
   const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const maxPagesToShow = 5;
 
-  const getPageRange = () => {
+  // 🔹 Мемоизация диапазона страниц
+  const pageNumbers = useMemo(() => {
+    const maxPagesToShow = 5;
     let startPage, endPage;
+
     if (totalPages <= maxPagesToShow) {
       startPage = 1;
       endPage = totalPages;
     } else {
-      const maxPagesBeforeCurrentPage = Math.floor(maxPagesToShow / 2);
-      const maxPagesAfterCurrentPage = Math.ceil(maxPagesToShow / 2) - 1;
-      if (currentPage <= maxPagesBeforeCurrentPage) {
+      const half = Math.floor(maxPagesToShow / 2);
+      if (currentPage <= half) {
         startPage = 1;
         endPage = maxPagesToShow;
-      } else if (currentPage + maxPagesAfterCurrentPage >= totalPages) {
+      } else if (currentPage + half >= totalPages) {
         startPage = totalPages - maxPagesToShow + 1;
         endPage = totalPages;
       } else {
-        startPage = currentPage - maxPagesBeforeCurrentPage;
-        endPage = currentPage + maxPagesAfterCurrentPage;
+        startPage = currentPage - half;
+        endPage = currentPage + half;
       }
     }
-    return { startPage, endPage };
-  };
 
-  const { startPage, endPage } = getPageRange();
+    const pages = [];
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }, [totalPages, currentPage]);
 
-  for (let i = startPage; i <= endPage; i++) {
-    pageNumbers.push(i);
-  }
-
-  // Не отображаем пагинацию, если страниц меньше двух
-  if (pageNumbers.length < 2) {
-    return null;
-  }
+  if (totalPages < 2) return null;
 
   return (
     <nav className="pagination-nav">
@@ -53,17 +50,12 @@ const Pagination = ({ itemsPerPage, totalItems, paginate, currentPage }) => {
           </li>
         )}
 
-        {startPage > 1 && (
+        {pageNumbers[0] > 1 && (
           <>
             <li className="pagination-item">
-              <button
-                onClick={() => paginate(1)}
-                className="pagination-button"
-              >
-                1
-              </button>
+              <button onClick={() => paginate(1)} className="pagination-button">1</button>
             </li>
-            {startPage > 2 && <li className="pagination-ellipsis">...</li>}
+            {pageNumbers[0] > 2 && <li className="pagination-ellipsis">...</li>}
           </>
         )}
 
@@ -78,16 +70,11 @@ const Pagination = ({ itemsPerPage, totalItems, paginate, currentPage }) => {
           </li>
         ))}
 
-        {endPage < totalPages && (
+        {pageNumbers[pageNumbers.length - 1] < totalPages && (
           <>
-            {endPage < totalPages - 1 && <li className="pagination-ellipsis">...</li>}
+            {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && <li className="pagination-ellipsis">...</li>}
             <li className="pagination-item">
-              <button
-                onClick={() => paginate(totalPages)}
-                className="pagination-button"
-              >
-                {totalPages}
-              </button>
+              <button onClick={() => paginate(totalPages)} className="pagination-button">{totalPages}</button>
             </li>
           </>
         )}
@@ -107,4 +94,4 @@ const Pagination = ({ itemsPerPage, totalItems, paginate, currentPage }) => {
   );
 };
 
-export default Pagination;
+export default React.memo(Pagination);
