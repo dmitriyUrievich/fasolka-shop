@@ -6,12 +6,10 @@ import CategorySidebar from './components/CategorySidebar';
 import { generateDailyOrderId } from './utils/orderUtils';
 import Swal from 'sweetalert2';
 
-// 🔹 Ленивая загрузка
 const CartBasket = React.lazy(() => import('./components/CartBasket'));
 const Modal = React.lazy(() => import('./components/Modal'));
 const OrderForm = React.lazy(() => import('./components/OrderForm'));
 
-// 🔹 API-функции
 import { fetchProductsWithRests, getCatalog, getShops } from './services/konturMarketApi';
 
 function App() {
@@ -19,17 +17,14 @@ function App() {
   const [sortOption, setSortOption] = useState('none');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
+  const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false); // 🔥 состояние меню
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
-  // ✅ Состояние для категорий и товаров
   const [products, setProducts] = useState([]);
   const [catalogGroups, setCatalogGroups] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // ✅ Фильтр по категории
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
 
-  // 🔹 Корзина
   const [cartItems, setCartItems] = useState(() => {
     try {
       const saved = localStorage.getItem('cartItems');
@@ -39,7 +34,7 @@ function App() {
     }
   });
 
-  // 🔹 Сохранение корзины
+  // Сохранение корзины
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem('cartItems', JSON.stringify(cartItems));
@@ -47,17 +42,19 @@ function App() {
     return () => clearTimeout(timer);
   }, [cartItems]);
 
-  // 🔹 Адаптивность
+  // Адаптивность
   useEffect(() => {
-    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 🔁 Загрузка товаров и категорий
+  // Загрузка данных
   useEffect(() => {
     const loadAllData = async () => {
-      const CACHE_TTL = 10 * 60 * 1000; // 10 минут
+      const CACHE_TTL = 10 * 60 * 1000;
       const now = Date.now();
 
       const cachedProducts = localStorage.getItem('products_cache_v3');
@@ -66,7 +63,6 @@ function App() {
       let productsData = null;
       let catalogData = null;
 
-      // Проверяем кэш
       if (cachedProducts) {
         try {
           const { data, timestamp } = JSON.parse(cachedProducts);
@@ -119,7 +115,7 @@ function App() {
     loadAllData();
   }, []);
 
-  // 🔹 Работа с корзиной
+  // Работа с корзиной
   const addToCart = useCallback((productToAdd) => {
     setCartItems((prev) => {
       const existing = prev.find((item) => item.id === productToAdd.id);
@@ -225,67 +221,113 @@ function App() {
     if (onClose) onClose();
   };
 
+  // 🔥 Закрытие по Esc
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        setIsCategoryMenuOpen(false);
+        setIsCartOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
+
   return (
     <div className="app-container">
       <header className="app-header">
-        <div className="header-content">
-          <h1 className="app-title">
-            <svg className="app-title-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2-1.343-2-3-2zM9 14V8m6 6V8m-3 6v2m-3-2c-.828 0-1.5.672-1.5 1.5S7.172 17 8 17s1.5-.672 1.5-1.5S8.828 14 8 0-3-2-3-2zM16 14c-.828 0-1.5.672-1.5 1.5S15.172 17 16 17s1.5-.672 1.5-1.5S16.828 14 16 14z" />
-            </svg>
-            Фасолька
-          </h1>
-          <div className="header-controls">
-            <div className="search-container">
-              <input
-                type="text"
-                placeholder="Найти продукт..."
-                className="search-input"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <svg className="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
+       <div className="header-content">
+  {/* 🔥 Бургер-иконка — ДО названия */}
+  <button
+    className="category-icon-button"
+    onClick={() => setIsCategoryMenuOpen(prev => !prev)}
+    aria-label={isCategoryMenuOpen ? "Закрыть меню категорий" : "Открыть меню категорий"}
+  >
+    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  </button>
 
-            <div className="sort-container">
-              <select
-                className="sort-select"
-                value={sortOption}
-                onChange={(e) => setSortOption(e.target.value)}
-              >
-                <option value="none">Без сортировки</option>
-                <option value="price-asc">По цене ↑</option>
-                <option value="price-desc">По цене ↓</option>
-                <option value="quantity-asc">Остатки ↑</option>
-                <option value="quantity-desc">Остатки ↓</option>
-              </select>
-              <div className="select-arrow">
-                <svg className="select-arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                </svg>
-              </div>
-            </div>
+  <h1 className="app-title">
+    <svg className="app-title-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2-1.343-2-3-2zM9 14V8m6 6V8m-3 6v2m-3-2c-.828 0-1.5.672-1.5 1.5S7.172 17 8 17s1.5-.672 1.5-1.5S8.828 14 8 0-3-2-3-2zM16 14c-.828 0-1.5.672-1.5 1.5S15.172 17 16 17s1.5-.672 1.5-1.5S16.828 14 16 14z" />
+    </svg>
+    Фасолька
+  </h1>
 
-            <button className="cart-icon-button" onClick={() => setIsCartOpen(true)}>
-              <svg className="cart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              {totalCartItems > 0 && <span className="cart-item-count">{totalCartItems}</span>}
-            </button>
-          </div>
-        </div>
+  <div className="header-controls">
+    {/* Поиск, сортировка, корзина */}
+    <div className="search-container">
+      <input
+        type="text"
+        placeholder="Найти продукт..."
+        className="search-input"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+      <svg className="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+    </div>
+
+    <div className="sort-container">
+      <select
+        className="sort-select"
+        value={sortOption}
+        onChange={(e) => setSortOption(e.target.value)}
+      >
+        <option value="none">Без сортировки</option>
+        <option value="price-asc">По цене ↑</option>
+        <option value="price-desc">По цене ↓</option>
+        <option value="quantity-asc">Остатки ↑</option>
+        <option value="quantity-desc">Остатки ↓</option>
+      </select>
+      <div className="select-arrow">
+        <svg className="select-arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+          <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+        </svg>
+      </div>
+    </div>
+
+    <button
+      className="cart-icon-button"
+      onClick={() => setIsCartOpen(prev => !prev)}
+      aria-label={isCartOpen ? "Закрыть корзину" : "Открыть корзину"}
+    >
+      <svg className="cart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+      {totalCartItems > 0 && <span className="cart-item-count">{totalCartItems}</span>}
+    </button>
+  </div>
+</div>
       </header>
 
-      <div className="app-layout">
-        <CategorySidebar
-          products={products} 
-          categories={catalogGroups}
-          activeCategoryId={selectedCategoryId}
-          onCategorySelect={setSelectedCategoryId}
-        />
+      {/* 🔥 Модальное меню категорий — всегда доступно */}
+      {isCategoryMenuOpen && (
+          <div className="category-menu-sidebar" onClick={e => e.stopPropagation()}>
+            <div className="category-menu-header">
+              <h3>Категории</h3>
+              <button
+                className="category-menu-close"
+                onClick={() => setIsCategoryMenuOpen(false)}
+                aria-label="Закрыть меню"
+              >
+                ×
+              </button>
+            </div>
+            <CategorySidebar
+              products={products}
+              categories={catalogGroups}
+              activeCategoryId={selectedCategoryId}
+              onCategorySelect={(id) => {
+                setSelectedCategoryId(id);
+              }}
+            />
+          </div>
+      )}
 
+      <div className="app-layout">
         <main className="app-main">
           <div className="main-content-wrapper">
             <ProductList
@@ -320,7 +362,7 @@ function App() {
         </main>
       </div>
 
-      {/* Мобильная корзина и модалки — без изменений */}
+      {/* Мобильная корзина */}
       {!isDesktop && isCartOpen && (
         <React.Suspense fallback={null}>
           <Modal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)}>
@@ -337,6 +379,7 @@ function App() {
         </React.Suspense>
       )}
 
+      {/* Форма заказа */}
       {isOrderFormOpen && (
         <React.Suspense fallback={null}>
           <Modal isOpen={isOrderFormOpen} onClose={handleCloseOrderForm}>
@@ -349,7 +392,9 @@ function App() {
         <div className="footer-content">
           <div className="footer-section about-us">
             <h3>О нас</h3>
-            <p>Добро пожаловать в наш магазин! У нас вы можете ознакомиться с широким ассортиментом свежих, натуральных продуктов от местных фермеров...</p>
+            <p>Добро пожаловать в наш магазин! 
+              У нас вы можете ознакомиться с широким ассортиментом свежих, 
+              натуральных продуктов, а так же заказать доставку.</p>
           </div>
           <div className="footer-section contact-info">
             <h3>Контакты</h3>

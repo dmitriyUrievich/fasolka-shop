@@ -62,7 +62,6 @@ const ProductList = ({
       }
     });
   }, [filteredProducts, sortOption]);
-  console.log('length',products)
   useEffect(() => setCurrentPage(1), [searchTerm, sortOption, selectedCategoryId]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -87,7 +86,6 @@ const ProductList = ({
   return (
     <>
       <div className="product-list-container">
-      <p>length {products.length }</p> 
         <div className="product-grid">
           {currentItems.map((product) => (
             <ProductCard

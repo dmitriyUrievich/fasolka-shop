@@ -1,357 +1,669 @@
+/* === Анимации === */
 @keyframes wiggle {
   0%, 100% { transform: rotate(0deg); }
   25% { transform: rotate(-5deg); }
   75% { transform: rotate(5deg); }
 }
 
-/* Новый класс для body, чтобы предотвратить прокрутку страницы при открытом модальном окне */
+/* Запрет прокрутки при открытом модальном окне */
 body.modal-open {
-scrollbar-gutter: stable;
+  overflow: hidden;
+  scrollbar-gutter: stable;
 }
 
+/* === Основной контейнер приложения === */
 .app-container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    background-color: var(--farm-cream);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--farm-cream);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* === Хедер === */
 .app-header {
-    background: linear-gradient(to right, var(--farm-dark-green), #4CAF50); /* Градиент зеленого */
-    color: white;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    padding: 5px 0;
-    position: sticky; /* Делаем хедер липким */
-    top: 0; /* Закрепляем вверху экрана */
-    z-index: 1000; /* Обеспечиваем поверхностное отображение */
+  background: linear-gradient(to right, var(--farm-dark-green), #4CAF50);
+  color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  padding: 5px 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
+/* === Основное содержимое хедера === */
 .header-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap; /* Для мобильных */
 }
 
+/* === Бургер-иконка — перед названием === */
+.category-icon-button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  margin-right: 10px;
+  transition: transform 0.2s ease;
+}
+
+.category-icon-button:hover {
+  transform: scale(1.1);
+}
+
+/* === Логотип и название === */
 .app-title {
-    font-size: 2.5em;
-    margin-bottom: 10px;
-    font-weight: bold;
-    text-align: center;
-    color: var(--farm-yellow); /* Желтый заголовок */
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  font-size: 2.5em;
+  margin: 0;
+  font-weight: bold;
+  text-align: center;
+  color: var(--farm-yellow);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1; /* Занимает оставшееся пространство */
+  white-space: nowrap;
+}
+.app-main {
+  flex: 1;
+  display: flex;
+  gap: 24px;
+  padding: 20px;
+  max-width: 1600px;
+  margin: 0 auto;
+  align-items: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+
+  /* 🔽 Добавляем отступ слева — чтобы не заходить под fixed-сайдбар */
+  margin-left: 260px; /* Ширина .category-menu-sidebar */
 }
 
+/* На мобильных — убираем отступ, так как меню не fixed или скрыто */
+@media (max-width: 767.98px) {
+  .app-main {
+    margin-left: 0;
+  }
+}
 .app-title-icon {
-    height: 35px;
-    width: 35px;
-    margin-right: 15px;
-    color: var(--farm-yellow);
+  height: 35px;
+  width: 35px;
+  margin-right: 15px;
+  color: var(--farm-yellow);
 }
 
+/* === Управление (поиск, сортировка, корзина) === */
 .header-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    width: 100%;
-    max-width: 600px;
-    position: relative; /* Для позиционирования иконки корзины */
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  margin-left: auto; /* Прижимаем вправо */
+  flex: 2;
+  min-width: 300px;
 }
 
-.search-container, .sort-container {
-    position: relative;
-    width: 100%;
+.search-container,
+.sort-container {
+  flex: 1;
+  min-width: 120px;
+  position: relative;
 }
 
-.search-input, .sort-select {
-    width: 100%;
-    padding: 8px 15px 8px 45px; /* Увеличено левое заполнение для иконки */
-    border-radius: 25px; /* Скругленные края */
-    border: 2px solid var(--farm-dark-green);
-    background-color: white;
-    color: var(--text-color);
-    font-size: 0.9em;
-    outline: none;
-    transition: all 0.3s ease;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+.search-input,
+.sort-select {
+  width: 100%;
+  padding: 8px 15px 8px 45px;
+  border-radius: 25px;
+  border: 2px solid var(--farm-dark-green);
+  background-color: white;
+  color: var(--text-color);
+  font-size: 0.9em;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .search-input::placeholder {
-    color: #888;
+  color: #888;
 }
 
-.search-input:focus, .sort-select:focus {
-    border-color: var(--farm-yellow);
-    box-shadow: 0 0 0 3px rgba(255, 235, 59, 0.5); /* Мягкая желтая тень при фокусе */
+.search-input:focus,
+.sort-select:focus {
+  border-color: var(--farm-yellow);
+  box-shadow: 0 0 0 3px rgba(255, 235, 59, 0.5);
 }
 
 .search-icon {
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    height: 20px;
-    width: 20px;
-    color: var(--farm-brown); /* Коричневая иконка поиска */
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 20px;
+  width: 20px;
+  color: var(--farm-brown);
 }
 
 .sort-select {
-    padding-right: 45px; /* Место для стрелки выпадающего списка */
-    appearance: none; /* Убирает стандартную стрелку */
-    cursor: pointer;
+  padding-right: 45px;
+  appearance: none;
+  cursor: pointer;
 }
 
 .select-arrow {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none; /* Чтобы клики проходили на select */
-    color: var(--farm-brown); /* Коричневая стрелка */
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--farm-brown);
 }
 
 .select-arrow-icon {
-    height: 18px;
-    width: 18px;
-    fill: currentColor;
+  height: 18px;
+  width: 18px;
+  fill: currentColor;
 }
 
-/* Стили для иконки корзины */
 .cart-icon-button {
-    background: none;
-    border: none;
-    color: white;
-    cursor: pointer;
-    position: relative;
-    padding: 0;
-    margin-left: 15px; /* Отступ от других элементов управления */
-    transition: transform 0.2s ease;
-    animation: wiggle 0.5s ease; 
-    will-change: transform;
-    margin-left: auto; /* Выравниваем корзину вправо */
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  position: relative;
+  padding: 0;
+  margin-left: 15px;
+  transition: transform 0.2s ease;
+  animation: wiggle 0.5s ease;
+  will-change: transform;
 }
 
 .cart-icon {
-    width: 30px;
-    height: 30px;
-    stroke-width: 2;
+  width: 30px;
+  height: 30px;
+  stroke-width: 2;
 }
 
 .cart-item-count {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background-color: var(--farm-yellow); /* Желтый кружок */
-    color: var(--farm-dark-green); /* Темно-зеленый текст */
-    border-radius: 50%;
-    padding: 2px 6px;
-    font-size: 0.7em;
-    font-weight: bold;
-    min-width: 20px;
-    text-align: center;
-    line-height: 1;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: var(--farm-yellow);
+  color: var(--farm-dark-green);
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.7em;
+  font-weight: bold;
+  min-width: 20px;
+  text-align: center;
+  line-height: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.app-layout {/*add*/
+/* === Иконка корзины === */
+.cart-icon-button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  position: relative;
+  padding: 0;
+  margin-left: auto;
+  transition: transform 0.2s ease;
+  animation: wiggle 0.5s ease;
+  will-change: transform;
+}
+
+.cart-icon {
+  width: 30px;
+  height: 30px;
+  stroke-width: 2;
+}
+
+.cart-item-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: var(--farm-yellow);
+  color: var(--farm-dark-green);
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.7em;
+  font-weight: bold;
+  min-width: 20px;
+  text-align: center;
+  line-height: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* === Макет страницы: 3 колонки (категории | товары | корзина) === */
+.app-layout {
   display: flex;
   min-height: calc(100vh - 60px);
+  flex: 1;
 }
-.app-main {
-    flex-grow: 1;
-    padding-top: 20px;
-    max-width: 1600px;
-    margin: 0 auto;
-    padding: 20px;
-    display: flex; /* Используем flexbox для app-main */
-    gap: 30px; /* Отступ между списком товаров и корзиной */
-    align-items: flex-start; /* Выравнивание элементов по верху */
-    flex-direction: column; /*add*/
-    flex: 1;/*add*/
+
+/* === Сайдбар категорий === */
+.category-sidebar {
+  width: 280px;
+  max-width: 280px;
+  background-color: white;
+  border-right: 1px solid #e0e0e0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  height: calc(100vh - 60px);
+  position: sticky;
+  top: 60px;
+  overflow-y: auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 90;
 }
-/* Для браузеров без gap */
-@supports not (gap: 30px) {
-    .app-main {
-        gap: 0;
-    }
-    .app-main > *:not(:first-child) {
-        margin-left: 30px;
-    }
+
+/* === Бургер-иконка (только на мобильных) === */
+.mobile-menu-button {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  margin-left: 10px;
 }
-/* Стили для футера */
+/* === Иконка категорий в хедере — всегда видна === */
+.category-icon-button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  margin-left: 10px;
+  transition: transform 0.2s ease;
+}
+
+.category-icon-button:hover {
+  transform: scale(1.1);
+}
+
+/* === Меню категорий — выдвигается слева, НЕ модальное === */
+.category-menu-sidebar {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  width: 260px;
+  max-height: calc(100vh - 60px);
+  background-color: white;
+  border-radius: 0 12px 12px 0;
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+  z-index: 900; /* Выше контента, но не блокирует полностью */
+  transform: translateX(0);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE и Edge */
+}
+.category-menu-sidebar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+/* Скрытие/показ — можно улучшить анимацией */
+.category-menu-sidebar.standalone {
+  transform: translateX(0);
+}
+
+/* === Заголовок меню === */
+.category-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: var(--farm-dark-green);
+  color: white;
+  font-weight: 600;
+}
+
+.category-menu-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  line-height: 1;
+  text-align: center;
+}
+
+/* === Убираем прокрутку страницы при открытом меню (опционально) === */
+body.category-menu-open {
+  overflow: hidden; /* Только если хочешь заблокировать прокрутку */
+}
+/* Показываем бургер на экранах < 768px */
+@media (max-width: 767.98px) {
+  .mobile-menu-button {
+    display: block;
+  }
+
+  /* Скрываем обычный сайдбар */
+  .category-sidebar-desktop {
+    display: none;
+  }
+
+  /* Скрываем иконку корзины при открытом меню (опционально) */
+  .cart-icon-button {
+    display: none;
+  }
+}
+
+/* === Мобильное меню категорий === */
+.mobile-menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 60px;
+}
+
+.mobile-menu-sidebar {
+  width: 280px;
+  max-height: calc(100vh - 70px);
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: var(--farm-dark-green);
+  color: white;
+  border-radius: 12px 12px 0 0;
+}
+
+.mobile-menu-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  line-height: 1;
+  text-align: center;
+}
+
+/* === Режим "только иконки" при очень узком экране === */
+@media (max-width: 500px) {
+  .category-item span {
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.8em;
+  }
+
+  .category-item span .icon {
+    margin-right: 0;
+    font-size: 1.4em;
+  }
+
+  .category-item span .count {
+    font-size: 0.7em;
+  }
+
+  /* Скрываем текст у подкатегорий */
+  .sub-category-item span {
+    flex-direction: column;
+    font-size: 0.75em;
+  }
+
+  .sub-category-item span .icon {
+    font-size: 1.2em;
+  }
+
+  /* Уменьшаем отступы */
+  .category-item {
+    padding: 10px 12px;
+  }
+
+  .sub-category-item {
+    padding: 8px 0;
+  }
+}
+
+
+/* Скрываем категории на мобильных */
+@media (max-width: 767.98px) {
+  .category-sidebar {
+    display: none;
+  }
+}
+
+/* === Основной контент (товары + корзина) === */
+
+
+/* На планшетах и малых десктопах — уменьшаем отступ */
+@media (max-width: 1024px) {
+  .app-main {
+    gap: 20px;
+    padding: 15px;
+  }
+}
+
+/* === Список товаров === */
+.main-content-wrapper {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* === Сайдбар корзины (справа) === */
+.cart-sidebar {
+  flex: 0 0 450px;
+  width: 100%; /* Важно: не больше родителя */
+  max-width: 100%; /* 🔥 Главное правило */
+  height: calc(100vh - 60px);
+  position: sticky;
+  top: 60px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* background-color: white; */
+  /* border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); */
+  padding: 16px;
+  box-sizing: border-box;
+  z-index: 80;
+}
+
+/* Адаптация ширины корзины */
+@media (max-width: 1100px) {
+  .cart-sidebar {
+    flex: 0 0 320px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .cart-sidebar {
+    flex: 0 0 300px;
+  }
+}
+@media (max-width: 767.98px) {
+  .app-main {
+    margin-left: 0;
+    padding: 15px;
+  } 
+}
+/* === Футер === */
 .app-footer {
-    background-color: var(--farm-dark-green);
-    color: white;
-    padding: 40px 20px; /* Увеличенный отступ */
-    margin-top: auto;
-    box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.2);
-    text-align: center; /* Центрируем текст по умолчанию */
+  background-color: var(--farm-dark-green);
+  color: white;
+  padding: 40px 20px;
+  margin-top: auto;
+  box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
 }
 
 .footer-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: grid; /* Используем Grid для более гибкого макета */
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* 250px - минимальная ширина колонки */
-    gap: 30px; /* Отступы между секциями */
-    text-align: left; /* Текст внутри секций выравниваем по левому краю */
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+  text-align: left;
 }
 
 .footer-section h3 {
-    font-size: 1.5em;
-    color: var(--farm-yellow); /* Желтые заголовки секций */
-    margin-bottom: 15px;
-    font-weight: bold;
-    border-bottom: 2px solid rgba(255, 235, 59, 0.5); /* Подчеркивание заголовков */
-    padding-bottom: 5px;
+  font-size: 1.5em;
+  color: var(--farm-yellow);
+  margin-bottom: 15px;
+  font-weight: bold;
+  border-bottom: 2px solid rgba(255, 235, 59, 0.5);
+  padding-bottom: 5px;
 }
 
 .footer-section p {
-    font-size: 0.95em;
-    line-height: 1.6;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: flex-start; /* Для выравнивания иконок и текста */
+  font-size: 0.95em;
+  line-height: 1.6;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: flex-start;
 }
 
 .footer-icon {
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
-    flex-shrink: 0; /* Чтобы иконка не сжималась */
-    color: var(--farm-yellow); /* Желтые иконки */
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  flex-shrink: 0;
+  color: var(--farm-yellow);
 }
 
 .social-links {
-    display: flex;
-    gap: 15px;
-    margin-top: 10px;
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
 }
 
 .social-icon {
-    display: block;
-    width: 35px;
-    height: 35px;
-    color: white;
-    background-color: rgba(255, 255, 255, 0.2); /* Полупрозрачный фон */
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.3s ease, transform 0.3s ease;
+  display: block;
+  width: 35px;
+  height: 35px;
+  color: white;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
 .social-icon:hover {
-    background-color: var(--farm-yellow); /* Желтый фон при наведении */
-    color: var(--farm-dark-green); /* Темно-зеленая иконка при наведении */
-    transform: translateY(-3px);
+  background-color: var(--farm-yellow);
+  color: var(--farm-dark-green);
+  transform: translateY(-3px);
 }
 
 .social-icon svg {
-    width: 20px;
-    height: 20px;
-    fill: currentColor;
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
 }
 
 .footer-bottom {
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    padding-top: 20px;
-    margin-top: 30px;
-    font-size: 0.85em;
-    color: rgba(255, 255, 255, 0.8);
-    text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: 20px;
+  margin-top: 30px;
+  font-size: 0.85em;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
 }
 
-/* === Планшеты (768px – 1023px) === */
+/* === Адаптив: Планшет (768px – 1023px) === */
 @media (min-width: 768px) and (max-width: 1023px) {
-    .header-content {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        gap: 15px;
-    }
+  .header-content {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+  }
 
-    .app-title {
-        font-size: 1.8em;
-        flex: 1;
-    }
+  .app-title {
+    font-size: 1.8em;
+    flex: 1;
+  }
 
-    .header-controls {
-        flex-direction: row;
-        gap: 12px;
-        flex: 2;
-        max-width: 600px;
-    }
+  .header-controls {
+    flex-direction: row;
+    gap: 12px;
+    flex: 2;
+    max-width: 600px;
+  }
 
-    .search-container,
-    .sort-container {
-        flex: 1;
-        min-width: 180px;
-    }
+  .search-container,
+  .sort-container {
+    flex: 1;
+    min-width: 180px;
+  }
 
-    .search-input,
-    .sort-select {
-        font-size: 0.95em;
-        padding: 9px 15px 9px 45px;
-    }
+  .search-input,
+  .sort-select {
+    font-size: 0.95em;
+    padding: 9px 15px 9px 45px;
+  }
 
-    .cart-icon-button {
-        margin-left: 15px;
-    }
+  .cart-icon-button {
+    margin-left: 15px;
+  }
+
+  .app-main {
+    gap: 20px;
+  }
 }
 
 /* === Десктоп (1024px и выше) === */
 @media (min-width: 1024px) {
-    .header-content {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-    }
+  .header-content {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
 
-    .app-title {
-        font-size: 2.2em;
-    }
+  .app-title {
+    font-size: 2.2em;
+  }
 
-    .header-controls {
-        flex-direction: row;
-        gap: 15px;
-        max-width: 600px;
-    }
+  .header-controls {
+    flex-direction: row;
+    gap: 15px;
+    max-width: 600px;
+  }
 
-    .search-container,
-    .sort-container {
-        flex: 1;
-        min-width: 200px;
-    }
+  .search-container,
+  .sort-container {
+    flex: 1;
+    min-width: 200px;
+  }
 
-    .search-input,
-    .sort-select {
-        font-size: 1em;
-    }
-}
-@media (max-width: 1100px) {
-    .cart-sidebar {
-        flex: 0 0 400px;
-    }
-
-    .app-main {
-        gap: 20px;
-        padding: 15px;
-    }
-}
-
-@media (max-width: 1024px) {
-    .cart-sidebar {
-        flex: 0 0 360px;
-    }
-
-    .cart-container {
-        max-width: 360px;
-    }
+  .search-input,
+  .sort-select {
+    font-size: 1em;
+  }
 }
