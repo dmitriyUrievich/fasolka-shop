@@ -1,23 +1,24 @@
-// ProductList.js (с кэшированием и оптимизациями)
-import React, { useState, useEffect, useMemo } from 'react';
+// src/components/ProductList.jsx
+import React, { useState, useMemo,useEffect } from 'react';
 import ProductCard from './ProductCard';
 import Pagination from './Pagination';
 import Map from './Map';
-import { fetchProductsWithRests } from '../services/konturMarketApi';
 import '../ProductList.css';
 
-// 🔹 Настройки кэша
-const CACHE_KEY = 'products_cache_v3';
-const CACHE_TTL = 10 * 60 * 1000; // 10 минут
+const storageKey = 'ageConfirmedGlobal';
 
-const ProductList = ({ searchTerm, sortOption, addToCart, cartItems, updateCartQuantity }) => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const ProductList = ({
+  products,
+  loading,
+  searchTerm,
+  sortOption,
+  cartItems,
+  updateCartQuantity,
+  addToCart,
+  selectedCategoryId,
+}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 24;
-  const storageKey = 'ageConfirmedGlobal';
-  const [productsWithoutImage, setProductsWithoutImage] = useState(new Set());
 
   const [ageConfirmed, setAgeConfirmed] = useState(() => localStorage.getItem(storageKey) === 'true');
 
@@ -31,94 +32,39 @@ const ProductList = ({ searchTerm, sortOption, addToCart, cartItems, updateCartQ
     if (saved === 'true') setAgeConfirmed(true);
   }, []);
 
-  useEffect(() => {
-    const loadProducts = async () => {
-      // 🔹 Попробуем взять из кэша
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached) {
-        try {
-          const { data, timestamp } = JSON.parse(cached);
-          if (Date.now() - timestamp < CACHE_TTL) {
-            setProducts(data);
-            setLoading(false);
-            return;
-          }
-        } catch (e) {
-          console.warn('Кэш повреждён');
-        }
-      }
-
-      // 🔹 Загружаем с сервера
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await fetchProductsWithRests();
-        localStorage.setItem(CACHE_KEY, JSON.stringify({
-          data,
-          timestamp: Date.now()
-        }));
-        setProducts(data);
-      } catch (err) {
-        setError('Не удалось загрузить товары');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProducts();
-  }, []);
-
-// 🟩 Храним ID товаров, у которых используется fallback (нет фото)
-    const handleImageStatus = (productId, hasNoImage) => {
-    setProductsWithoutImage(prev => {
-      const newSet = new Set(prev);
-      if (hasNoImage) {
-        newSet.add(productId);
-      } else {
-        newSet.delete(productId);
-      }
-      return newSet;
-    });
-  };
-
-  // 🔹 Фильтрация и сортировка (мемоизированы)
+  // 🔹 Фильтрация
   const filteredProducts = useMemo(() => {
-    return products.filter(product => {
+    return products.filter((product) => {
       if (!product) return false;
+      const matchesCategory = selectedCategoryId
+        ? product.groupId === selectedCategoryId
+        : true;
       const matchesSearch = searchTerm
         ? product.name.toLowerCase().includes(searchTerm.toLowerCase())
         : true;
-      return matchesSearch && product.rests > 0;
+      return matchesCategory && matchesSearch && product.rests > 0;
     });
-  }, [products, searchTerm]);
-
-  // 🟨 Получить массив товаров без фото
-    const getProductsMissingImage = () => {
-    return products.filter(p => productsWithoutImage.has(p.id));
-  };
-
-
-
+  }, [products, selectedCategoryId, searchTerm]);
 
   const sortedProducts = useMemo(() => {
     return [...filteredProducts].sort((a, b) => {
       switch (sortOption) {
-        case 'price-asc': return a.sellPricePerUnit - b.sellPricePerUnit;
-        case 'price-desc': return b.sellPricePerUnit - a.sellPricePerUnit;
-        case 'quantity-asc': return a.rests - b.rests;
-        case 'quantity-desc': return b.rests - a.rests;
-        default: return 0;
+        case 'price-asc':
+          return a.sellPricePerUnit - b.sellPricePerUnit;
+        case 'price-desc':
+          return b.sellPricePerUnit - a.sellPricePerUnit;
+        case 'quantity-asc':
+          return a.rests - b.rests;
+        case 'quantity-desc':
+          return b.rests - a.rests;
+        default:
+          return 0;
       }
     });
   }, [filteredProducts, sortOption]);
 
-  // 🔹 Сброс страницы при поиске/сортировке
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, sortOption]);
+  useEffect(() => setCurrentPage(1), [searchTerm, sortOption, selectedCategoryId]);
 
-  // 🔹 Пагинация
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = sortedProducts.slice(indexOfFirstItem, indexOfLastItem);
@@ -141,8 +87,9 @@ const ProductList = ({ searchTerm, sortOption, addToCart, cartItems, updateCartQ
   return (
     <>
       <div className="product-list-container">
+        <p>length{currentItems.length}</p> 
         <div className="product-grid">
-          {currentItems.map(product => (
+          {currentItems.map((product) => (
             <ProductCard
               key={product.id}
               product={product}
@@ -165,7 +112,7 @@ const ProductList = ({ searchTerm, sortOption, addToCart, cartItems, updateCartQ
         </div>
       </div>
 
-      <div className="map-section">
+      {/* <div className="map-section">
         <h2 className="map-title">Наш Магазин на Карте</h2>
         <Map
           center={[44.675898, 37.642492]}
@@ -174,7 +121,7 @@ const ProductList = ({ searchTerm, sortOption, addToCart, cartItems, updateCartQ
           placemarkHint="Фасолька - Фермерский Рынок"
           placemarkBalloon="Свежие продукты от местных фермеров!"
         />
-      </div>
+      </div> */}
     </>
   );
 };

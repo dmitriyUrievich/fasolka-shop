@@ -13,7 +13,3 @@ npm-debug.log*
 
 # Логи
 *.log
-
-# Системные файлы
-.DS_Store
-Thumbs.db
