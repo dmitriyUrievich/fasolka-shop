@@ -16,6 +16,7 @@ const ProductList = ({
   updateCartQuantity,
   addToCart,
   selectedCategoryId,
+  listHeader,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 24;
@@ -86,6 +87,7 @@ const ProductList = ({
   return (
     <>
       <div className="product-list-container">
+      {listHeader && <>{listHeader}</>}
         <div className="product-grid">
           {currentItems.map((product) => (
             <ProductCard

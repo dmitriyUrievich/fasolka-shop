@@ -30,27 +30,27 @@ body.modal-open {
   top: 0;
   z-index: 1000;
 }
-
 /* === Основное содержимое хедера === */
 .header-content {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
   display: flex;
-  flex-direction: row;
+  flex-wrap: wrap; /* Позволяет перенос */
   align-items: center;
   gap: 15px;
-  flex-wrap: wrap; /* Для мобильных */
+  position: relative;
 }
 
-/* === Бургер-иконка — перед названием === */
+/* Бургер — всегда первым */
 .category-icon-button {
+  flex: 0 0 auto;
   background: none;
   border: none;
   color: white;
   cursor: pointer;
   padding: 8px;
-  margin-right: 10px;
+  margin: 0;
   transition: transform 0.2s ease;
 }
 
@@ -58,58 +58,37 @@ body.modal-open {
   transform: scale(1.1);
 }
 
-/* === Логотип и название === */
+/* === Логотип — теперь отдельно от корзины === */
 .app-title {
   font-size: 2.5em;
   margin: 0;
   font-weight: bold;
-  text-align: center;
   color: var(--farm-yellow);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex: 1; /* Занимает оставшееся пространство */
   white-space: nowrap;
-}
-.app-main {
-  flex: 1;
-  display: flex;
-  gap: 24px;
-  padding: 20px;
-  max-width: 1600px;
-  margin: 0 auto;
-  align-items: flex-start;
-  width: 100%;
-  box-sizing: border-box;
-
-  /* 🔽 Добавляем отступ слева — чтобы не заходить под fixed-сайдбар */
-  margin-left: 260px; /* Ширина .category-menu-sidebar */
+  font-size: 1.4em;
+  flex: 1 0 200px;
+  min-width: 180px;
 }
 
-/* На мобильных — убираем отступ, так как меню не fixed или скрыто */
-@media (max-width: 767.98px) {
-  .app-main {
-    margin-left: 0;
-  }
-}
 .app-title-icon {
   height: 35px;
   width: 35px;
-  margin-right: 15px;
-  color: var(--farm-yellow);
+  margin-right: 12px;
 }
 
-/* === Управление (поиск, сортировка, корзина) === */
+/* === Управление (поиск, сортировка, корзина) — гибкая группа === */
 .header-controls {
   display: flex;
-  flex-direction: row;
+  flex: 0 1 auto;
   gap: 12px;
-  margin-left: auto; /* Прижимаем вправо */
-  flex: 2;
   min-width: 300px;
+  order: 3; /* Переносится на новую строку при сжатии */
 }
 
+/* Элементы управления */
 .search-container,
 .sort-container {
   flex: 1;
@@ -131,9 +110,6 @@ body.modal-open {
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.search-input::placeholder {
-  color: #888;
-}
 
 .search-input:focus,
 .sort-select:focus {
@@ -172,6 +148,7 @@ body.modal-open {
   fill: currentColor;
 }
 
+/* === Иконка корзины — единый стиль === */
 .cart-icon-button {
   background: none;
   border: none;
@@ -179,10 +156,42 @@ body.modal-open {
   cursor: pointer;
   position: relative;
   padding: 0;
+  transition: transform 0.2s ease;
+  animation: wiggle 0.5s ease;
+  will-change: transform;
+}
+
+.cart-item-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: var(--farm-yellow);
+  color: var(--farm-dark-green);
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.7em;
+  font-weight: bold;
+  min-width: 20px;
+  text-align: center;
+  line-height: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* === Мобильная корзина — отдельный элемент === */
+.cart-icon-button.mobile-cart {
+  display: none; /* По умолчанию скрыта */
+  margin-left: auto; /* Важно: выталкивает вправо */
+  order: 2; /* Порядок на мобильных */
+}
+
+/* === Десктопная корзина — в конце controls === */
+.cart-icon-button.desktop-cart {
   margin-left: 15px;
-  transition: transform 0.2s ease;
-  animation: wiggle 0.5s ease;
-  will-change: transform;
+  display: none; /* По умолчанию скрыта */
+}
+
+.search-input::placeholder {
+  color: #888;
 }
 
 .cart-icon {
@@ -190,6 +199,7 @@ body.modal-open {
   height: 30px;
   stroke-width: 2;
 }
+
 
 .cart-item-count {
   position: absolute;
@@ -206,92 +216,43 @@ body.modal-open {
   line-height: 1;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
-
-/* === Иконка корзины === */
-.cart-icon-button {
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-  position: relative;
-  padding: 0;
-  margin-left: auto;
-  transition: transform 0.2s ease;
-  animation: wiggle 0.5s ease;
-  will-change: transform;
-}
-
-.cart-icon {
-  width: 30px;
-  height: 30px;
-  stroke-width: 2;
-}
-
-.cart-item-count {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background-color: var(--farm-yellow);
-  color: var(--farm-dark-green);
-  border-radius: 50%;
-  padding: 2px 6px;
-  font-size: 0.7em;
-  font-weight: bold;
-  min-width: 20px;
-  text-align: center;
-  line-height: 1;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* === Макет страницы: 3 колонки (категории | товары | корзина) === */
 .app-layout {
   display: flex;
-  min-height: calc(100vh - 60px);
   flex: 1;
+  min-height: calc(100vh - 60px);
+  background-color: var(--farm-cream);
 }
 
-/* === Сайдбар категорий === */
-.category-sidebar {
-  width: 280px;
-  max-width: 280px;
-  background-color: white;
-  border-right: 1px solid #e0e0e0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+.products-and-cart-container {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  padding: 15px;
+  box-sizing: border-box;
+}
+
+/* === Сайдбар корзины (справа) === */
+.cart-sidebar {
+  flex: 0 0 450px;
+  width: 100%;
+  max-width: min(450px, 100vw);
   height: calc(100vh - 60px);
   position: sticky;
   top: 60px;
   overflow-y: auto;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  z-index: 90;
+  overflow-x: hidden;
+  background-color: white;
+  border-left: 1px solid #e0e0e0;
+  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+  padding: 20px 16px;
+  box-sizing: border-box;
+  z-index: 80;
 }
-
-/* === Бургер-иконка (только на мобильных) === */
-.mobile-menu-button {
-  display: none;
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-  padding: 8px;
-  margin-left: 10px;
-}
-/* === Иконка категорий в хедере — всегда видна === */
-.category-icon-button {
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-  padding: 8px;
-  margin-left: 10px;
-  transition: transform 0.2s ease;
-}
-
-.category-icon-button:hover {
-  transform: scale(1.1);
-}
-
 /* === Меню категорий — выдвигается слева, НЕ модальное === */
 .category-menu-sidebar {
   position: fixed;
@@ -348,67 +309,62 @@ body.category-menu-open {
 }
 /* Показываем бургер на экранах < 768px */
 @media (max-width: 767.98px) {
-  .mobile-menu-button {
-    display: block;
+  .cart-sidebar {
+    position: fixed;
+    top: 60px;
+    right: 0;
+    width: 100vw;
+    height: calc(100vh - 60px);
+    max-width: 100vw;
+    border-radius: 0;
+    transform: none;
+    z-index: 1000;
+  }
+  
+  .header-content {
+    gap: 10px;
+    padding: 10px 20px;
   }
 
-  /* Скрываем обычный сайдбар */
-  .category-sidebar-desktop {
+  /* Поиск и сортировка переносятся на новую строку */
+  .header-controls {
+    order: 2;
+    width: 100%;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 5px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Логотип остается слева */
+  .app-title {
+    order: 1;
+    flex: 1;
+  }
+
+  /* Мобильная корзина становится видимой и выталкивается вправо */
+  .cart-icon-button.mobile-cart {
+    display: flex;
+  }
+
+  /* Десктопная корзина скрыта */
+  .cart-icon-button.desktop-cart {
     display: none;
   }
 
-  /* Скрываем иконку корзины при открытом меню (опционально) */
-  .cart-icon-button {
-    display: none;
+  .app-title {
+    font-size: 1.8em;
+  }
+
+  .app-title-icon {
+    height: 30px;
+    width: 30px;
+    margin-right: 10px;
   }
 }
-
-/* === Мобильное меню категорий === */
-.mobile-menu-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 60px;
-}
-
-.mobile-menu-sidebar {
-  width: 280px;
-  max-height: calc(100vh - 70px);
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.mobile-menu-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  background-color: var(--farm-dark-green);
-  color: white;
-  border-radius: 12px 12px 0 0;
-}
-
-.mobile-menu-close {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 24px;
-  cursor: pointer;
-  width: 30px;
-  height: 30px;
-  line-height: 1;
-  text-align: center;
+.cart-icon-button.desktop-cart {
+  margin-left: 0 !important;
 }
 
 /* === Режим "только иконки" при очень узком экране === */
@@ -448,25 +404,6 @@ body.category-menu-open {
   }
 }
 
-
-/* Скрываем категории на мобильных */
-@media (max-width: 767.98px) {
-  .category-sidebar {
-    display: none;
-  }
-}
-
-/* === Основной контент (товары + корзина) === */
-
-
-/* На планшетах и малых десктопах — уменьшаем отступ */
-@media (max-width: 1024px) {
-  .app-main {
-    gap: 20px;
-    padding: 15px;
-  }
-}
-
 /* === Список товаров === */
 .main-content-wrapper {
   flex: 1;
@@ -474,24 +411,6 @@ body.category-menu-open {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-}
-
-/* === Сайдбар корзины (справа) === */
-.cart-sidebar {
-  flex: 0 0 450px;
-  width: 100%; /* Важно: не больше родителя */
-  max-width: 100%; /* 🔥 Главное правило */
-  height: calc(100vh - 60px);
-  position: sticky;
-  top: 60px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  /* background-color: white; */
-  /* border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); */
-  padding: 16px;
-  box-sizing: border-box;
-  z-index: 80;
 }
 
 /* Адаптация ширины корзины */
@@ -506,12 +425,7 @@ body.category-menu-open {
     flex: 0 0 300px;
   }
 }
-@media (max-width: 767.98px) {
-  .app-main {
-    margin-left: 0;
-    padding: 15px;
-  } 
-}
+
 /* === Футер === */
 .app-footer {
   background-color: var(--farm-dark-green);
@@ -595,9 +509,57 @@ body.category-menu-open {
   color: rgba(255, 255, 255, 0.8);
   text-align: center;
 }
+/* === Медиа-запросы === */
 
-/* === Адаптив: Планшет (768px – 1023px) === */
-@media (min-width: 768px) and (max-width: 1023px) {
+/* Мобильные: < 768px */
+@media (max-width: 767.98px) {
+  
+  .header-content {
+    gap: 10px;
+    padding: 10px 20px;
+  }
+
+  .header-controls {
+    order: 2;
+    width: 100%;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 5px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .app-title {
+    order: 1;
+    flex: 1;
+    font-size: 1.8em;
+  }
+
+  .app-title-icon {
+    height: 30px;
+    width: 30px;
+    margin-right: 10px;
+  }
+
+  .cart-icon-button.mobile-cart {
+    display: flex;
+  }
+
+  .cart-icon-button.desktop-cart {
+    display: none;
+  }
+}
+
+/* Планшет: 768px — 1023.98px */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .cart-icon-button.desktop-cart {
+    display: flex;
+  }
+
+  .cart-icon-button.mobile-cart {
+    display: none;
+  }
+
   .header-content {
     flex-direction: row;
     justify-content: space-between;
@@ -628,18 +590,18 @@ body.category-menu-open {
     font-size: 0.95em;
     padding: 9px 15px 9px 45px;
   }
-
-  .cart-icon-button {
-    margin-left: 15px;
-  }
-
-  .app-main {
-    gap: 20px;
-  }
 }
 
-/* === Десктоп (1024px и выше) === */
+/* Десктоп: ≥1024px */
 @media (min-width: 1024px) {
+  .cart-icon-button.desktop-cart {
+    display: flex;
+  }
+
+  .cart-icon-button.mobile-cart {
+    display: none;
+  }
+
   .header-content {
     flex-direction: row;
     justify-content: space-between;
@@ -665,5 +627,28 @@ body.category-menu-open {
   .search-input,
   .sort-select {
     font-size: 1em;
+  }
+}
+
+/* Очень узкие экраны */
+@media (max-width: 480px) {
+  .header-content {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .app-title {
+    font-size: 1.6em;
+  }
+
+  .header-controls {
+    gap: 8px;
+    padding: 8px 0;
+  }
+
+  .search-input,
+  .sort-select {
+    padding: 7px 15px 7px 40px;
+    font-size: 0.85em;
   }
 }

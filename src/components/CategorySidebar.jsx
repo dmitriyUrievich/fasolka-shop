@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import '../CategorySidebar.css';
 import getIcon from '../utils/IconMap'
+
 const CategorySidebar = ({ categories, products, activeCategoryId, onCategorySelect }) => {
   const [expandedCategories, setExpandedCategories] = useState(new Set());
 
@@ -34,9 +35,7 @@ const CategorySidebar = ({ categories, products, activeCategoryId, onCategorySel
   });
 
   const getProductCount = (id) => productCountByGroupId.get(id) || 0;
-for (let i = 0; i < categories.length; i++) {
-  console.log(categories[i].name); // каждый массив items
-}
+
   // Построение дерева
   const categoryMap = new Map();
   const rootCategories = [];
@@ -46,7 +45,6 @@ for (let i = 0; i < categories.length; i++) {
   });
 
   filteredCategories.forEach(cat => {
-
     if (cat.parentId && categoryMap.has(cat.parentId)) {
       categoryMap.get(cat.parentId).children.push(categoryMap.get(cat.id));
     } else {
@@ -55,7 +53,6 @@ for (let i = 0; i < categories.length; i++) {
   });
 
   const topLevel = rootCategories.sort((a, b) => a.name.localeCompare(b.name));
-  console.log(categories)
 
   // Авто-раскрытие при активной подкатегории
   useEffect(() => {
@@ -80,6 +77,10 @@ for (let i = 0; i < categories.length; i++) {
       }
       return next;
     });
+  //    if (window.innerWidth < 1024) {
+  //   document.querySelector('.category-menu-close')?.click(); // косвенный способ
+  //   // Но лучше — через пропс
+  // }
   };
 
   const handleChildClick = (childId) => {
@@ -88,18 +89,35 @@ for (let i = 0; i < categories.length; i++) {
 
   const isActive = (id) => id === activeCategoryId;
 
+// useEffect(() => {
+//   const printHierarchy = (categories, level = 0) => {
+//     categories.forEach(cat => {
+//       const indent = '  '.repeat(level);
+//       console.log(`${indent}📁 ${cat.name} (ID: ${cat.id}, Товаров: ${getProductCount(cat.id)})`);
+//       if (cat.children && cat.children.length > 0) {
+//         printHierarchy(cat.children, level + 1);
+//       }
+//     });
+//   };
+
+//   console.log('\n📦 Иерархия категорий:\n');
+//   printHierarchy(topLevel);
+// }, [topLevel, getProductCount]);
+
+
+
   return (
     <div className="category-sidebar">
       {/* Заголовок — фиксирован сверху */}
-      <div className="category-item" onClick={() => {
+      <div className="category-item all-categories" onClick={() => {
         onCategorySelect(null);
         setExpandedCategories(new Set());
       }}>
-        <span>
+        <div className="category-item-content">
           <span className="icon">🛒</span>
-          <span>Все товары</span>
-          <span className="count">({totalCount})</span>
-        </span>
+          <span className="category-text">Все товары</span>
+        </div>
+        <span className="count">({totalCount})</span>
       </div>
 
       {/* Прокручиваемая область категорий */}
@@ -120,20 +138,20 @@ for (let i = 0; i < categories.length; i++) {
             {parent.children.length > 0 && expandedCategories.has(parent.id) && (
               <ul className="sub-category-list">
                 {parent.children.map(child => (
-               <li
-                  key={child.id}
-                  className={`sub-category-item ${isActive(child.id) ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleChildClick(child.id);
-                  }}
-                >
-                  <div className="category-item-content">
-                    <span className="icon">{getIcon(child.name)}</span>
-                    <span className="category-text">{child.name}</span>
-                  </div>
-                  <span className="count">({getProductCount(child.id)})</span>
-                </li>
+                  <li
+                    key={child.id}
+                    className={`sub-category-item ${isActive(child.id) ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleChildClick(child.id);
+                    }}
+                  >
+                    <div className="category-item-content">
+                      <span className="icon">{getIcon(child.name)}</span>
+                      <span className="category-text">{child.name}</span>
+                    </div>
+                    <span className="count">({getProductCount(child.id)})</span>
+                  </li>
                 ))}
               </ul>
             )}

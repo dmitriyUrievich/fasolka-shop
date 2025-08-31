@@ -98,6 +98,26 @@
   margin: 8px 0;
   line-height: 1.5;
 }
+
+
+.product-list-header {
+  font-size: 0.875rem;
+  color: #64748b;
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+  background-color: #f8f9fa;
+  border-left: 3px solid #e2e8f0;
+  border-radius: 4px;
+  display: inline-block;
+  font-weight: 500;
+}
+
+.product-list-header strong {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+
 /* На экранах < 340px — гарантируем 1 колонку */
 @media (max-width: 339px) {
     .product-grid {
