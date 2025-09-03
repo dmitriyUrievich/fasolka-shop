@@ -95,7 +95,7 @@ const CartBasket = ({
           disabled={!isOrderValid}
           onClick={isOrderValid ? onProceedToOrder : undefined}
         >
-          {subtotal < 1000 ? `Ещё ${1000 - subtotal} ₽ до заказа` : 'Далее'}
+          {subtotal < 1000 ? `Ещё ${1000 - subtotal.toFixed()} ₽ до заказа` : 'Далее'}
         </button>
       </div>
     </div>
