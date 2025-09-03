@@ -6,7 +6,7 @@
   padding: 15px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   position: relative;
   border: 1px solid var(--border-color);
   border-radius: 16px;
@@ -267,13 +267,17 @@
 /* === Адаптивность — корзина всегда влезает === */
 @media (max-width: 600px) {
   .cart-container {
-    width: 95vw; /* Почти на всю ширину экрана */
-    max-width: 400px; /* Но не больше 400px */
-    min-width: 280px;
+    width: calc(100% - 16px); /* Учитываем padding .cart-sidebar */
+    max-width: 100%;
+    min-width: auto;
     padding: 12px;
-    margin: 0 auto;
+    margin: 0 auto !important;
     border-radius: 12px;
+    left: 8px; /* Корректировка позиционирования */
+    right: 8px;
+    position: relative;
   }
+  
 
   .cart-header h2 {
     font-size: 1.4em;
@@ -309,9 +313,15 @@
 /* На очень узких экранах — ещё компактнее */
 @media (max-width: 400px) {
   .cart-container {
-    width: 98vw;
-    max-width: 360px;
-    padding: 10px;
+    width: calc(100% - 16px); /* Учитываем padding .cart-sidebar */
+    max-width: 100%;
+    min-width: auto;
+    padding: 12px;
+    margin: 0 auto !important;
+    border-radius: 12px;
+    left: 8px; /* Корректировка позиционирования */
+    right: 8px;
+    position: relative;
   }
 
   .cart-header h2 {

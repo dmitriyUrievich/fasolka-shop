@@ -92,7 +92,9 @@ const OrderForm = ({ onSubmit, onClose }) => {
           >
             Отмена
           </button>
+          <p></p>
         </div>
+        <span></span>
       </form>
     </div>
   );

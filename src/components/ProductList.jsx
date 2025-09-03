@@ -1,10 +1,10 @@
 // src/components/ProductList.jsx
-import React, { useState, useMemo,useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import Pagination from './Pagination';
 import Map from './Map';
 import '../ProductList.css';
-
+import getPortion from '../utils/getPortion';
 const storageKey = 'ageConfirmedGlobal';
 
 const ProductList = ({
@@ -33,19 +33,42 @@ const ProductList = ({
     if (saved === 'true') setAgeConfirmed(true);
   }, []);
 
-  // 🔹 Фильтрация
+  // 🔹 Фильтрация: учитываем unit и минимальный остаток
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      if (!product) return false;
-      const matchesCategory = selectedCategoryId
-        ? product.groupId === selectedCategoryId
-        : true;
-      const matchesSearch = searchTerm
-        ? product.name.toLowerCase().includes(searchTerm.toLowerCase())
-        : true;
-      return matchesCategory && matchesSearch && product.rests > 0;
-    });
-  }, [products, selectedCategoryId, searchTerm]);
+  return products.filter((product) => {
+    if (!product) return false;
+
+    const matchesCategory = selectedCategoryId
+      ? product.groupId === selectedCategoryId
+      : true;
+
+    const matchesSearch = searchTerm
+      ? product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      : true;
+
+    // --- Проверка доступности с учётом порции ---
+    const isAvailable = (() => {
+      // Если НЕ килограмм — просто rests > 0
+      if (product.unit !== 'Kilogram') {
+        return product.rests > 0;
+      }
+
+      // Для Kilogram: определяем порцию
+      const portion = getPortion(product.name, product.unit);
+
+      // Если порция найдена — минимальный остаток = одна порция
+      if (portion) {
+        const minRest = portion.weightInGrams / 1000; // в кг
+        return product.rests >= minRest;
+      }
+
+      // Если порции нет — минимальный остаток 0.1 кг (100 грамм)
+      return product.rests >= 0.1;
+    })();
+
+    return matchesCategory && matchesSearch && isAvailable;
+  });
+}, [products, selectedCategoryId, searchTerm]);
 
   const sortedProducts = useMemo(() => {
     return [...filteredProducts].sort((a, b) => {
@@ -63,6 +86,7 @@ const ProductList = ({
       }
     });
   }, [filteredProducts, sortOption]);
+
   useEffect(() => setCurrentPage(1), [searchTerm, sortOption, selectedCategoryId]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -87,7 +111,7 @@ const ProductList = ({
   return (
     <>
       <div className="product-list-container">
-      {listHeader && <>{listHeader}</>}
+        {listHeader && <>{listHeader}</>}
         <div className="product-grid">
           {currentItems.map((product) => (
             <ProductCard
@@ -111,8 +135,7 @@ const ProductList = ({
           />
         </div>
       </div>
-
-      {/* <div className="map-section">
+     <div className="map-section">
         <h2 className="map-title">Наш Магазин на Карте</h2>
         <Map
           center={[44.675898, 37.642492]}
@@ -121,7 +144,7 @@ const ProductList = ({
           placemarkHint="Фасолька - Фермерский Рынок"
           placemarkBalloon="Свежие продукты от местных фермеров!"
         />
-      </div> */}
+      </div>
     </>
   );
 };

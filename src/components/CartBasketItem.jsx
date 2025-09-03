@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import '../CartBasketItem.css';
 import { createImageLoader } from '../utils/imageUtils';
-
+import getPortion from '../utils/getPortion';
+import { FaCircleXmark } from "react-icons/fa6";
 const CartBasketItem = ({ item, updateCartQuantity, removeFromCart }) => {
   const [imageSrc, setImageSrc] = useState(() => createImageLoader(item.id, item.name).getCurrentUrl());
 
@@ -18,6 +19,13 @@ const CartBasketItem = ({ item, updateCartQuantity, removeFromCart }) => {
     }
   };
 
+  const portion = item.unit === 'Kilogram' ? getPortion(item.name, item.unit) : null;
+  const unitLabel = item.unit === 'Kilogram'
+    ? `кг`
+    : `шт.`;
+
+  const step = portion ? portion.weightInGrams / 1000 : item.unit === 'Kilogram' ? 0.1 : 1;
+
   return (
     <div className="cart-item">
       <img
@@ -30,35 +38,48 @@ const CartBasketItem = ({ item, updateCartQuantity, removeFromCart }) => {
         height="80"
       />
       <div className="cart-item-details">
+        <div className="cart-item-header">
         <h4 className="cart-item-name">{item.name}</h4>
+          <button
+            className="cart-item-remove-inline"
+            onClick={() => removeFromCart(item.id)}
+            aria-label={`Удалить ${item.name}`}
+          >
+              &#10006;
+           </button>
+          </div>
         <p className="cart-item-price">
-          {(item.sellPricePerUnit || 0).toLocaleString('ru-RU')} ₽ / шт.
+          {(item.sellPricePerUnit || 0).toLocaleString('ru-RU')} ₽ / {unitLabel}
         </p>
         <div className="cart-item-quantity-control">
           <button
-            onClick={() => updateCartQuantity(item.id, item.quantityInCart - 1)}
-            disabled={item.quantityInCart <= 1}
+            onClick={() => updateCartQuantity(item.id, item.quantityInCart - step)}
+            disabled={item.quantityInCart <= step}
             aria-label="Уменьшить количество"
           >
             −
           </button>
-          <span>{item.quantityInCart}</span>
-          <button
-            onClick={() => updateCartQuantity(item.id, item.quantityInCart + 1)}
-            disabled={item.quantityInCart >= item.rests}
-            aria-label="Увеличить количество"
-          >
-            +
-          </button>
+          <span>
+            {item.unit === 'Kilogram'
+              ? `${item.quantityInCart.toFixed(3)} кг`
+              : `${Math.round(item.quantityInCart)} шт.`}
+          </span>
+
+           <div className="tooltip">
+              <button
+                onClick={() => updateCartQuantity(item.id, item.quantityInCart + step)}
+                disabled={item.quantityInCart + step > item.rests}
+                aria-label="Увеличить количество"
+              >
+                +
+              </button>
+              {/* Показываем подсказку, только если достигнут лимит */}
+              {item.quantityInCart + step > item.rests && (
+                <span className="tooltip-text">Товара больше нет</span>
+              )}
+          </div>
         </div>
       </div>
-      <button
-        className="cart-item-remove"
-        onClick={() => removeFromCart(item.id)}
-        aria-label={`Удалить ${item.name}`}
-      >
-        Удалить
-      </button>
     </div>
   );
 };

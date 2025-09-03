@@ -1,15 +1,18 @@
-import React, { useState, useMemo, useRef } from 'react';
+// components/ProductCard.js
+import React, { useState, useRef } from 'react';
 import '../ProductCard.css';
 import { createImageLoader } from '../utils/imageUtils';
+import getPortion from '../utils/getPortion';
 
 const capitalizeFirstLetter = (string) =>
   string ? string.charAt(0).toUpperCase() + string.slice(1) : '';
 
 const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageConfirmed, onConfirmAge }) => {
-  const { id, name: rawName, sellPricePerUnit, rests, productType } = product || {};
+  const { id, name: rawName, sellPricePerUnit, rests, productType, unit } = product || {};
 
   const imageLoaderRef = useRef(null);
 
+  // --- Обработка изображения (без изменений) ---
   if (!imageLoaderRef.current || imageLoaderRef.current.productId !== id) {
     const hasValidId = id != null && id !== 'undefined' && id !== '';
     if (!hasValidId) {
@@ -21,7 +24,7 @@ const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageCon
       };
     } else {
       const loader = createImageLoader(id, rawName);
-      loader.productId = id; // Для отладки
+      loader.productId = id;
       imageLoaderRef.current = loader;
     }
   }
@@ -35,12 +38,10 @@ const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageCon
   };
 
   const onImageError = () => {
-    //console.error(`[ImageError] Не удалось загрузить: ${imageSrc}`);
     const loader = imageLoaderRef.current;
     if (loader?.handleImageError) {
-      loader.handleImageError(); // Меняем состояние
+      loader.handleImageError();
       const newSrc = loader.getCurrentUrl();
-      //console.log(`[ImageError] Переключаем на: ${newSrc}`);
       setImageSrc(newSrc);
     }
   };
@@ -56,6 +57,42 @@ const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageCon
   const itemInCart = cartItems.find((item) => item.id === id);
   const quantity = itemInCart ? itemInCart.quantityInCart : 0;
   const total = quantity * price;
+
+  // 🔹 Определяем порцию ТОЛЬКО для Kilogram
+  const portion = unit === 'Kilogram' ? getPortion(rawName, unit) : null;
+
+  // 🔹 Сообщение об остатке — зависит от unit
+  const getRestsMessage = () => {
+    const amount = rests;
+
+    if (unit === 'Kilogram') {
+      if (amount > 5) return 'Товара много';
+      if (amount > 0) return `Осталось ${parseFloat(amount).toFixed(1)} кг`;
+      return 'Нет в наличии';
+    }
+
+    if (amount > 5) return 'Осталось много';
+    if (amount > 0) return `Осталось ${Math.floor(amount)} шт.`;
+    return 'Нет в наличии';
+  };
+
+  // 🔹 Поведение зависит от unit
+  const isWeighted = unit === 'Kilogram';
+
+  // 🔹 Для кг: шаг — порция или 0.1 кг. Для штук — шаг 1.
+  const increment = isWeighted && portion
+    ? portion.weightInGrams / 1000 // шаг в кг
+    : isWeighted
+      ? 0.1 // шаг 100 грамм
+      : 1;
+
+  const decrement = increment;
+
+  const maxAvailable = isWeighted
+    ? rests
+    : Math.floor(rests);
+
+  const nextStepAvailable = quantity + increment <= maxAvailable;
 
   return (
     <div className="product-card">
@@ -79,9 +116,18 @@ const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageCon
         <p className="product-card__price">
           {price ? `${price.toLocaleString('ru-RU')} ₽` : 'Цена не указана'}
         </p>
+
+        {/* 🔹 Порция — только для кг */}
+        {portion && (
+          <p className="product-card__portion">
+            <small>Порция: {portion.portionLabelShort}</small>
+          </p>
+        )}
+
         <p className="product-card__quantity">
-          {rests > 5 ? 'Товара много' : `Осталось ${rests} шт.`}
+          {getRestsMessage()}
         </p>
+
         {isAgeRestricted && !ageConfirmed ? (
           <button className="product-card__button" onClick={onConfirmAge}>
             Подтвердить возраст
@@ -93,25 +139,34 @@ const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageCon
                 <button
                   className="btn-quantity"
                   aria-label="Уменьшить количество"
-                  onClick={() => updateCartQuantity(product.id, quantity - 1)}
+                  onClick={() => updateCartQuantity(product.id, quantity - decrement)}
                   disabled={quantity === 0}
                 >
                   −
                 </button>
 
                 <div className="quantity-info">
-                  <div className="quantity">{quantity}</div>
+                  <div className="quantity">
+                    {isWeighted
+                      ? `${quantity.toFixed(3)} кг`
+                      : `${Math.round(quantity)} шт.`}
+                  </div>
                   <div className="total-price">{total.toLocaleString('ru-RU')} ₽</div>
                 </div>
 
-                <button
-                  className="btn-quantity"
-                  aria-label="Увеличить количество"
-                  onClick={() => addToCart(product)}
-                  disabled={quantity >= rests || rests === 0 || disableBuy}
-                >
-                  +
-                </button>
+                <div className="tooltip">
+                  <button
+                    className="btn-quantity"
+                    aria-label="Увеличить количество"
+                    onClick={() => addToCart(product)}
+                    disabled={!nextStepAvailable || disableBuy}
+                  >
+                    +
+                  </button>
+                  {(!nextStepAvailable && !disableBuy) && (
+                    <span className="tooltip-text">Товара нет</span>
+                  )}
+                </div>
               </div>
             ) : (
               <button

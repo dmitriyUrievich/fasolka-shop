@@ -1,13 +1,26 @@
 // src/components/Pagination.js
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import '../Pagination.css';
+import { FaArrowCircleRight, FaArrowCircleLeft } from "react-icons/fa";
 
 const Pagination = ({ itemsPerPage, totalItems, paginate, currentPage }) => {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+  
+  // 🔹 Определяем, является ли устройство мобильным
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 600);
+  
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth <= 500);
+    };
+    
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
-  // 🔹 Мемоизация диапазона страниц
+  // 🔹 Мемоизация диапазона страниц с адаптивным количеством
   const pageNumbers = useMemo(() => {
-    const maxPagesToShow = 5;
+    const maxPagesToShow = isMobile ? 2 : 5; // На мобильных показываем только 2 страницы
     let startPage, endPage;
 
     if (totalPages <= maxPagesToShow) {
@@ -32,7 +45,7 @@ const Pagination = ({ itemsPerPage, totalItems, paginate, currentPage }) => {
       pages.push(i);
     }
     return pages;
-  }, [totalPages, currentPage]);
+  }, [totalPages, currentPage, isMobile]);
 
   if (totalPages < 2) return null;
 
@@ -40,12 +53,12 @@ const Pagination = ({ itemsPerPage, totalItems, paginate, currentPage }) => {
     <nav className="pagination-nav">
       <ul className="pagination-list">
         {currentPage > 1 && (
-          <li className="pagination-item">
+          <li className="pagination-item pagination-arrow">
             <button
               onClick={() => paginate(currentPage - 1)}
               className="pagination-button"
             >
-              Предыдущая
+             <FaArrowCircleLeft />
             </button>
           </li>
         )}
@@ -80,12 +93,12 @@ const Pagination = ({ itemsPerPage, totalItems, paginate, currentPage }) => {
         )}
 
         {currentPage < totalPages && (
-          <li className="pagination-item">
+          <li className="pagination-item pagination-arrow">
             <button
               onClick={() => paginate(currentPage + 1)}
               className="pagination-button"
             >
-              Следующая
+             <FaArrowCircleRight />
             </button>
           </li>
         )}

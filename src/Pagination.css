@@ -58,7 +58,7 @@
 }
 
 /* Адаптивность для пагинации */
-@media (max-width: 600px) {
+@media (max-width: 500px) {
     .pagination-list {
         flex-wrap: wrap;
         justify-content: center;
@@ -68,7 +68,7 @@
         margin: 5px 3px;
     }
     .pagination-button {
-        padding: 8px 14px;
-        font-size: 0.9em;
+        min-width: 20px; /* Уменьшаем на мобильных */
+        padding: 3px 6px;
     }
 }

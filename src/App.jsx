@@ -4,6 +4,7 @@ import './App.css';
 import ProductList from './components/ProductList';
 import CategorySidebar from './components/CategorySidebar';
 import { generateDailyOrderId } from './utils/orderUtils';
+import getPortion from './utils/getPortion';
 import Swal from 'sweetalert2';
 
 const CartBasket = React.lazy(() => import('./components/CartBasket'));
@@ -129,17 +130,23 @@ function App() {
   // Работа с корзиной
   const addToCart = useCallback((productToAdd) => {
     setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === productToAdd.id);
+      const { id, unit, rests } = productToAdd;
+      const portion = unit === 'Kilogram' ? getPortion(productToAdd.name, unit) : null;
+      const step = portion ? portion.weightInGrams / 1000 : unit === 'Kilogram' ? 0.1 : 1;
+
+      const existing = prev.find((item) => item.id === id);
       if (existing) {
+        const newQty = Math.min(existing.quantityInCart + step, existing.rests);
         return prev.map((item) =>
-          item.id === productToAdd.id
-            ? { ...item, quantityInCart: Math.min(item.quantityInCart + 1, item.rests) }
-            : item
+          item.id === id ? { ...item, quantityInCart: newQty } : item
         );
       }
-      return productToAdd.rests > 0
-        ? [...prev, { ...productToAdd, quantityInCart: 1 }]
-        : prev;
+
+      if (rests >= step) {
+        return [...prev, { ...productToAdd, quantityInCart: step }];
+      }
+
+      return prev;
     });
   }, []);
 
@@ -147,19 +154,30 @@ function App() {
     setCartItems((prev) => prev.filter((item) => item.id !== productId));
   }, []);
 
-  const updateCartQuantity = useCallback((productId, newQuantity) => {
-    setCartItems((prev) =>
-      prev
-        .map((item) => {
-          if (item.id === productId) {
-            const qty = Math.max(0, Math.min(newQuantity, item.rests));
-            return qty === 0 ? null : { ...item, quantityInCart: qty };
+const updateCartQuantity = useCallback((productId, newQuantity) => {
+  setCartItems((prev) =>
+    prev.map((item) => {
+        if (item.id === productId) {
+          const portion = item.unit === 'Kilogram' ? getPortion(item.name, item.unit) : null;
+          const step = portion ? portion.weightInGrams / 1000 : item.unit === 'Kilogram' ? 0.1 : 1;
+
+          let qty = Math.max(0, newQuantity);
+          if (item.unit !== 'Kilogram' && !portion) {
+            qty = Math.floor(qty); // штуки — только целые
+          } else {
+            // Для кг: округляем к ближайшему шагу (вниз)
+            qty = ((qty / step) * step).toFixed(2);
           }
-          return item;
-        })
-        .filter(Boolean)
-    );
-  }, []);
+
+          qty = Math.min(qty, item.rests);
+
+          return qty === 0 ? null : { ...item, quantityInCart: qty };
+        }
+        return item;
+      })
+      .filter(Boolean)
+  );
+}, []);
 
   const totalCartItems = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.quantityInCart, 0),
@@ -202,7 +220,8 @@ function App() {
       if (response.ok) {
         Swal.fire({
           title: '🎉 Заказ оформлен!',
-          text: `Ваш заказ №${orderData.id} отправлен. Спасибо!`,
+          text: `Ваш заказ №${orderData.id} отправлен. Спасибо! \n 
+          Пожалуйста запомните номер.`,
           icon: 'success',
           confirmButtonText: 'Ок',
           background: '#f8f9fa',
@@ -227,7 +246,7 @@ function App() {
     }
   };
 
-  const clearCart = () => {
+  const onClearCart = () => {
     setCartItems([]);
     setIsCartOpen(false);
   };
@@ -261,10 +280,7 @@ function App() {
 
           {/* Логотип */}
           <h1 className="app-title">
-            <svg className="app-title-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2-1.343-2-3-2zM9 14V8m6 6V8m-3 6v2m-3-2c-.828 0-1.5.672-1.5 1.5S7.172 17 8 17s1.5-.672 1.5-1.5S8.828 14 8 0-3-2-3-2zM16 14c-.828 0-1.5.672-1.5 1.5S15.172 17 16 17s1.5-.672 1.5-1.5S16.828 14 16 14z" />
-            </svg>
-            Фасолька
+            <img src="/log-header.png" className="logo-header" alt="Логотип Фасоль" />   
           </h1>
 
           {/* Мобильная корзина */}
@@ -276,7 +292,7 @@ function App() {
             <svg className="cart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
-            {totalCartItems > 0 && <span className="cart-item-count">{totalCartItems}</span>}
+            {totalCartItems > 0 && <span className="cart-item-count">{Math.ceil(totalCartItems)}</span>}
           </button>
 
           {/* Поиск + сортировка + ДЕСКТОПНАЯ корзина */}
@@ -321,7 +337,7 @@ function App() {
               <svg className="cart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-              {totalCartItems > 0 && <span className="cart-item-count">{totalCartItems}</span>}
+              {totalCartItems > 0 && <span className="cart-item-count">{Math.ceil(totalCartItems)}</span>}
             </button>
           </div>
         </div>
@@ -399,7 +415,7 @@ function App() {
                 <CartBasket
                   isSidebar={true}
                   onClose={() => setIsCartOpen(false)}
-                  onClearCart={clearCart}
+                  onClearCart={onClearCart}
                   cartItems={cartItems}
                   removeFromCart={removeFromCart}
                   updateCartQuantity={updateCartQuantity}

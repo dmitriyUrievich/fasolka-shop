@@ -60,6 +60,7 @@ body.modal-open {
 
 /* === Логотип — теперь отдельно от корзины === */
 .app-title {
+  height: 60px;
   font-size: 2.5em;
   margin: 0;
   font-weight: bold;
@@ -72,7 +73,12 @@ body.modal-open {
   flex: 1 0 200px;
   min-width: 180px;
 }
-
+.logo-header {
+  height: 50px;     /* Пример: высота 50px — подбери под свой дизайн */
+  width: auto;
+  max-width: 100%;  /* Не выйдет за размеры контейнера */
+  display: block;
+}
 .app-title-icon {
   height: 35px;
   width: 35px;
@@ -200,7 +206,6 @@ body.modal-open {
   stroke-width: 2;
 }
 
-
 .cart-item-count {
   position: absolute;
   top: -8px;
@@ -224,9 +229,12 @@ body.modal-open {
 }
 
 .products-and-cart-container {
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
   display: flex;
-  flex: 1;
-  min-width: 0;
+  gap: 30px;
+  justify-content: space-between;
 }
 
 .app-main {
@@ -235,24 +243,21 @@ body.modal-open {
   padding: 15px;
   box-sizing: border-box;
 }
-
 /* === Сайдбар корзины (справа) === */
 .cart-sidebar {
   flex: 0 0 450px;
-  width: 100%;
-  max-width: min(450px, 100vw);
+  width: 450px; /* Фиксированная ширина */
+  max-width: 100%; /* Не превышает родителя */
+  min-width: 320px; /* Минимальная ширина */
   height: calc(100vh - 60px);
-  position: sticky;
-  top: 60px;
   overflow-y: auto;
   overflow-x: hidden;
-  background-color: white;
-  border-left: 1px solid #e0e0e0;
-  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
   padding: 20px 16px;
   box-sizing: border-box;
   z-index: 80;
+  margin: 0 auto; /* Отцентрировать по горизонтали */
 }
+
 /* === Меню категорий — выдвигается слева, НЕ модальное === */
 .category-menu-sidebar {
   position: fixed;
@@ -309,16 +314,21 @@ body.category-menu-open {
 }
 /* Показываем бургер на экранах < 768px */
 @media (max-width: 767.98px) {
-  .cart-sidebar {
+.cart-sidebar {
     position: fixed;
     top: 60px;
-    right: 0;
-    width: 100vw;
+    left: 0; /* Заменяем right:0 на left:0 */
+    right: 0; /* Добавляем правую привязку */
+    width: auto; /* Убираем 100vw */
     height: calc(100vh - 60px);
-    max-width: 100vw;
+    max-width: none; /* Убираем ограничение max-width */
     border-radius: 0;
     transform: none;
     z-index: 1000;
+    /* Добавляем паддинг для избежания наезда на края */
+    padding-left: 8px;
+    padding-right: 8px;
+    box-sizing: border-box;
   }
   
   .header-content {

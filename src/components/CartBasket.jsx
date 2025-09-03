@@ -6,7 +6,7 @@ import CartBasketItem from './CartBasketItem';
 const CartBasket = ({ 
   cartItems = [], 
   removeFromCart, 
-  onClick, 
+  onClearCart, 
   updateCartQuantity, 
   onClose, 
   onProceedToOrder 
@@ -45,7 +45,7 @@ const CartBasket = ({
 
       <button
         className="cart-clear-button"
-        onClick={onClick}
+        onClick={onClearCart}
         disabled={cartItems.length === 0}
         title={cartItems.length === 0 ? 'Корзина уже пуста' : 'Очистить корзину'}
       >

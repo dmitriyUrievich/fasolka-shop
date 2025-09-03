@@ -29,7 +29,7 @@ const getProducts = async (shopId) => {
 export const getCatalog = async (shopId) => {
   try {
     const response = await apiClient.get(`/shops/${shopId}/product-groups`);
-    console.log(`[API] Ответ product-groups для магазина ${shopId}:`, response.data);
+    //console.log(`[API] Ответ product-groups для магазина ${shopId}:`, response.data);
     return response.data.items || [];
   } catch (error) {
     console.error(`[API Error] Ошибка при получении каталога для магазина ${shopId}:`, error.response?.data || error.message);
