@@ -15,7 +15,7 @@ const CategorySidebar = ({ categories, products, activeCategoryId, onCategorySel
 
   // Фильтрация категорий
   const isBlacklisted = (name) =>
-    ['ОБОРУДОВАНИЕ', 'Вода 19л', 'ПИКНИК', 'ХОЛОДНЫЙ ЧАЙ', 'Без группы', 'Пасха']
+    ['ОБОРУДОВАНИЕ', 'Вода 19л', 'ПИКНИК', 'ХОЛОДНЫЙ ЧАЙ', 'Без группы', 'Пасха','Сигареты']
       .some(word => name.includes(word) || word === name);
 
   const filteredCategories = categoryList
@@ -77,10 +77,7 @@ const CategorySidebar = ({ categories, products, activeCategoryId, onCategorySel
       }
       return next;
     });
-  //    if (window.innerWidth < 1024) {
-  //   document.querySelector('.category-menu-close')?.click(); // косвенный способ
-  //   // Но лучше — через пропс
-  // }
+
   };
 
   const handleChildClick = (childId) => {
@@ -89,26 +86,8 @@ const CategorySidebar = ({ categories, products, activeCategoryId, onCategorySel
 
   const isActive = (id) => id === activeCategoryId;
 
-// useEffect(() => {
-//   const printHierarchy = (categories, level = 0) => {
-//     categories.forEach(cat => {
-//       const indent = '  '.repeat(level);
-//       console.log(`${indent}📁 ${cat.name} (ID: ${cat.id}, Товаров: ${getProductCount(cat.id)})`);
-//       if (cat.children && cat.children.length > 0) {
-//         printHierarchy(cat.children, level + 1);
-//       }
-//     });
-//   };
-
-//   console.log('\n📦 Иерархия категорий:\n');
-//   printHierarchy(topLevel);
-// }, [topLevel, getProductCount]);
-
-
-
   return (
     <div className="category-sidebar">
-      {/* Заголовок — фиксирован сверху */}
       <div className="category-item all-categories" onClick={() => {
         onCategorySelect(null);
         setExpandedCategories(new Set());
@@ -120,7 +99,6 @@ const CategorySidebar = ({ categories, products, activeCategoryId, onCategorySel
         <span className="count">({totalCount})</span>
       </div>
 
-      {/* Прокручиваемая область категорий */}
       <div className="category-sidebar__scrollable">
         {topLevel.map(parent => (
           <React.Fragment key={parent.id}>

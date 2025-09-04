@@ -202,6 +202,8 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
       customer_name: customerData.name,
       phone: customerData.phone,
       address: customerData.address,
+      comment: customerData.comment,          
+      deliveryTime: customerData.deliveryTime,  
       total: totalCartPrice,
       cart: cartItems.map((item) => ({
         name: item.name,
