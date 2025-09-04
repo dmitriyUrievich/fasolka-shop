@@ -1,97 +1,229 @@
 /* src/components/OrderForm.css */
+
 .order-form-container {
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  max-width: 500px;
-  margin: 20px auto;
+  padding: 25px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  max-width: 520px;
+  margin: 30px auto;
   box-sizing: border-box;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
 .order-form-container h2 {
   text-align: center;
-  color: #333;
-  margin-bottom: 25px;
+  color: #2c3e50;
+  margin-bottom: 28px;
   font-size: 1.8em;
+  font-weight: 600;
+  letter-spacing: -0.5px;
 }
 
 .order-form-container .form-group {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .order-form-container label {
   display: block;
   margin-bottom: 8px;
-  font-weight: bold;
-  color: #555;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.95em;
 }
 
+/* Стили для текстовых полей и телефона */
 .order-form-container input[type="text"],
-.order-form-container input[type="tel"] {
+.order-form-container input[type="tel"],
+.order-form-container input[type="time"] {
   width: 100%;
-  padding: 12px;
+  padding: 12px 14px;
   border: 1px solid #ddd;
-  border-radius: 5px;
+  border-radius: 6px;
   font-size: 1em;
   box-sizing: border-box;
-  transition: border-color 0.2s ease-in-out;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background-color: #fdfdfd;
 }
-.order-form-container input[type="tel"] {
-  font-family: 'Courier New', monospace; /* Цифры по ровнее */
+
+/* Улучшение внешнего вида для поля времени */
+.order-form-container input[type="time"] {
+  font-family: 'Courier New', monospace;
+  color: #2c3e50;
 }
-.order-form-container input[type="text"]:focus-visible,
-.order-form-container input[type="tel"]:focus-visible {
-  border-color: #72a450; 
+
+/* Фокус для всех полей */
+.order-form-container input[type="text"]:focus,
+.order-form-container input[type="tel"]:focus,
+.order-form-container input[type="time"]:focus,
+.order-form-container textarea:focus {
+  border-color: #8bc34a;
+  box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.15);
   outline: none;
 }
 
-.order-form-container .input-error {
-  border-color: #e74c3c; /* Цвет ошибки */
+/* Стиль для поля телефона */
+.order-form-container input[type="tel"] {
+  font-family: 'Courier New', monospace;
+}
+
+/* Стиль для textarea (комментарий) */
+.order-form-container textarea.textarea-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1em;
+  font-family: 'Segoe UI', sans-serif;
+  color: #2c3e50;
+  background-color: #fdfdfd;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.order-form-container textarea.textarea-input:focus {
+  border-color: #8bc34a;
+  box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.15);
+  outline: none;
+}
+
+/* Обработка ошибок */
+.order-form-container .input-error,
+.order-form-container textarea.input-error {
+  border-color: #e74c3c;
+  background-color: #fdf2f2;
 }
 
 .order-form-container .error-message {
   color: #e74c3c;
   font-size: 0.85em;
-  margin-top: 5px;
+  margin-top: 6px;
   display: block;
+  font-weight: 500;
+  letter-spacing: -0.2px;
 }
 
+/* Кнопки */
 .order-form-container .form-actions {
   display: flex;
   justify-content: space-between;
-  gap: 15px;
+  gap: 16px;
   margin-top: 30px;
 }
 
 .order-form-container .submit-button,
 .order-form-container .cancel-button {
-  padding: 12px 25px;
+  padding: 13px 24px;
   border: none;
-  border-radius: 5px;
-  font-size: 1.1em;
+  border-radius: 6px;
+  font-size: 1.05em;
+  font-weight: 600;
   cursor: pointer;
-  min-height: 40px; 
-  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
-  flex: 1; /* Чтобы кнопки занимали равное пространство */
+  min-height: 44px;
+  transition: all 0.2s ease;
+  flex: 1;
+  text-align: center;
 }
 
 .order-form-container .submit-button {
-  background-color: #8bc34a; /* Зеленый цвет */
+  background-color: #8bc34a;
   color: white;
 }
 
-.order-form-container .submit-button:hover {
+.order-form-container .submit-button:hover:not(:disabled) {
   background-color: #72a450;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(139, 195, 74, 0.2);
+}
+
+.order-form-container .submit-button:active {
+  transform: translateY(0);
+}
+
+.order-form-container .submit-button:disabled {
+  background-color: #b8d6a0;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .order-form-container .cancel-button {
-  background-color: #ccc;
-  color: #333;
+  background-color: #f1f1f1;
+  color: #555;
+  border: 1px solid #ddd;
 }
 
 .order-form-container .cancel-button:hover {
-  background-color: #bbb;
-  transform: translateY(-1px);
+  background-color: #e5e5e5;
+  transform: translateY(-2px);
+}
+
+.order-form-container .cancel-button:active {
+  transform: translateY(0);
+}
+.order-form-container select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1em;
+  background-color: #fdfdfd;
+  color: #2c3e50;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+.order-form-container select:focus {
+  border-color: #8bc34a;
+  box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.15);
+  outline: none;
+}
+/* Адаптивность на мобильных */
+@media (max-width: 540px) {
+  .order-form-container {
+    padding: 16px;
+    margin: 10px;
+    max-width: 100%;
+    border-radius: 8px;
+  }
+
+  .order-form-container h2 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+  }
+
+  .order-form-container .form-group {
+    margin-bottom: 10px;
+  }
+
+  .order-form-container select,
+  .order-form-container input[type="text"],
+  .order-form-container input[type="tel"] {
+    padding: 10px 10px;
+    font-size: 0.95em;
+  }
+
+  .order-form-container .form-actions {
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .order-form-container .submit-button,
+  .order-form-container .cancel-button {
+    width: 100%;
+    padding: 12px;
+    font-size: 1em;
+  }
+
+  .order-form-container .error-message {
+    font-size: 0.8em;
+    margin-top: 4px;
+  }
 }

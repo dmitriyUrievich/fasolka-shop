@@ -37,6 +37,7 @@ const ProductList = ({
   const filteredProducts = useMemo(() => {
   return products.filter((product) => {
     if (!product) return false;
+    if (product.productType === 'Tobacco') return false;
 
     const matchesCategory = selectedCategoryId
       ? product.groupId === selectedCategoryId

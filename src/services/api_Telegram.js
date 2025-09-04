@@ -231,6 +231,7 @@ bot.on('callback_query', async (q) => {
 app.post('/order', async (req, res) => {
   const o = req.body;
 
+  // Валидация обязательных полей
   if (!o?.id || !o.customer_name || !o.phone || !o.address || !o.total || !Array.isArray(o.cart)) {
     return res.status(400).json({ 
       success: false, 
@@ -238,31 +239,41 @@ app.post('/order', async (req, res) => {
     });
   }
 
+  // Установка статуса
   o.status = 'new';
   orders.set(o.id, o);
 
+  // Формируем список товаров
   let cartText = '';
   o.cart.forEach((it, i) => {
-    cartText += `${i + 1}) ${it.name} — ${it.quantity}×${it.price}₽ = ${it.quantity * it.price}₽\n`;
+    const unitLabel = it.unit === 'Kilogram' ? 'кг' : 'шт';
+    cartText += `${i + 1}) ${it.name} — ${it.quantity}${unitLabel} × ${it.price}₽ = ${(it.quantity * it.price).toFixed(2)}₽\n`;
   });
 
+  // Подготовка дополнительных полей
+  const commentText = o.comment ? `\n💬 Комментарий: ${o.comment}` : '';
+  const deliveryText = o.deliveryTime ? `\n⏰ Время доставки: ${o.deliveryTime}` : '';
+
+  // Полное сообщение в Telegram
   const msg = `
-🛒 Новый заказ
+🛒 <b>Новый заказ</b>
 
-Номер: ${o.id}
-Имя: ${o.customer_name}
-Адрес: ${o.address}
-Телефон: ${o.phone}
+🧾 Номер: <code>${o.id}</code>
+👤 Имя: ${o.customer_name}
+🏠 Адрес: ${o.address}
+📞 Телефон: ${o.phone}
+ ${deliveryText}
+ ${commentText}
 
-Корзина:
+📦 <b>Корзина:</b>
 ${cartText}
 
-Итого: ${o.total}₽
-Статус: ${STATUS_LABEL[o.status]}
+💰 <b>Итого:</b> ${o.total.toFixed(2)}₽
+📌 Статус: ${STATUS_LABEL[o.status]}
   `.trim();
 
   try {
-    // Отправляем сообщение всем разрешённым чатам
+    // Отправляем всем разрешённым чатам
     await Promise.all(
       ALLOWED_CHAT_IDS.map(chatId =>
         bot.sendMessage(chatId, msg, { parse_mode: 'HTML' }).catch(err => {
@@ -273,7 +284,7 @@ ${cartText}
 
     res.status(200).json({ message: 'Заказ успешно обработан' });
   } catch (e) {
-    console.error('Ошибка отправки сообщения:', e);
+    console.error('Ошибка отправки сообщения в Telegram:', e);
     res.status(500).json({ success: false, message: 'Ошибка отправки уведомления' });
   }
 });
