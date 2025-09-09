@@ -29,16 +29,16 @@
 }
 /* Основная сетка карточек */
 /* Используем auto-fit + minmax, чтобы кол-во колонок подбиралось автоматически и не ломало макет */
-.product-grid {
+/* .product-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* auto-fit подберёт кол-во колонок */
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     grid-auto-rows: minmax(320px, auto);
     gap: 18px;
     padding: 12px 0;
     justify-content: center;
     justify-items: stretch;
     box-sizing: border-box;
-}
+} */
 .status-message.loading-placeholder {
   display: flex;
   flex-direction: column;

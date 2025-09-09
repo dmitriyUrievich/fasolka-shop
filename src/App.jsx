@@ -274,7 +274,7 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
       <meta name="keywords" content="доставка овощей и фруктов, продуктовый магазин, молочка, мясо, Южная Озереевка" />
       
       {/* Open Graph — динамически (если нужно) */}
-      <meta property="og:title" content="Фасолька — Свежие продукты с доставкой" />
+      <meta property="og:title" content="Фасоль — Свежие продукты с доставкой" />
       <meta property="og:description" content="Закажите свежие продукты с доставкой на дом." />
       <meta property="og:image" content="%PUBLIC_URL%/basket.jpg" />
       <meta property="og:url" content="https://fasol-nvrsk.ru/" />
