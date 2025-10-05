@@ -4,34 +4,44 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "server": "node ./src/services/api_Telegram.js",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "dev": "concurrently \"npm:client\" \"npm:server\"",
+    "client": "vite",
+    "server": "nodemon",
+    "t": "tsc",
+    "build": "tsc && vite build",
+    "start": "node build/server.js",
+    "lint": "eslint ."
   },
   "dependencies": {
+    "@a2seven/yoo-checkout": "^1.1.4",
     "axios": "^1.10.0",
+    "cors": "^2.8.5",
     "dotenv": "^17.0.1",
     "express": "^5.1.0",
     "node-telegram-bot-api": "^0.63.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-icons": "^5.5.0",
-    "sweetalert2": "^11.22.4"
+    "sweetalert2": "^11.22.4",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.5.2",
     "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.1",
     "eslint": "^9.29.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.2.0",
+    "nodemon": "^3.1.10",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.11",
+    "typescript": "^5.9.3",
     "vite": "^7.0.0"
   }
 }
