@@ -18,7 +18,7 @@
   animation-delay: calc(var(--card-delay, 0) * 0.1s);
 }
 
-/* Обёртка изображения: используем одну переменную высоты и фиксируем её */
+/* Обёртка изображения: используем одну переменную высоты и фиксируем её
 .product-card__image-wrapper {
   width: 100%;
   height: var(--card-image-height, 180px);
@@ -26,25 +26,25 @@
   max-height: var(--card-image-height, 180px);
   overflow: hidden;
   position: relative;
-  display: flex;               /* центрирует <img> внутри */
+  display: flex;             
   align-items: center;
   justify-content: center;
   background-color: #fff;
-  padding: 6px;                /* небольшой отступ, чтобы не было "прижатости" */
+  padding: 6px;               
   box-sizing: border-box;
-}
+} */
 
 /* Само изображение — cover, чтобы одинаково кадрироваться и не менять размеры контейнера */
-.product-card__image {
-  width: auto;                 /* сохраняем пропорции (ширина авто) */
-  max-width: 100%;             /* не вылезает за ширину контейнера */
-  height: auto;                /* высота авто, не принудительно 100% */
-  max-height: 100%;            /* не больше контейнера */
-  object-fit: cover;         /* НЕ обрезаем изображение */
+/* .product-card__image {
+  width: auto;                 
+  max-width: 100%;             
+  height: auto;                
+  max-height: 100%;            
+  object-fit: cover;         
   object-position: center;
   display: block;
   transition: filter .24s ease, transform .24s ease;
-}
+} */
 .product-card:hover .product-card__image {
   transform: scale(1.1); /* Легкое увеличение при наведении */
 }
@@ -123,7 +123,7 @@
 }
 
 /* Название/текст оставляем как есть (указыв. одно правило), можно падать в 2-3 строки */
-.product-card__name {
+/* .product-card__name {
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--farm-dark-green);
@@ -136,17 +136,17 @@
   min-height: 2.5em;
   word-wrap: break-word;
   word-break: break-word;
-}
+} */
 
 /* Цена/количество — компактные блоки */
-.product-card__price { font-size: 1.35rem; font-weight: 700; color: var(--farm-green); margin: 0; }
-.product-card__quantity { font-size: .95rem; color:#666; margin: 0; }
+/* .product-card__price { font-size: 1.35rem; font-weight: 700; color: var(--farm-green); margin: 0; } */
+/* .product-card__quantity { font-size: .95rem; color:#666; margin: 0; } */
 
 /* Кнопка: занять нижнюю часть контента (margin-top:auto),
    фиксированная высота/внутренний отступ, не даём ей сжиматься */
-.product-card__button {
-  margin-top: auto;        /* толкает кнопку к низу карточки */
-  flex-shrink: 0;          /* не сжимается */
+/* .product-card__button {
+  margin-top: auto;        
+  flex-shrink: 0;          
   padding: 10px 14px;
   border: none;
   border-radius: 15px;
@@ -156,9 +156,9 @@
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  min-height: 44px;        /* удобный размер для тача */
+  min-height: 44px;
   box-sizing: border-box;
-}
+} */
 
 .product-card__button:disabled { 
   background: #BDBDBD; 

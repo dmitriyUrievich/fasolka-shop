@@ -142,8 +142,8 @@ const ProductList = ({
           center={[44.675898, 37.642492]}
           zoom={12}
           placemark={[44.675898, 37.642492]}
-          placemarkHint="Фасолька - Фермерский Рынок"
-          placemarkBalloon="Свежие продукты от местных фермеров!"
+          placemarkHint="Фасоль"
+          placemarkBalloon="Мы находимся по адресу: пер. Торпедный д4."
         />
       </div>
     </>

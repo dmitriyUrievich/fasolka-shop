@@ -1,5 +1,6 @@
 // src/App.js
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Helmet } from 'react-helmet-async';
 import './App.css';
 import ProductList from './components/ProductList';
 import CategorySidebar from './components/CategorySidebar';
@@ -333,6 +334,18 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
   }, []);
 
   return (
+    <> 
+    <Helmet>
+      <title>Фасоль — ваш магазни продуктов</title>
+      <meta name="description" content="Свежие овощи, фрукты, мясо и молочка с доставкой от фермеров." />
+      <meta name="keywords" content="доставка овощей и фруктов, продуктовый магазин, молочка, мясо, Южная Озереевка" />
+      
+      {/* Open Graph — динамически (если нужно) */}
+      <meta property="og:title" content="Фасоль — Свежие продукты с доставкой" />
+      <meta property="og:description" content="Закажите свежие продукты с доставкой на дом." />
+      <meta property="og:image" content="%PUBLIC_URL%/basket.jpg" />
+      <meta property="og:url" content="https://fasol-nvrsk.ru/" />
+    </Helmet>
     <div className="app-container">
       <header className="app-header">
         <div className="header-content">
@@ -545,6 +558,7 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
         </div>
       </footer>
     </div>
+    </>
   );
 }
 

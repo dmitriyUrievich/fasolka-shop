@@ -1,53 +1,119 @@
 // src/components/YandexMap.js
 import React, { useEffect, useRef } from 'react';
-import '../YandexMap.css'; // Стили для карты
+import '../YandexMap.css';
+
+const MAP_SCRIPT_ID = 'yandex-maps-script';
+const API_KEY = '4abf5f7f-8f77-4fe3-a958-ff7b22c0ff1e';
 
 const Map = ({ center, zoom, placemark, placemarkHint, placemarkBalloon }) => {
-  const mapRef = useRef(null); // Ссылка на DOM-элемент карты
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+
+  const loadYandexMaps = () => {
+    return new Promise((resolve, reject) => {
+      // 1. Если API уже загружено — резолвим
+      if (window.ymaps) {
+        resolve(window.ymaps);
+        return;
+      }
+
+      // 2. Если скрипт уже в DOM — не добавляем второй раз
+      const existingScript = document.getElementById(MAP_SCRIPT_ID);
+      if (existingScript) {
+        console.warn('Yandex Maps script already in DOM, waiting for ready...');
+        // Всё равно ждём готовности
+        const waitForYmaps = () => {
+          if (window.ymaps) {
+            window.ymaps.ready(() => resolve(window.ymaps));
+          } else {
+            setTimeout(waitForYmaps, 50);
+          }
+        };
+        waitForYmaps();
+        return;
+      }
+
+      // 3. Генерируем уникальный callback
+      const callbackName = 'ymapsCallback_' + Date.now();
+
+      window[callbackName] = () => {
+        delete window[callbackName];
+        window.ymaps.ready(() => resolve(window.ymaps));
+      };
+
+      // 4. Создаём скрипт
+      const script = document.createElement('script');
+      script.id = MAP_SCRIPT_ID;
+      script.type = 'text/javascript';
+      script.src = `https://api-maps.yandex.ru/2.1/?apikey=${API_KEY}&lang=ru_RU&callback=${callbackName}`;
+      script.async = true;
+
+      script.onerror = () => {
+        console.error('❌ Ошибка загрузки Яндекс.Карт');
+        delete window[callbackName];
+        document.body.removeChild(script);
+        reject(new Error('Failed to load Yandex Maps'));
+      };
+
+      document.body.appendChild(script);
+    });
+  };
 
   useEffect(() => {
-    // Проверяем, что API Яндекс.Карт загружен
-    if (window.ymaps) {
-      window.ymaps.ready(() => {
-        // Инициализация карты
+    let isMounted = true;
+
+    const initializeMap = async () => {
+      try {
+        await loadYandexMaps();
+
+        if (!isMounted || !mapRef.current) return;
+
+        // Проверяем, не создана ли уже карта
+        if (mapInstanceRef.current) return;
+
         const myMap = new window.ymaps.Map(mapRef.current, {
-          center: center, // Центр карты
-          zoom: zoom,     // Уровень масштабирования
-          controls: ['zoomControl', 'fullscreenControl'] // Элементы управления картой
+          center,
+          zoom,
+          controls: ['zoomControl', 'fullscreenControl'],
         }, {
-          searchControlProvider: 'yandex#search' // Поиск
+          searchControlProvider: 'yandex#search',
         });
 
-        // Добавление метки на карту, если указаны координаты
-        if (placemark && placemark.length === 2) {
+        mapInstanceRef.current = myMap;
+
+        if (placemark && Array.isArray(placemark) && placemark.length === 2) {
           const myPlacemark = new window.ymaps.Placemark(placemark, {
-            hintContent: placemarkHint || 'Местоположение магазина', // Подсказка при наведении
-            balloonContent: placemarkBalloon || 'Наш фермерский магазин' // Содержимое балуна при клике
+            hintContent: placemarkHint || 'Местоположение магазина',
+            balloonContent: placemarkBalloon || 'Ваш фермерский магазин',
           }, {
-            // Опции для метки (например, цвет иконки)
-            preset: 'islands#greenDotIcon' // Зеленая точка
+            preset: 'islands#greenDotIcon',
           });
           myMap.geoObjects.add(myPlacemark);
         }
-
-        // Сохраняем экземпляр карты для возможного дальнейшего использования
-        mapRef.current.mapInstance = myMap;
-      });
-    } else {
-      console.error('Яндекс.Карты API не загружен. Убедитесь, что скрипт подключен в public/index.html');
-    }
-
-    // Очистка при размонтировании компонента
-    return () => {
-      if (mapRef.current && mapRef.current.mapInstance) {
-        mapRef.current.mapInstance.destroy();
+      } catch (error) {
+        console.error('❌ Не удалось инициализировать карту:', error);
       }
     };
-  }, [center, zoom, placemark, placemarkHint, placemarkBalloon]); // Зависимости useEffect
+
+    initializeMap();
+
+    return () => {
+      isMounted = false;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.destroy();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [center, zoom, placemark, placemarkHint, placemarkBalloon]);
 
   return (
-    <div ref={mapRef} className="yandex-map-container">
-      {/* Здесь будет рендериться карта */}
+    <div className="yandex-map-wrapper">
+      <div ref={mapRef} className="yandex-map-container"></div>
+      {!window.ymaps && (
+        <div className="map-placeholder">
+          <p>Загружаем карту...</p>
+        </div>
+      )}
     </div>
   );
 };
