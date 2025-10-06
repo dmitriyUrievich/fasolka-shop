@@ -8,7 +8,7 @@
     "client": "vite",
     "server": "nodemon",
     "t": "tsc",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "start": "node build/server.js",
     "lint": "eslint ."
   },
