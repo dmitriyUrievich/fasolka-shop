@@ -1,12 +1,7 @@
-import dotenv from 'dotenv';
-import express from 'express';
 import TelegramBot from 'node-telegram-bot-api';
 
-dotenv.config();
-const app = express();
-app.use(express.json());
-
-// const card = {
+export default function initializeBot(app) {
+ // const card = {
 //   "id": "ORDER6",
 //   "customer_name": "Лиза",
 //   "phone": "+79998887766",
@@ -16,9 +11,7 @@ app.use(express.json());
 //     { "name": "Кофе", "quantity": 1, "price": 580 },
 //     { "name": "Печенье", "quantity": 2, "price": 600 }
 //   ]
-// }
-
-const PORT = 3000;
+// } 
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
 // Парсим список разрешённых CHAT_ID
@@ -31,7 +24,7 @@ if (ALLOWED_CHAT_IDS.length === 0) {
   console.warn('⚠️ ВНИМАНИЕ: Не заданы разрешённые CHAT_ID');
 }
 
-console.log('TOKEN:', TOKEN);
+console.log('TOKEN----:', TOKEN);
 console.log('Разрешённые CHAT_ID:', ALLOWED_CHAT_IDS);
 
 // Проверка авторизации пользователя
@@ -288,9 +281,4 @@ ${cartText}
     res.status(500).json({ success: false, message: 'Ошибка отправки уведомления' });
   }
 });
-
-// Запуск сервера
-app.listen(PORT, () => {
-  console.log(`✅ Сервер запущен на порту ${PORT}`);
-  console.log(`🤖 Бот запущен. Доступно для: ${ALLOWED_CHAT_IDS.join(', ')}`);
-});
+}

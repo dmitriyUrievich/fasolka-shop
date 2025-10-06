@@ -7,12 +7,12 @@ import CategorySidebar from './components/CategorySidebar';
 import { generateDailyOrderId } from './utils/orderUtils';
 import getPortion from './utils/getPortion';
 import Swal from 'sweetalert2';
+import { fetchProductsWithRests, getCatalog, getShops } from './services/konturMarketApi';
 
 const CartBasket = React.lazy(() => import('./components/CartBasket'));
 const Modal = React.lazy(() => import('./components/Modal'));
 const OrderForm = React.lazy(() => import('./components/OrderForm'));
 
-import { fetchProductsWithRests, getCatalog, getShops } from './services/konturMarketApi';
 
 function App() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -198,6 +198,7 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
   const handleCloseOrderForm = () => setIsOrderFormOpen(false);
 
   const handleSubmitOrder = async (customerData) => {
+
     const orderData = {
       id: generateDailyOrderId(),
       customer_name: customerData.name,
@@ -212,6 +213,18 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
         price: item.sellPricePerUnit,
       })),
     };
+    fetch('https://fasol-nvrsk.ru/api/payment',{
+      method:'POST',
+      headers:{
+         'Content-Type':'application/json'
+      },
+      body: JSON.stringify({
+        value:orderData.total,
+        orderId:orderData.id,
+      })
+      }).then(res=>res.json()).then(data=>{
+        window.open(data?.payment?.confirmation?.confirmation_url)
+    })
 
     try {
       const response = await fetch('/order', {
@@ -219,7 +232,6 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData),
       });
-
       if (response.ok) {
         Swal.fire({
           title: '🎉 Заказ оформлен!',

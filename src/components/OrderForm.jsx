@@ -107,7 +107,7 @@ const OrderForm = ({ onSubmit, onClose }) => {
             onChange={(e) => setComment(e.target.value)}
             className="textarea-input"
             rows="3"
-            placeholder="Например: оставить у двери, не звонить..."
+            placeholder="Например: оставить у двери."
           />
         </div>
 
@@ -138,7 +138,7 @@ const OrderForm = ({ onSubmit, onClose }) => {
             className="submit-button"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Отправка...' : 'Отправить заказ'}
+            {isSubmitting ? 'Отправка...' : 'Оплатить'}
           </button>
           <button
             type="button"
