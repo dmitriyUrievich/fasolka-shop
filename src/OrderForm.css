@@ -227,3 +227,75 @@
     margin-top: 4px;
   }
 }
+
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 2.5rem; /* Увеличиваем размер крестика */
+  line-height: 1;
+  color: #cc0000; /* Красный цвет */
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.close-button:hover {
+  opacity: 1;
+}
+
+/* Контейнер для новых способов оплаты */
+.payment-methods {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+  text-align: center;
+}
+.payment-methods-title {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+/* Общий стиль для кнопок оплаты */
+.payment-button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 10px;
+}
+
+.payment-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.payment-button.main-card {
+  background-color: #ef8900; /* Ваш основной зеленый */
+  color: white;
+}
+/* Специфичные стили для кнопок */
+.payment-button.sberpay {
+  background-color: #008700; /* Зеленый цвет Сбера */
+  color: white;
+}
+
+.payment-button.psb {
+  background-color: #7b15ff; /* Фиолетовый цвет ПСБ */
+  color: white;
+}
+
+/* Убираем старую кнопку отмены, так как она заменена крестиком */
+.cancel-button {
+  display: none;
+}
