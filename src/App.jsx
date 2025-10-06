@@ -8,6 +8,7 @@ import { generateDailyOrderId } from './utils/orderUtils';
 import getPortion from './utils/getPortion';
 import Swal from 'sweetalert2';
 import { fetchProductsWithRests, getCatalog, getShops } from './services/konturMarketApi';
+const apiUrl = import.meta.env.API_URL;
 
 const CartBasket = React.lazy(() => import('./components/CartBasket'));
 const Modal = React.lazy(() => import('./components/Modal'));
@@ -30,14 +31,17 @@ function App() {
   const [cartItems, setCartItems] = useState(() => {
     try {
       const saved = localStorage.getItem('cartItems');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
+      if (!saved) {
+        return []; 
+      }
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      console.warn("Не удалось прочитать корзину из localStorage:", error);
+      return []; 
     }
   });
-
-  // Сохранение корзины
-  useEffect(() => {
+useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem('cartItems', JSON.stringify(cartItems));
     }, 300);
@@ -197,8 +201,67 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
 
   const handleCloseOrderForm = () => setIsOrderFormOpen(false);
 
-  const handleSubmitOrder = async (customerData) => {
+  // 1. Выносим отправку в Telegram в отдельную функцию для переиспользования
+  const sendOrderToTelegram = async (orderData) => {
+    try {
+      const response = await fetch('/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData),
+      });
+      if (!response.ok) {
+        // Если не удалось отправить в Telegram, выбрасываем ошибку, чтобы остановить процесс
+        const errorText = await response.text();
+        throw new Error(`Ошибка отправки в Telegram: ${errorText || response.statusText}`);
+      }
+      return true; // Возвращаем true в случае успеха
+    } catch (error) {
+      console.error("Сетевая ошибка при отправке в Telegram:", error);
+      Swal.fire({
+        title: 'Сетевая ошибка',
+        text: 'Не удалось отправить заказ. Проверьте интернет и попробуйте снова.',
+        icon: 'error',
+      });
+      return false; 
+    }
+  };
 
+  const createYooKassaPayment = async (orderData) => {
+    try {
+      const response = await fetch(`${apiUrl}/api/payment`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        value:orderData.total,
+        orderId:orderData.id,
+       })
+      })
+      if (!response.ok) {
+         const errorData = await response.json();
+        throw new Error(errorData.message || 'Ошибка сети при создании платежа');
+      }
+      const data = await response.json();
+      const confirmationUrl = data?.payment?.confirmation?.confirmation_url;
+      if (confirmationUrl) {
+        window.open(confirmationUrl, '_blank');
+        return true; 
+      } else {
+        throw new Error('Не получена ссылка на оплату от платежного шлюза');
+      }
+    } catch (error) {
+      console.error("Ошибка при создании платежа:", error);
+      Swal.fire({
+        title: 'Ошибка оплаты',
+        text: error.message || 'Не удалось создать ссылку на оплату. Попробуйте другой способ или свяжитесь с нами.',
+        icon: 'error',
+      });
+      return false; 
+    }
+  };
+
+
+  const handleSubmitOrder = async (customerData) => {
+  
     const orderData = {
       id: generateDailyOrderId(),
       customer_name: customerData.name,
@@ -211,56 +274,48 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
         name: item.name,
         quantity: item.quantityInCart,
         price: item.sellPricePerUnit,
+        unit: item.unit, 
       })),
     };
-    fetch('https://fasol-nvrsk.ru/api/payment',{
-      method:'POST',
-      headers:{
-         'Content-Type':'application/json'
-      },
-      body: JSON.stringify({
-        value:orderData.total,
-        orderId:orderData.id,
-      })
-      }).then(res=>res.json()).then(data=>{
-        window.open(data?.payment?.confirmation?.confirmation_url)
-    })
 
-    try {
-      const response = await fetch('/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData),
-      });
-      if (response.ok) {
-        Swal.fire({
-          title: '🎉 Заказ оформлен!',
-          text: `Ваш заказ №${orderData.id} отправлен. Спасибо! \n 
-          Пожалуйста запомните номер.`,
-          icon: 'success',
-          confirmButtonText: 'Ок',
-          background: '#f8f9fa',
-        });
-        setCartItems([]);
-        setIsOrderFormOpen(false);
-      } else {
-        const text = await response.text();
-        Swal.fire({
-          title: 'Ошибка',
-          text: `Ошибка: ${text || response.statusText}`,
-          icon: 'error',
-          confirmButtonText: 'Понятно',
-        });
-      }
-    } catch (error) {
-      Swal.fire({
-        title: 'Сетевая ошибка',
-        text: 'Проверьте интернет и попробуйте снова.',
-        icon: 'error',
-      });
+    let isPaymentInitiated = false; // Флаг платежа
+
+    switch (customerData.paymentMethod) {
+      case 'PSB':
+        console.log( 'Click payment PSB' );
+        break;
+      case 'SberPay':
+        console.log( 'Click payment SberPay' );
+        break;
+      case 'Card':
+        console.log( 'Click payment YouKassa' );
+        await createYooKassaPayment(orderData);
+        break;
+      
+      default:
+        console.error(`Неизвестный метод оплаты: ${customerData.paymentMethod}`);
+        Swal.fire({ title: 'Ошибка', text: 'Выбран неизвестный метод оплаты.', icon: 'error' });
+        return;
     }
-  };
 
+    if (!isPaymentInitiated) {
+      return; 
+    }
+
+    await sendOrderToTelegram(orderData);
+    
+  if (isPaymentInitiated) {
+      Swal.fire({
+        title: '🎉 Заказ оформлен!',
+        html: `Ваш заказ <b>№${orderData.id}</b> отправлен.<br>Пожалуйста, запомните номер.<br> Окно для оплаты должно открыться в новой вкладке.`,
+        icon: 'success',
+        confirmButtonText: 'Отлично!',
+      });
+      setCartItems([]);
+      handleCloseOrderForm();
+    };
+    } 
+  // --- КОНЕЦ ОБНОВЛЕННОГО БЛОКА ЛОГИКИ ---
   const onClearCart = () => {
     setCartItems([]);
     setIsCartOpen(false);
@@ -476,7 +531,7 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
       {isOrderFormOpen && (
         <React.Suspense fallback={null}>
           <Modal isOpen={isOrderFormOpen} onClose={handleCloseOrderForm}>
-            <OrderForm onSubmit={handleSubmitOrder} onClose={handleCloseOrderForm} />
+            <OrderForm onSubmit={handleSubmitOrder} onClose={handleCloseOrderForm}/>
           </Modal>
         </React.Suspense>
       )}
