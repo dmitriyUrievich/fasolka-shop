@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://fasol-nvrsk.ru/sitemap.xml
+
+# Запрещаем доступ к несуществующим путям
+Disallow: /admin/
+Disallow: /cgi-bin/

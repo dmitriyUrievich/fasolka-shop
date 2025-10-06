@@ -29,16 +29,16 @@
 }
 /* Основная сетка карточек */
 /* Используем auto-fit + minmax, чтобы кол-во колонок подбиралось автоматически и не ломало макет */
-.product-grid {
+/* .product-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* auto-fit подберёт кол-во колонок */
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     grid-auto-rows: minmax(320px, auto);
     gap: 18px;
     padding: 12px 0;
     justify-content: center;
     justify-items: stretch;
     box-sizing: border-box;
-}
+} */
 .status-message.loading-placeholder {
   display: flex;
   flex-direction: column;
@@ -64,31 +64,6 @@
   100% { transform: rotate(360deg); }
 }
 /* Гарантия: каждая карточка занимает всю ширину своей колонки и не выходит за неё */
-
-.product-card {
-    width: 100%;
-    min-width: var(--card-min-width);
-    min-height: 320px;
-    box-sizing: border-box;
-    border-radius: 15px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    background-color: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(var(--farm-dark-green-rgb), 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    animation: fadeInUp 0.5s ease forwards;
-    animation-delay: calc(var(--card-delay, 0) * 0.1s);
-}
-
-.status-message {
-  text-align: center;
-  padding: 40px 20px;
-  color: #666;
-  font-size: 1.2em;
-  font-weight: 500;
-}
 
 .status-message.no-results {
   color: #888;

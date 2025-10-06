@@ -20,16 +20,7 @@ body.modal-open {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* === Хедер === */
-.app-header {
-  background: linear-gradient(to right, var(--farm-dark-green), #4CAF50);
-  color: white;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  padding: 5px 0;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
+
 /* === Основное содержимое хедера === */
 .header-content {
   max-width: 1200px;
@@ -42,17 +33,6 @@ body.modal-open {
   position: relative;
 }
 
-/* Бургер — всегда первым */
-.category-icon-button {
-  flex: 0 0 auto;
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-  padding: 8px;
-  margin: 0;
-  transition: transform 0.2s ease;
-}
 
 .category-icon-button:hover {
   transform: scale(1.1);
