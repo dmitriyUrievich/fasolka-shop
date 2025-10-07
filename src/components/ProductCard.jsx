@@ -49,7 +49,7 @@ const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageCon
   const name = capitalizeFirstLetter(rawName);
   const price = sellPricePerUnit;
   const disableBuyTypes = ['Tobacco'];
-  const ageRestrictedTypes = ['Tobacco', 'LightAlcohol', 'Cigarettes', 'Softdrinks'];
+  const ageRestrictedTypes = ['Tobacco', 'LightAlcohol', 'Cigarettes'];
   
   const disableBuy = disableBuyTypes.includes(productType);
   const isAgeRestricted = ageRestrictedTypes.includes(productType) || containsLighterKeyword(rawName);

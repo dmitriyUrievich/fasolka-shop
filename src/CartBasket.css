@@ -219,7 +219,7 @@
 
 /* === Кнопки === */
 .cart-checkout-button {
-  background: linear-gradient(to right, var(--farm-green), var(--farm-dark-green));
+  background: linear-gradient(to right, var(--farm-green), #689F38);
   color: white;
   border: none;
   border-radius: 30px;

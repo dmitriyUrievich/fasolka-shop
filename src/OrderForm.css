@@ -1,133 +1,74 @@
 /* src/components/OrderForm.css */
 
+/* src/components/OrderForm.css - ФИНАЛЬНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ */
+
 .order-form-container {
   padding: 25px;
   background-color: #ffffff;
   border-radius: 12px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   max-width: 520px;
-  margin: 30px auto;
+  width: 90%; /* Занимает 90% ширины родителя (модалки) */
+  margin: 20px auto; /* Отступы сверху и снизу */
   box-sizing: border-box;
   font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  position: relative;
+  max-height: 90vh; /* Ограничиваем высоту, чтобы форма не вылезала за экран */
+/* Включаем внутреннюю прокрутку, если контент не влезает */
 }
-
-.order-form-container h2 {
-  text-align: center;
-  color: #2c3e50;
-  margin-bottom: 28px;
-  font-size: 1.8em;
-  font-weight: 600;
-  letter-spacing: -0.5px;
+.form-title { 
+  text-align: center; 
+  color: #2c3e50; 
+  margin-bottom: 28px; 
+  font-size: 1.8em; 
+  font-weight: 600; 
 }
-
-.order-form-container .form-group {
-  margin-bottom: 20px;
-}
-
-.order-form-container label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-  color: #2c3e50;
-  font-size: 0.95em;
-}
-
-/* Стили для текстовых полей и телефона */
+/* --- СТИЛИ ЗАГОЛОВКА, ПОЛЕЙ ВВОДА И ОШИБОК (остаются как в старой версии) --- */
+.order-form-container h2 { text-align: center; color: #2c3e50; margin-bottom: 28px; font-size: 1.8em; font-weight: 600; }
+.order-form-container .form-group { margin-bottom: 20px; }
+.order-form-container label { display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50; }
 .order-form-container input[type="text"],
 .order-form-container input[type="tel"],
-.order-form-container input[type="time"] {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 1em;
-  box-sizing: border-box;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  background-color: #fdfdfd;
+.order-form-container textarea,
+.order-form-container select {
+  width: 100%; padding: 12px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em;
+  box-sizing: border-box; transition: border-color 0.2s ease, box-shadow 0.2s ease; background-color: #fdfdfd;
 }
-
-/* Улучшение внешнего вида для поля времени */
-.order-form-container input[type="time"] {
-  font-family: 'Courier New', monospace;
-  color: #2c3e50;
-}
-
-/* Фокус для всех полей */
-.order-form-container input[type="text"]:focus,
-.order-form-container input[type="tel"]:focus,
-.order-form-container input[type="time"]:focus,
-.order-form-container textarea:focus {
-  border-color: #8bc34a;
+.order-form-container input:focus,
+.order-form-container textarea:focus,
+.order-form-container select:focus {
+  border-color: #8bc34a; /* Ваш зеленый */
   box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.15);
   outline: none;
 }
+.order-form-container .input-error { border-color: #e74c3c; }
+.order-form-container .error-message { color: #e74c3c; font-size: 0.85em; margin-top: 6px; display: block; }
+.order-form-container select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; }
 
-/* Стиль для поля телефона */
-.order-form-container input[type="tel"] {
-  font-family: 'Courier New', monospace;
+/* --- НОВЫЕ СТИЛИ ДЛЯ КРЕСТИКА --- */
+.close-button {
+  position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 2.5rem; line-height: 1;
+  color: #cc0000; cursor: pointer; padding: 0; opacity: 0.7; transition: opacity 0.2s ease;
 }
+.close-button:hover { opacity: 1; }
 
-/* Стиль для textarea (комментарий) */
-.order-form-container textarea.textarea-input {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 1em;
-  font-family: 'Segoe UI', sans-serif;
-  color: #2c3e50;
-  background-color: #fdfdfd;
-  resize: vertical;
-  min-height: 80px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.order-form-container textarea.textarea-input:focus {
-  border-color: #8bc34a;
-  box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.15);
-  outline: none;
-}
-
-/* Обработка ошибок */
-.order-form-container .input-error,
-.order-form-container textarea.input-error {
-  border-color: #e74c3c;
-  background-color: #fdf2f2;
-}
-
-.order-form-container .error-message {
-  color: #e74c3c;
-  font-size: 0.85em;
-  margin-top: 6px;
-  display: block;
-  font-weight: 500;
-  letter-spacing: -0.2px;
-}
-
-/* Кнопки */
+/* Контейнер для кнопки теперь будет занимать всю ширину */
 .order-form-container .form-actions {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
+  display: flex; /* Оставляем flex для выравнивания, если понадобится */
   margin-top: 30px;
 }
 
-.order-form-container .submit-button,
-.order-form-container .cancel-button {
+/* Основная кнопка отправки (взято из старых стилей) */
+.order-form-container .submit-button {
+  flex: 1; /* Растягиваем на всю ширину контейнера */
   padding: 13px 24px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px; /* Можно оставить новый радиус */
   font-size: 1.05em;
   font-weight: 600;
   cursor: pointer;
-  min-height: 44px;
   transition: all 0.2s ease;
-  flex: 1;
-  text-align: center;
-}
-
-.order-form-container .submit-button {
-  background-color: #8bc34a;
+  background-color: #8bc34a; /* ВАШ ЗЕЛЕНЫЙ ЦВЕТ */
   color: white;
 }
 
@@ -137,7 +78,7 @@
   box-shadow: 0 4px 8px rgba(139, 195, 74, 0.2);
 }
 
-.order-form-container .submit-button:active {
+.order-form-container .submit-button:active:not(:disabled) {
   transform: translateY(0);
 }
 
@@ -145,44 +86,12 @@
   background-color: #b8d6a0;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
+/* Скрываем старую кнопку "Отмена", так как теперь есть крестик */
 .order-form-container .cancel-button {
-  background-color: #f1f1f1;
-  color: #555;
-  border: 1px solid #ddd;
-}
-
-.order-form-container .cancel-button:hover {
-  background-color: #e5e5e5;
-  transform: translateY(-2px);
-}
-
-.order-form-container .cancel-button:active {
-  transform: translateY(0);
-}
-.order-form-container select {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 1em;
-  background-color: #fdfdfd;
-  color: #2c3e50;
-  cursor: pointer;
-  box-sizing: border-box;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 16px;
-}
-
-.order-form-container select:focus {
-  border-color: #8bc34a;
-  box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.15);
-  outline: none;
+  display: none;
 }
 /* Адаптивность на мобильных */
 @media (max-width: 540px) {
@@ -226,76 +135,4 @@
     font-size: 0.8em;
     margin-top: 4px;
   }
-}
-
-
-.close-button {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  background: none;
-  border: none;
-  font-size: 2.5rem; /* Увеличиваем размер крестика */
-  line-height: 1;
-  color: #cc0000; /* Красный цвет */
-  cursor: pointer;
-  padding: 0;
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
-}
-
-.close-button:hover {
-  opacity: 1;
-}
-
-/* Контейнер для новых способов оплаты */
-.payment-methods {
-  margin-top: 20px;
-  padding-top: 15px;
-  border-top: 1px solid #eee;
-  text-align: center;
-}
-.payment-methods-title {
-  font-size: 1rem;
-  color: #555;
-  margin-bottom: 15px;
-  font-weight: 500;
-}
-
-/* Общий стиль для кнопок оплаты */
-.payment-button {
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-bottom: 10px;
-}
-
-.payment-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.payment-button.main-card {
-  background-color: #ef8900; /* Ваш основной зеленый */
-  color: white;
-}
-/* Специфичные стили для кнопок */
-.payment-button.sberpay {
-  background-color: #008700; /* Зеленый цвет Сбера */
-  color: white;
-}
-
-.payment-button.psb {
-  background-color: #7b15ff; /* Фиолетовый цвет ПСБ */
-  color: white;
-}
-
-/* Убираем старую кнопку отмены, так как она заменена крестиком */
-.cancel-button {
-  display: none;
 }

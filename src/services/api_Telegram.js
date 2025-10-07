@@ -1,6 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
+import dotenv from 'dotenv';
+dotenv.config();
 
-export default function initializeBot(app) {
  // const card = {
 //   "id": "ORDER6",
 //   "customer_name": "Лиза",
@@ -12,9 +13,8 @@ export default function initializeBot(app) {
 //     { "name": "Печенье", "quantity": 2, "price": 600 }
 //   ]
 // } 
-const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
-// Парсим список разрешённых CHAT_ID
+const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const ALLOWED_CHAT_IDS = (process.env.TELEGRAM_CHAT_IDS || '')
   .split(',')
   .map(id => id.trim())
@@ -34,6 +34,55 @@ function isAuthorized(chatId) {
 
 const bot = new TelegramBot(TOKEN, { polling: true });
 const orders = new Map();
+
+/**
+ * Отправляет уведомление об успешной оплате заказа в Telegram.
+ * @param {object} orderData - Полные данные заказа, сохраненные при создании платежа.
+ */
+export const sendPaidOrderNotification = async (orderData) => {
+  // Формируем список товаров из корзины
+  const cartText = orderData.cart.map((item, i) => {
+    const unitLabel = item.unit === 'Kilogram' ? 'кг' : 'шт';
+    return `${i + 1}) ${item.name} — ${item.quantity}${unitLabel} × ${item.price}₽ = ${(item.quantity * item.price).toFixed(2)}₽`;
+  }).join('\n');
+
+  // Формируем дополнительные поля
+  const commentText = orderData.comment ? `\n💬 Комментарий: ${orderData.comment}` : '';
+  const deliveryText = orderData.deliveryTime ? `\n⏰ Время доставки: ${orderData.deliveryTime}` : '';
+
+  const message = `
+✅ <b>Поступила новая ОПЛАТА</b>
+
+🧾 Номер заказа: <code>${orderData.id}</code>
+👤 Имя: ${orderData.customer_name}
+📞 Телефон: ${orderData.phone}
+🏠 Адрес: ${orderData.address}
+${deliveryText}
+${commentText}
+
+📦 <b>Корзина:</b>
+${cartText}
+
+💰 <b>Итого: ${orderData.total.toFixed(2)} ₽</b>
+  `.trim();
+
+  try {
+    // Сохраняем заказ в локальное хранилище для дальнейшего управления через бота
+    // Статус "new" означает, что заказ новый и ожидает обработки.
+    orders.set(orderData.id.toString(), { ...orderData, status: 'new' });
+
+    // Отправляем сообщение всем разрешенным админам
+    const promises = ALLOWED_CHAT_IDS.map(chatId => 
+      bot.sendMessage(chatId, message, { parse_mode: 'HTML' })
+    );
+    await Promise.all(promises);
+    console.log(`[Telegram] Уведомление об оплаченном заказе №${orderData.id} успешно отправлено.`);
+  } catch (error) {
+    console.error(`[Telegram] Ошибка отправки уведомления для заказа №${orderData.id}:`, error);
+  }
+};
+
+export default function initializeBot(app) {
 
 // Русские названия статусов
 const STATUS_LABEL = {

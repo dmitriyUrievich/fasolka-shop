@@ -8,7 +8,6 @@ import { generateDailyOrderId } from './utils/orderUtils';
 import getPortion from './utils/getPortion';
 import Swal from 'sweetalert2';
 import { fetchProductsWithRests, getCatalog, getShops } from './services/konturMarketApi';
-const apiUrl = import.meta.env.API_URL;
 
 const CartBasket = React.lazy(() => import('./components/CartBasket'));
 const Modal = React.lazy(() => import('./components/Modal'));
@@ -56,16 +55,19 @@ useEffect(() => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    if (isCartOpen && !isDesktop) {
-      document.body.classList.add('modal-open');
-    } else {
-      document.body.classList.remove('modal-open');
-    }
-    return () => {
-      document.body.classList.remove('modal-open');
-    };
-  }, [isCartOpen, isDesktop]);
+useEffect(() => {
+  // Теперь проверяем, открыта ли корзина ИЛИ любая другая модалка
+  if (isCartOpen || isOrderFormOpen) {
+    document.body.classList.add('modal-open');
+  } else {
+    document.body.classList.remove('modal-open');
+  }
+  
+  // Функция очистки на случай размонтирования компонента
+  return () => {
+    document.body.classList.remove('modal-open');
+  };
+}, [isCartOpen, isOrderFormOpen]);
 
   // Загрузка данных
   useEffect(() => {
@@ -227,94 +229,67 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
 
   const createYooKassaPayment = async (orderData) => {
     try {
-      const response = await fetch(`${apiUrl}/api/payment`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        value:orderData.total,
-        orderId:orderData.id,
-       })
-      })
+      const response = await fetch(`/api/payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
       if (!response.ok) {
-         const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({ message: 'Не удалось прочитать ошибку сервера' }));
         throw new Error(errorData.message || 'Ошибка сети при создании платежа');
       }
       const data = await response.json();
       const confirmationUrl = data?.payment?.confirmation?.confirmation_url;
       if (confirmationUrl) {
         window.open(confirmationUrl, '_blank');
-        return true; 
+        return true;
       } else {
-        throw new Error('Не получена ссылка на оплату от платежного шлюза');
+        throw new Error('Не получена ссылка на оплату');
       }
     } catch (error) {
       console.error("Ошибка при создании платежа:", error);
-      Swal.fire({
-        title: 'Ошибка оплаты',
-        text: error.message || 'Не удалось создать ссылку на оплату. Попробуйте другой способ или свяжитесь с нами.',
-        icon: 'error',
-      });
-      return false; 
+      Swal.fire({ title: 'Ошибка оплаты', text: error.message, icon: 'error' });
+      return false;
     }
   };
 
 
-  const handleSubmitOrder = async (customerData) => {
-  
+const handleSubmitOrder = async (customerData) => {
+    
+    // 1. Формируем полный объект заказа
     const orderData = {
       id: generateDailyOrderId(),
       customer_name: customerData.name,
       phone: customerData.phone,
       address: customerData.address,
-      comment: customerData.comment,          
-      deliveryTime: customerData.deliveryTime,  
+      comment: customerData.comment,
+      deliveryTime: customerData.deliveryTime,
       total: totalCartPrice,
       cart: cartItems.map((item) => ({
         name: item.name,
         quantity: item.quantityInCart,
         price: item.sellPricePerUnit,
-        unit: item.unit, 
+        unit: item.unit,
       })),
     };
 
-    let isPaymentInitiated = false; // Флаг платежа
+    const isPaymentInitiated = await createYooKassaPayment(orderData);
 
-    switch (customerData.paymentMethod) {
-      case 'PSB':
-        console.log( 'Click payment PSB' );
-        break;
-      case 'SberPay':
-        console.log( 'Click payment SberPay' );
-        break;
-      case 'Card':
-        console.log( 'Click payment YouKassa' );
-        await createYooKassaPayment(orderData);
-        break;
-      
-      default:
-        console.error(`Неизвестный метод оплаты: ${customerData.paymentMethod}`);
-        Swal.fire({ title: 'Ошибка', text: 'Выбран неизвестный метод оплаты.', icon: 'error' });
-        return;
-    }
-
-    if (!isPaymentInitiated) {
-      return; 
-    }
-
-    await sendOrderToTelegram(orderData);
-    
-  if (isPaymentInitiated) {
+    if (isPaymentInitiated) {
       Swal.fire({
-        title: '🎉 Заказ оформлен!',
-        html: `Ваш заказ <b>№${orderData.id}</b> отправлен.<br>Пожалуйста, запомните номер.<br> Окно для оплаты должно открыться в новой вкладке.`,
+        title: '🎉 Заказ создан!',
+        html: `Ваш заказ <b>№${orderData.id}</b> принят и ожидает оплаты.<br>Окно для оплаты должно было открыться в новой вкладке.`,
         icon: 'success',
         confirmButtonText: 'Отлично!',
       });
       setCartItems([]);
       handleCloseOrderForm();
-    };
-    } 
-  // --- КОНЕЦ ОБНОВЛЕННОГО БЛОКА ЛОГИКИ ---
+    }
+    // Если isPaymentInitiated === false, то сообщение об ошибке уже было показано,
+    // и мы ничего не делаем. Корзина и форма остаются открытыми.
+  };
+
+
   const onClearCart = () => {
     setCartItems([]);
     setIsCartOpen(false);
@@ -530,7 +505,7 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
       {isOrderFormOpen && (
         <React.Suspense fallback={null}>
           <Modal isOpen={isOrderFormOpen} onClose={handleCloseOrderForm}>
-            <OrderForm onSubmit={handleSubmitOrder} onClose={handleCloseOrderForm}/>
+            <OrderForm onSubmit={handleSubmitOrder} onClose={handleCloseOrderForm} totalAmount={totalCartPrice}/>
           </Modal>
         </React.Suspense>
       )}

@@ -9,7 +9,6 @@ import paymentRouter from './services/YooKassa.js';
 const PORT = process.env.PORT || 3000;
 const app = express();
 
-
 const allowedOrigins = [
   'https://fasol-nvrsk.ru',      // Ваш основной домен
   'http://localhost:5173',       // Адрес для локальной разработки
