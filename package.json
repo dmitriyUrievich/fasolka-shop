@@ -3,15 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": {
-    "dev": "concurrently \"npm:client\" \"npm:server\"",
-    "client": "vite",
-    "server": "nodemon",
-    "t": "tsc",
-    "build": "vite build",
-    "start": "node build/server.js",
-    "lint": "eslint ."
-  },
+"scripts": {
+  "dev": "concurrently \"npm:client\" \"npm:server\"",
+  "client": "vite",
+  "server": "nodemon",
+  "build": "vite build",
+  "start": "node src/server.js",
+  "lint": "eslint ."
+},
   "dependencies": {
     "@a2seven/yoo-checkout": "^1.1.4",
     "axios": "^1.10.0",
@@ -28,10 +27,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.5.2",
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.2.1",

@@ -121,30 +121,7 @@
   box-sizing: border-box;
   min-height: 0;         /* важно для корректного сжатия внутри grid/flex */
 }
-
-/* Название/текст оставляем как есть (указыв. одно правило), можно падать в 2-3 строки */
-/* .product-card__name {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--farm-dark-green);
-  line-height: 1.25;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-height: 2.5em;
-  word-wrap: break-word;
-  word-break: break-word;
-} */
-
-/* Цена/количество — компактные блоки */
-/* .product-card__price { font-size: 1.35rem; font-weight: 700; color: var(--farm-green); margin: 0; } */
-/* .product-card__quantity { font-size: .95rem; color:#666; margin: 0; } */
-
-/* Кнопка: занять нижнюю часть контента (margin-top:auto),
-   фиксированная высота/внутренний отступ, не даём ей сжиматься */
-/* .product-card__button {
+ .product-card__button {
   margin-top: auto;        
   flex-shrink: 0;          
   padding: 10px 14px;
@@ -158,7 +135,7 @@
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   min-height: 44px;
   box-sizing: border-box;
-} */
+} 
 
 .product-card__button:disabled { 
   background: #BDBDBD; 

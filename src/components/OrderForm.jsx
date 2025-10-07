@@ -2,7 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import './../OrderForm.css';
 
-const OrderForm = ({ onSubmit, onClose }) => {
+const OrderForm = ({ onSubmit, onClose,totalAmount }) => {
   const [customerName, setCustomerName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
@@ -34,31 +34,29 @@ const OrderForm = ({ onSubmit, onClose }) => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [customerName, phoneNumber, address, deliveryTime]);
-const handleProcessPayment = async (paymentMethod) => {
-    // 1. Сначала валидируем поля формы
+
+  // Стандартный обработчик отправки формы
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Предотвращаем стандартную перезагрузку страницы
     if (!validate()) {
-      console.log("Форма не прошла валидацию");
-      return; // Если есть ошибки, прерываем отправку
+      return;
     }
-    
+
     setIsSubmitting(true);
     try {
-      // 2. Собираем все данные в один объект
-      const formData = {
+      // Собираем данные и вызываем onSubmit из родительского компонента
+      await onSubmit({
         name: customerName,
         phone: phoneNumber,
         address,
         comment: comment.trim() || null,
         deliveryTime: deliveryTime || null,
-        paymentMethod: paymentMethod, // <--- Указываем, какая кнопка была нажата
-      };
-      
-      // 3. Вызываем onSubmit из родительского компонента
-      await onSubmit(formData);
-
+      });
     } catch (error) {
-      console.error("Ошибка при отправке заказа:", error);
+        console.error("Ошибка при обработке формы:", error);
     } finally {
+      // isSubmitting будет управляться из родительского компонента 
+      // через закрытие модального окна, но на всякий случай оставим
       setIsSubmitting(false);
     }
   };
@@ -71,8 +69,8 @@ const handleProcessPayment = async (paymentMethod) => {
         &times;
       </button>
 
-      <h2 id="modal-title">Оформление заказа</h2>
-        {/* ... все ваши поля input остаются без изменений ... */}
+      <h2 id="form-title">Оформление заказа</h2>
+      <form onSubmit={handleSubmit}>     
         <div className="form-group">
           <label htmlFor="customerName">Имя:</label>
           <input type="text" id="customerName" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className={errors.name ? 'input-error' : ''} autoComplete="name" required />
@@ -101,33 +99,16 @@ const handleProcessPayment = async (paymentMethod) => {
           {errors.deliveryTime && (<span className="error-message">{errors.deliveryTime}</span>)}
         </div>
 
-        <div className="form-actions"> 
-          <div className="payment-methods">         
-          <h3 className="payment-methods-title">Выберите способ оплаты</h3>
+        <div className="form-actions">        
           <button
-            type="button"
-            className="payment-button main-card"
+            type="submit"
+            className="submit-button"
             disabled={isSubmitting}
-            onClick={() => handleProcessPayment('Card')}
           >
-            {isSubmitting ? 'Отправка...' : 'Оплатить картой'}
-          </button>
-          <button
-            type="button"
-            className="payment-button sberpay"
-            onClick={() => handleProcessPayment('SberPay')}
-          >
-            Оплатить через SberPay
-          </button>
-          <button
-            type="button"
-            className="payment-button psb"
-            onClick={() => handleProcessPayment('PSB')}
-          >
-            Оплатить через ПСБ
+            {isSubmitting ? 'Отправка...' : `Перейти к оплате ${totalAmount.toFixed(2)} ₽`}
           </button>
         </div>
-      </div>
+      </form>
     </div>
   );
 };

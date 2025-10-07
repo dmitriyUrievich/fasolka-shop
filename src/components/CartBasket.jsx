@@ -11,7 +11,6 @@ const CartBasket = ({
   onClose, 
   onProceedToOrder 
 }) => {
-  // 🔹 Мемоизация суммы
   const subtotal = useMemo(() => {
     return cartItems.reduce(
       (sum, item) => sum + (item.sellPricePerUnit || 0) * item.quantityInCart,
@@ -19,9 +18,8 @@ const CartBasket = ({
     );
   }, [cartItems]);
 
-  // 🔹 Мемоизация доставки
   const deliveryInfo = useMemo(() => {
-    if (subtotal < 1000) {
+    if (subtotal < 5) {
       return { cost: null, text: 'от 1000 ₽', showFreeHint: false };
     }
     if (subtotal >= 3000) {
@@ -32,7 +30,7 @@ const CartBasket = ({
 
   const { cost: deliveryCost, text: deliveryText, showFreeHint } = deliveryInfo;
   const isOrderValid = deliveryCost !== null;
-  const total = isOrderValid ? subtotal + deliveryCost : 0;
+  const total = isOrderValid ? subtotal : 0 // + deliveryCost : 0;
 
   return (
     <div className="cart-container">
