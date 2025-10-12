@@ -5,6 +5,8 @@ import { YooCheckout } from '@a2seven/yoo-checkout';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 import { sendPaidOrderNotification } from './api_Telegram.js';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
@@ -17,8 +19,20 @@ if (!YOUKASSA_SECRET_KEY || !YOUKASSA_SHOP_ID) {
   // Выбрасываем ошибку, чтобы остановить сервер при неверной конфигурации
   throw new Error('Учетные данные YooKassa не заданы в .env файле.');
 }
+const pendingOrdersPath = path.resolve('pendingOrders.json');
 
-const pendingOrders = {};
+const readPendingOrders = () => {
+  if (!fs.existsSync(pendingOrdersPath)) {
+    return {};
+  }
+  const data = fs.readFileSync(pendingOrdersPath);
+  return JSON.parse(data);
+};
+
+// 4. Функция для записи заказов в файл
+const writePendingOrders = (orders) => {
+  fs.writeFileSync(pendingOrdersPath, JSON.stringify(orders, null, 2));
+};
 
 const YooKassa = new YooCheckout({
   shopId: YOUKASSA_SHOP_ID,
@@ -62,17 +76,10 @@ router.post('/payment', async (req, res) => {
 
     const payment = await YooKassa.createPayment(createPayload, uuidv4());
 
+   const pendingOrders = readPendingOrders();
     pendingOrders[payment.id] = {
-      id: orderId,
-      total,
-      cart,
-      customer_name,
-      phone,
-      address,
-      deliveryTime,
-      comment,
+      id: orderId, total, cart, customer_name, phone, address, deliveryTime, comment,
     };
-
     console.log(`[Payment] Создан платеж для заказа №${orderId} с paymentId: ${payment.id}`);
     
     // Отправляем клиенту объект с платежом (включая confirmation_url)
@@ -86,15 +93,14 @@ router.post('/payment', async (req, res) => {
 
 // Роут для приема вебхуков (уведомлений) от ЮKassa
 router.post('/payment/notifications', async (req, res) => {
+  console.log('[Webhook] ПОЛУЧЕН ЗАПРОС НА /api/payment/notifications. Тело запроса:', req.body);
   try {
     const notification = req.body;
-    console.log('[Webhook] Получено уведомление:', notification);
-    
-    // Проверяем, что это уведомление об успешном платеже
     if (notification.event === 'payment.succeeded' && notification.object.status === 'succeeded') {
       const paymentId = notification.object.id;
       
       // Находим заказ в нашем временном хранилище
+      const pendingOrders = readPendingOrders();
       const orderData = pendingOrders[paymentId];
       
       if (orderData) {

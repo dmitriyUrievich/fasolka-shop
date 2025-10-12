@@ -187,31 +187,6 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
 
   const handleCloseOrderForm = () => setIsOrderFormOpen(false);
 
-  // 1. Выносим отправку в Telegram в отдельную функцию для переиспользования
-  const sendOrderToTelegram = async (orderData) => {
-    try {
-      const response = await fetch('/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData),
-      });
-      if (!response.ok) {
-        // Если не удалось отправить в Telegram, выбрасываем ошибку, чтобы остановить процесс
-        const errorText = await response.text();
-        throw new Error(`Ошибка отправки в Telegram: ${errorText || response.statusText}`);
-      }
-      return true; // Возвращаем true в случае успеха
-    } catch (error) {
-      console.error("Сетевая ошибка при отправке в Telegram:", error);
-      Swal.fire({
-        title: 'Сетевая ошибка',
-        text: 'Не удалось отправить заказ. Проверьте интернет и попробуйте снова.',
-        icon: 'error',
-      });
-      return false; 
-    }
-  };
-
   const createYooKassaPayment = async (orderData) => {
     try {
       const response = await fetch(`/api/payment`, {
@@ -237,7 +212,6 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
       return false;
     }
   };
-
 
 const handleSubmitOrder = async (customerData) => {
     
@@ -270,8 +244,6 @@ const handleSubmitOrder = async (customerData) => {
       setCartItems([]);
       handleCloseOrderForm();
     }
-    // Если isPaymentInitiated === false, то сообщение об ошибке уже было показано,
-    // и мы ничего не делаем. Корзина и форма остаются открытыми.
   };
 
 
@@ -369,7 +341,7 @@ const handleSubmitOrder = async (customerData) => {
                 </svg>
               </div>
             </div>
-              <div className="fallback-toggle-container">
+              {/* <div className="fallback-toggle-container">
                 <input 
                   type="checkbox" 
                   id="fallback-toggle"
@@ -380,7 +352,7 @@ const handleSubmitOrder = async (customerData) => {
                 <label htmlFor="fallback-toggle" className="fallback-toggle-label">
                   Без фото
                 </label>
-              </div>
+              </div> */}
             <button
               className="cart-icon-button desktop-cart"
               onClick={() => setIsCartOpen(prev => !prev)}

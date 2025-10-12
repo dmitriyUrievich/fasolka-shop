@@ -55,7 +55,14 @@ const Modal = ({ isOpen, onClose, children, shouldCloseOnOverlayClick = true }) 
       aria-labelledby="modal-title"
       onClick={shouldCloseOnOverlayClick ? onClose : undefined}
     >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
         {children}
+      </div>
     </div>,
     document.getElementById('root')
   );
