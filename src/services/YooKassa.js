@@ -93,6 +93,7 @@ router.post('/payment', async (req, res) => {
 
 // Роут для приема вебхуков (уведомлений) от ЮKassa
 router.post('/payment/notifications', async (req, res) => {
+  console.log('start')
   console.log('[Webhook] ПОЛУЧЕН ЗАПРОС НА /api/payment/notifications. Тело запроса:', req.body);
   try {
     const notification = req.body;
