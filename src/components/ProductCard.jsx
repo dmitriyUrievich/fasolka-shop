@@ -112,7 +112,7 @@ const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageCon
       </div>
       <div className="product-card__content">
         <h3 className="product-card__name">{name}</h3>
-        {import.meta.env.DEV && <p>{id}-{productType}</p>}
+        {import.meta.env.DEV && <p>{id}</p>}
         <p className="product-card__price">
           {price ? `${price.toLocaleString('ru-RU')} ₽` : 'Цена не указана'}
         </p>

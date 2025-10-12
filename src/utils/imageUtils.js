@@ -1,18 +1,11 @@
 // src/utils/imageUtils.js
 
-// Форматы, которые пробуем для изображений товаров
 const imageFormats = ['webp', 'jpg', 'jpeg'];
 
-// Локальный путь к дефолтному изображению
 const FALLBACK_IMAGE_URL = '/img/fallback.webp';
 
-// Кэш состояния загрузки для каждого товара
 const imageCache = {};
 
-/**
- * Возвращает URL fallback-изображения
- * Теперь — всегда локальный, без внешних зависимостей
- */
 export function getFallbackImageUrl(name) {
   // Можно игнорировать `name`, так как у нас одно дефолтное фото
   return FALLBACK_IMAGE_URL;

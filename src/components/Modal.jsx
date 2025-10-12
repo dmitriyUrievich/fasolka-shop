@@ -55,14 +55,7 @@ const Modal = ({ isOpen, onClose, children, shouldCloseOnOverlayClick = true }) 
       aria-labelledby="modal-title"
       onClick={shouldCloseOnOverlayClick ? onClose : undefined}
     >
-      <div
-        ref={modalRef}
-        tabIndex="-1"
-        className="modal-content"
-        onClick={(e) => e.stopPropagation()}
-      >
         {children}
-      </div>
     </div>,
     document.getElementById('root')
   );

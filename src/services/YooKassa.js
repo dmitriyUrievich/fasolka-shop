@@ -27,12 +27,12 @@ const YooKassa = new YooCheckout({
 
 router.post('/payment', async (req, res) => {
   try {
-    // Получаем все данные о заказе из тела запроса
-    const { orderId, total, cart, customer_name, phone, address, deliveryTime, comment } = req.body;
+   
+    const { id: orderId, total, cart, customer_name, phone, address, deliveryTime, comment } = req.body;
 
     const createPayload = {
       amount: {
-        value: total,
+        value: Number(total).toFixed(2),
         currency: 'RUB',
       },
       capture: true,
@@ -52,10 +52,10 @@ router.post('/payment', async (req, res) => {
           description: item.name,
           quantity: item.quantity.toString(),
           amount: {
-            value: item.price.toFixed(2),
+            value: Number(item.price).toFixed(2),
             currency: 'RUB'
           },
-          // vat_code: '1', ндс ?
+          vat_code: '1',
         })),
       }
     };
