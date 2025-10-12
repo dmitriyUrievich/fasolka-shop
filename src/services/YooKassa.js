@@ -111,6 +111,7 @@ router.post('/payment/notifications', async (req, res) => {
         
         // Удаляем обработанный заказ из хранилища
         delete pendingOrders[paymentId];
+        writePendingOrders(pendingOrders);
         
       } else {
         console.warn(`[Webhook] Не найден заказ для оплаченного paymentId: ${paymentId}. Возможно, он уже был обработан.`);
