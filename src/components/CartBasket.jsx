@@ -30,8 +30,8 @@ const CartBasket = ({
 
   const { cost: deliveryCost, text: deliveryText, showFreeHint } = deliveryInfo;
   const isOrderValid = deliveryCost !== null;
-  const total = isOrderValid ? subtotal : 0 // + deliveryCost : 0;
-
+  const total = isOrderValid ? subtotal + deliveryCost : 0;
+console.log(total,'====')
   return (
     <div className="cart-container">
       <div className="cart-header">

@@ -2,7 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import './../OrderForm.css';
 
-const OrderForm = ({ onSubmit, onClose,totalAmount }) => {
+const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
   const [customerName, setCustomerName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
@@ -28,12 +28,11 @@ const OrderForm = ({ onSubmit, onClose,totalAmount }) => {
     }
     if (!address.trim()) newErrors.address = 'Введите адрес.';
     
-    
   if (!deliveryTime) newErrors.deliveryTime = 'Выберите интервал доставки.';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [customerName, phoneNumber, address, deliveryTime]);
-
+console.log('---',totalAmount)
   // Стандартный обработчик отправки формы
   const handleSubmit = async (e) => {
     e.preventDefault(); 
