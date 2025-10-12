@@ -11,8 +11,8 @@
   border: 1px solid var(--border-color);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  box-sizing: border-box; /* 🔥 Обязательно */
-  overflow-x: hidden; /* 🔥 Блокируем горизонтальный overflow */
+  box-sizing: border-box;
+  overflow-x: hidden; 
 }
 
 .cart-header {
@@ -29,7 +29,6 @@
     color: var(--farm-dark-green);
     margin: 0;
     white-space: nowrap;
-    overflow: hidden;
     text-overflow: ellipsis;
 }
 
@@ -282,7 +281,6 @@
   .cart-header h2 {
     font-size: 1.4em;
     max-width: 80%;
-    overflow: hidden;
     text-overflow: ellipsis;
   }
 

@@ -3,10 +3,9 @@
 /* Базовые переменные для удобства */
 :root {
     --farm-green: #4CAF50; /* Насыщенный зеленый */
-    /* --farm-dark-green: #2E7D32; Темно-зеленый */
-    /* --farm-yellow: #FFEB3B; Яркий желтый */
     --farm-brown: #795548; /* Землистый коричневый */
     --farm-cream: #FFFDE7; /* Светлый кремовый */
+    --farm-dark-green: #2E7D32;
     --text-color: #333;
     --light-gray: #f5f5f5;
     --border-color: #ddd;

@@ -93,6 +93,33 @@
 .order-form-container .cancel-button {
   display: none;
 }
+.form-agreement-text {
+  font-size: 0.8rem; /* Маленький шрифт */
+  color: #666;      /* Серый, не отвлекающий цвет */
+  line-height: 1.5;
+  text-align: center; /* Центрируем текст */
+  margin-top: 20px;
+  margin-bottom: 15px; /* Отступ перед кнопкой */
+  padding: 0 10px; /* Небольшие отступы по бокам, чтобы текст не прилипал к краям */
+}
+
+.form-agreement-text a {
+  color: var(--farm-green, #4CAF50); /* Ваш фирменный цвет */
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.form-agreement-text a:hover {
+  color: var(--farm-dark-green, #2E7D32);
+}
+
+/* Убедитесь, что стиль для disabled кнопки выглядит так */
+.submit-button:disabled {
+  background-color: #b8d6a0; /* Светло-зеленый для состояния отправки */
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
 /* Адаптивность на мобильных */
 @media (max-width: 540px) {
   .order-form-container {

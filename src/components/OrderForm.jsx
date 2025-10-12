@@ -28,23 +28,21 @@ const OrderForm = ({ onSubmit, onClose,totalAmount }) => {
     }
     if (!address.trim()) newErrors.address = 'Введите адрес.';
     
-    // Опционально: сделать выбор времени обязательным
+    
   if (!deliveryTime) newErrors.deliveryTime = 'Выберите интервал доставки.';
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [customerName, phoneNumber, address, deliveryTime]);
 
   // Стандартный обработчик отправки формы
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Предотвращаем стандартную перезагрузку страницы
+    e.preventDefault(); 
     if (!validate()) {
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Собираем данные и вызываем onSubmit из родительского компонента
       await onSubmit({
         name: customerName,
         phone: phoneNumber,
@@ -55,12 +53,9 @@ const OrderForm = ({ onSubmit, onClose,totalAmount }) => {
     } catch (error) {
         console.error("Ошибка при обработке формы:", error);
     } finally {
-      // isSubmitting будет управляться из родительского компонента 
-      // через закрытие модального окна, но на всякий случай оставим
       setIsSubmitting(false);
     }
   };
-
 
   return (
    <div className="order-form-container">
@@ -98,7 +93,16 @@ const OrderForm = ({ onSubmit, onClose,totalAmount }) => {
           </select>
           {errors.deliveryTime && (<span className="error-message">{errors.deliveryTime}</span>)}
         </div>
-
+         <div className="form-agreement-text">
+          Нажимая «Перейти к оплате», вы соглашаетесь с условиями{' '}
+          <a href="/user-agreement.pdf" target="_blank" rel="noopener noreferrer">
+            Пользовательского соглашения
+          </a>{' '}
+          и{' '}
+          <a href="/privacy-policy.pdf" target="_blank" rel="noopener noreferrer">
+            Политикой конфиденциальности
+          </a>.
+        </div>
         <div className="form-actions">        
           <button
             type="submit"

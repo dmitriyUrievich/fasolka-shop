@@ -17,37 +17,11 @@
   animation: fadeInUp 0.5s ease forwards;
   animation-delay: calc(var(--card-delay, 0) * 0.1s);
 }
-
-/* Обёртка изображения: используем одну переменную высоты и фиксируем её
-.product-card__image-wrapper {
-  width: 100%;
-  height: var(--card-image-height, 180px);
-  min-height: var(--card-image-height, 180px);
-  max-height: var(--card-image-height, 180px);
-  overflow: hidden;
-  position: relative;
-  display: flex;             
-  align-items: center;
-  justify-content: center;
-  background-color: #fff;
-  padding: 6px;               
-  box-sizing: border-box;
-} */
-
-/* Само изображение — cover, чтобы одинаково кадрироваться и не менять размеры контейнера */
-/* .product-card__image {
-  width: auto;                 
-  max-width: 100%;             
-  height: auto;                
-  max-height: 100%;            
-  object-fit: cover;         
-  object-position: center;
-  display: block;
-  transition: filter .24s ease, transform .24s ease;
-} */
-.product-card:hover .product-card__image {
-  transform: scale(1.1); /* Легкое увеличение при наведении */
+.product-card__name{
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
 }
+
 .product-card__image--blur {
   filter: blur(2px) grayscale(.25) contrast(.9);
   transform: scale(1.02); /* немного масштабируем, чтобы заполнить "letterbox" */
@@ -174,7 +148,7 @@
 }
 
 .btn-quantity {
-  background: linear-gradient(90deg, var(--farm-green), var(--farm-dark-green));
+  background: linear-gradient(to right, var(--farm-green), #689F38);
   border: none;
   color: #fff;
   font-size: 18px; /* Чуть меньше на мобиле */
@@ -247,7 +221,7 @@
 
   .product-card__name {
     font-size: 0.95em;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     min-height: 2.2em;
   }
 
@@ -294,7 +268,7 @@
 
   .product-card__name {
     font-size: 0.9em;
-    -webkit-line-clamp: 1; /* Один ряд на очень узких экранах */
+    -webkit-line-clamp: 2; /* Один ряд на очень узких экранах */
     min-height: 1.4em;
   }
 

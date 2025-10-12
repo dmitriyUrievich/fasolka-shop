@@ -6,9 +6,11 @@ import Map from './Map';
 import '../ProductList.css';
 import getPortion from '../utils/getPortion';
 const storageKey = 'ageConfirmedGlobal';
+import { createImageLoader } from '../utils/imageUtils';
 
 const ProductList = ({
   products,
+  categories,
   loading,
   searchTerm,
   sortOption,
@@ -17,6 +19,7 @@ const ProductList = ({
   addToCart,
   selectedCategoryId,
   listHeader,
+  showOnlyFallback,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 24;
@@ -33,43 +36,72 @@ const ProductList = ({
     if (saved === 'true') setAgeConfirmed(true);
   }, []);
 
+ const blacklistedCategoryIds = useMemo(() => {
+    const blacklistNames = ['ОБОРУДОВАНИЕ', 'Без группы',];
+    const ids = new Set();
+    if (Array.isArray(categories)) {
+      categories.forEach(cat => {
+        if (blacklistNames.some(name => cat.name && (cat.name.includes(name) || cat.name === name))) {
+          ids.add(cat.id);
+        }
+      });
+    }
+    return ids;
+  }, [categories]);
+
   // 🔹 Фильтрация: учитываем unit и минимальный остаток
   const filteredProducts = useMemo(() => {
-  return products.filter((product) => {
-    if (!product) return false;
-    if (product.productType === 'Tobacco') return false;
-
-    const matchesCategory = selectedCategoryId
-      ? product.groupId === selectedCategoryId
-      : true;
-
-    const matchesSearch = searchTerm
-      ? product.name.toLowerCase().includes(searchTerm.toLowerCase())
-      : true;
-
-    // --- Проверка доступности с учётом порции ---
-    const isAvailable = (() => {
-      // Если НЕ килограмм — просто rests > 0
-      if (product.unit !== 'Kilogram') {
-        return product.rests > 0;
+    // Шаг 1: Основная фильтрация
+    const initialFilter = products.filter((product) => {
+      if (!product) return false;
+      
+      // Отфильтровываем товары из "черного списка" категорий
+      if (product.groupId && blacklistedCategoryIds.has(product.groupId)) {
+        return false;
       }
+      
+      if (product.productType === 'Tobacco') return false;
 
-      // Для Kilogram: определяем порцию
-      const portion = getPortion(product.name, product.unit);
+      const matchesCategory = selectedCategoryId
+        ? product.groupId === selectedCategoryId
+        : true;
 
-      // Если порция найдена — минимальный остаток = одна порция
-      if (portion) {
-        const minRest = portion.weightInGrams / 1000; // в кг
-        return product.rests >= minRest;
-      }
+      const matchesSearch = searchTerm
+        ? product.name.toLowerCase().includes(searchTerm.toLowerCase())
+        : true;
 
-      // Если порции нет — минимальный остаток 0.1 кг (100 грамм)
-      return product.rests >= 0.1;
-    })();
+      const isAvailable = (() => {
+        if (product.unit !== 'Kilogram') {
+          return product.rests > 0;
+        }
+        const portion = getPortion(product.name, product.unit);
+        if (portion) {
+          const minRest = portion.weightInGrams / 1000;
+          return product.rests >= minRest;
+        }
+        return product.rests >= 0.1;
+      })();
 
-    return matchesCategory && matchesSearch && isAvailable;
-  });
-}, [products, selectedCategoryId, searchTerm]);
+      return matchesCategory && matchesSearch && isAvailable;
+    });
+
+    // Шаг 2: Дополнительная фильтрация по дефолтным фото (если включен режим)
+    if (showOnlyFallback) {
+      return initialFilter.filter((product) => {
+        if (!product || !product.id) return false;
+        
+        // Создаем загрузчик для проверки, дефолтное ли фото
+        const loader = createImageLoader(product.id, product.name);
+        
+        // Используем метод isFallback() из вашей утилиты
+        return loader.isFallback();
+      });
+    }
+
+    // Если режим не включен, возвращаем результат основной фильтрации
+    return initialFilter;
+
+  }, [products, selectedCategoryId, searchTerm, blacklistedCategoryIds, showOnlyFallback]);
 
   const sortedProducts = useMemo(() => {
     return [...filteredProducts].sort((a, b) => {
