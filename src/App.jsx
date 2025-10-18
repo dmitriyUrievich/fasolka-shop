@@ -8,11 +8,31 @@ import { generateDailyOrderId } from './utils/orderUtils';
 import getPortion from './utils/getPortion';
 import Swal from 'sweetalert2';
 import { fetchProductsWithRests, getCatalog, getShops } from './services/konturMarketApi';
-import totalSum from './utils/totalSum'
 
 const CartBasket = React.lazy(() => import('./components/CartBasket'));
 const Modal = React.lazy(() => import('./components/Modal'));
 const OrderForm = React.lazy(() => import('./components/OrderForm'));
+
+const totalSum = (cartItems) => {
+  let total = 0;
+  let totalWithReserve = 0;
+
+  cartItems.forEach(item => {
+    const itemTotal = item.sellPricePerUnit * item.quantityInCart;
+    total += itemTotal;
+
+    if (item.unit === 'Kilogram') {
+      totalWithReserve += itemTotal * 1.15;
+    } else {
+      totalWithReserve += itemTotal;
+    }
+  });
+
+  return {
+    total: parseFloat(total.toFixed(2)),
+    totalWithReserve: parseFloat(totalWithReserve.toFixed(2))
+  };
+};
 
 function App() {
   const [searchTerm, setSearchTerm] = useState('');

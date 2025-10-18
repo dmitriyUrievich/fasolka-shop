@@ -174,6 +174,9 @@ export default function initializeBot(app) {
      */
     bot.on('message', async (msg) => {
         const chatId = msg.chat.id.toString();
+        if (!ALLOWED_CHAT_IDS.includes(chatId)) {
+        return bot.sendMessage(chatId, '🚫 Доступ запрещён.');
+    }
         const state = userState[chatId];
 
         // --- Логика ввода веса ---
@@ -217,21 +220,31 @@ export default function initializeBot(app) {
      */
     bot.on('callback_query', async (q) => {
         const chatId = q.message.chat.id.toString();
+        if (!ALLOWED_CHAT_IDS.includes(chatId)) {
+            return bot.answerCallbackQuery(q.id, { text: '🚫 У вас нет доступа.', show_alert: true });
+        }
+
         const [action, orderId, itemIndexStr] = q.data.split('_');
 
-        // --- Логика для заказов НА СБОРКЕ ---
-        const assemblyOrders = readFile(ASSEMBLY_ORDERS_PATH);
-        if (assemblyOrders[orderId]) {
+        // --- БЛОК 1: Логика для заказов НА СБОРКЕ ---
+        if (action === 'adjust' || action === 'capture') {
+            const assemblyOrders = readFile(ASSEMBLY_ORDERS_PATH);
+            const orderData = assemblyOrders[orderId];
+
+            if (!orderData) {
+                return bot.answerCallbackQuery(q.id, { text: 'Этот заказ уже подтвержден или не найден.', show_alert: true });
+            }
+
             if (action === 'adjust') {
                 const itemIndex = parseInt(itemIndexStr, 10);
-                const item = assemblyOrders[orderId]?.cart[itemIndex];
-                if (!item) return bot.answerCallbackQuery(q.id, { text: 'Товар не найден.', show_alert: true });
+                const item = orderData.cart[itemIndex];
+                if (!item) return bot.answerCallbackQuery(q.id, { text: 'Товар в заказе не найден.', show_alert: true });
                 
                 userState[chatId] = { action: 'adjust_weight', orderId, itemIndex, messageId: q.message.message_id };
                 bot.answerCallbackQuery(q.id);
                 bot.sendMessage(chatId, `✏️ Введите точный вес в ГРАММАХ для товара "${item.name}":`);
-                return;
             }
+            
             if (action === 'capture') {
                 try {
                     await bot.answerCallbackQuery(q.id, { text: 'Отправляю запрос на списание...' });
@@ -240,26 +253,35 @@ export default function initializeBot(app) {
                 } catch (error) {
                     bot.answerCallbackQuery(q.id, { text: `⚠️ Ошибка: ${error.message}`, show_alert: true });
                 }
-                return;
             }
+            return; // Завершаем выполнение, так как действие обработано
         }
 
-        // --- Логика для ОПЛАЧЕННЫХ заказов ---
-        const orders = readFile(COMPLETED_ORDERS_PATH);
-        const order = orders[orderId];
-        if (!order) {
-            return bot.answerCallbackQuery(q.id, { text: 'Заказ не найден в списке оплаченных.', show_alert: true });
-        }
-        
-        if (action === 'get') order.status = 'in_progress';
-        else if (action === 'done') order.status = 'completed';
-        else return bot.answerCallbackQuery(q.id); // Неизвестное действие
+        // --- БЛОК 2: Логика для ОПЛАЧЕННЫХ заказов ---
+        if (action === 'get' || action === 'done') {
+            const orders = readFile(COMPLETED_ORDERS_PATH);
+            const order = orders[orderId];
 
-        writeFile(COMPLETED_ORDERS_PATH, orders);
-        
-        const { message, options } = buildPaidOrderMessageAndOptions(order);
-        await bot.editMessageText(message, { chat_id: chatId, message_id: q.message.message_id, ...options });
-        bot.answerCallbackQuery(q.id);
+            if (!order) {
+                return bot.answerCallbackQuery(q.id, { text: 'Заказ не найден в списке оплаченных.', show_alert: true });
+            }
+            
+            if (action === 'get') {
+                order.status = 'in_progress';
+            } else if (action === 'done') {
+                order.status = 'completed';
+            }
+
+            writeFile(COMPLETED_ORDERS_PATH, orders);
+            
+            const { message, options } = buildPaidOrderMessageAndOptions(order);
+            await bot.editMessageText(message, { chat_id: chatId, message_id: q.message.message_id, ...options });
+            bot.answerCallbackQuery(q.id);
+            return; // Завершаем выполнение
+        }
+
+        // Если действие не подошло ни под одну категорию
+        bot.answerCallbackQuery(q.id, { text: 'Неизвестное действие.', show_alert: true });
     });
 
     /**
