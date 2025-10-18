@@ -8,6 +8,7 @@ import { generateDailyOrderId } from './utils/orderUtils';
 import getPortion from './utils/getPortion';
 import Swal from 'sweetalert2';
 import { fetchProductsWithRests, getCatalog, getShops } from './services/konturMarketApi';
+import totalSum from './utils/totalSum'
 
 const CartBasket = React.lazy(() => import('./components/CartBasket'));
 const Modal = React.lazy(() => import('./components/Modal'));
@@ -214,7 +215,11 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
   };
 
 const handleSubmitOrder = async (customerData) => {
-    
+    if (cartItems.length === 0) {
+      Swal.fire('Корзина пуста', 'Пожалуйста, добавьте товары в корзину.', 'warning');
+      return;
+    }
+    const { total, totalWithReserve } = totalSum (cartItems);
     // 1. Формируем полный объект заказа
     const orderData = {
       id: generateDailyOrderId(),
@@ -223,8 +228,10 @@ const handleSubmitOrder = async (customerData) => {
       address: customerData.address,
       comment: customerData.comment,
       deliveryTime: customerData.deliveryTime,
-      total: totalCartPrice,
+      total: total,
+      totalWithReserve: totalWithReserve, // Сумма с запасом (ХОЛДИРОВАНИЯ)
       cart: cartItems.map((item) => ({
+        id: item.id,
         name: item.name,
         quantity: item.quantityInCart,
         price: item.sellPricePerUnit,
@@ -245,7 +252,6 @@ const handleSubmitOrder = async (customerData) => {
       handleCloseOrderForm();
     }
   };
-
 
   const onClearCart = () => {
     setCartItems([]);
