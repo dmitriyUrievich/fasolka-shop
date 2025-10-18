@@ -25,8 +25,16 @@ const readPendingOrders = () => {
   if (!fs.existsSync(pendingOrdersPath)) {
     return {};
   }
-  const data = fs.readFileSync(pendingOrdersPath);
-  return JSON.parse(data);
+  try {
+    const data = fs.readFileSync(pendingOrdersPath, 'utf8');
+    if (data.trim() === '') {
+      return {};
+    }
+    return JSON.parse(data);
+  } catch (error) {
+    console.error(`Ошибка чтения или парсинга файла pendingOrders.json:`, error);
+    return {};
+  }
 };
 
 // 4. Функция для записи заказов в файл
@@ -81,7 +89,7 @@ router.post('/payment', async (req, res) => {
       id: orderId, total, cart, customer_name, phone, address, deliveryTime, comment,
     };
     console.log(`[Payment] Создан платеж для заказа №${orderId} с paymentId: ${payment.id}`);
-    
+    writePendingOrders(pendingOrders);
     // Отправляем клиенту объект с платежом (включая confirmation_url)
     res.json({ payment });
 
