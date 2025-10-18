@@ -1,7 +1,8 @@
 // src/components/OrderForm.js
 import React, { useState, useCallback } from 'react';
 import './../OrderForm.css';
-
+import YandexMap from './YandexMap';
+import '../YandexMap.css';
 const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
   const [customerName, setCustomerName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -10,6 +11,7 @@ const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
   const [deliveryTime, setDeliveryTime] = useState(''); // теперь это строка-интервал
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAddressInZone, setIsAddressInZone] = useState(false);
 
   const timeSlots = [
     '9:00–12:00',
@@ -27,16 +29,20 @@ const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
       newErrors.phone = 'Некорректный номер.';
     }
     if (!address.trim()) newErrors.address = 'Введите адрес.';
+
+    if (!isAddressInZone) newErrors.address = 'Адрес должен быть в зоне доставки.';
+    
     
   if (!deliveryTime) newErrors.deliveryTime = 'Выберите интервал доставки.';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [customerName, phoneNumber, address, deliveryTime]);
+  }, [customerName, phoneNumber, address, deliveryTime,isAddressInZone]);
 console.log('---',totalAmount)
   // Стандартный обработчик отправки формы
   const handleSubmit = async (e) => {
     e.preventDefault(); 
-    if (!validate()) {
+    if (!validate() || !isAddressInZone) {
+      if(!isAddressInZone) alert("Пожалуйста, укажите адрес в зоне доставки.");
       return;
     }
 
@@ -92,6 +98,18 @@ console.log('---',totalAmount)
           </select>
           {errors.deliveryTime && (<span className="error-message">{errors.deliveryTime}</span>)}
         </div>
+
+        <div className='map-section'>
+          <YandexMap
+            address={address} // <-- Передаем текущий адрес в карту
+            onZoneCheck={setIsAddressInZone} // <-- Карта вызовет эту функцию с true/false
+            center={[44.665, 37.79]} // Координаты центра карты
+            zoom={12}
+            placemark={[44.67590828940214,37.64249692460607]} // Координаты магазина
+            kmlUrl="/map.kml" // Убедитесь, что файл лежит в public/
+          />
+        </div>
+
          <div className="form-agreement-text">
           Нажимая «Перейти к оплате», вы соглашаетесь с условиями{' '}
           <a href="/user-agreement.pdf" target="_blank" rel="noopener noreferrer">
@@ -106,7 +124,7 @@ console.log('---',totalAmount)
           <button
             type="submit"
             className="submit-button"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !isAddressInZone}
           >
             {isSubmitting ? 'Отправка...' : `Перейти к оплате ${totalAmount.toFixed(2)} ₽`}
           </button>

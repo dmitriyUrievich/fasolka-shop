@@ -2,20 +2,19 @@
 .yandex-map-wrapper {
   position: relative;
   width: 100%;
-  height: 300px;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  margin: 16px 0;
+  border: 1px solid #e0e0e0;
 }
-
 .yandex-map-container {
-    width: 100%;
-    height: 400px; /* Фиксированная высота карты */
-    border-radius: 12px; /* Скругленные углы */
-    overflow: hidden; /* Обрезает содержимое по скругленным углам */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Мягкая тень */
-    margin: 20px 0; /* Отступ сверху и снизу от карты */
-    border: 1px solid var(--border-color); /* Небольшая рамка */
+  width: 100%;
+  height: 350px; /* Оптимальная высота для формы */
+  border-radius: 8px; /* Скругляем углы */
+  border: 1px solid #e0e0e0; /* Тонкая рамка */
+  overflow: hidden; /* Обрезает все, что выходит за рамки */
+  box-sizing: border-box;
 }
 /* Заглушка во время загрузки */
 .map-placeholder {
@@ -33,9 +32,24 @@
   z-index: 1;
   border-radius: 8px;
 }
-/* Адаптивность для карты, если нужно изменить высоту на мобильных */
+.map-check-result {
+  padding: 0 8px;
+  font-size: 0.9em;
+  text-align: center;
+  min-height: 25px; /* Резервируем место, чтобы форма не "прыгала" */
+}
+
+.map-check-result p {
+  margin: 8px 0 0 0; /* Только верхний отступ */
+}
+
+.map-check-result .success { color: #2e7d32; font-weight: 500; }
+.map-check-result .error { color: #d32f2f; font-weight: 500; }
+.map-check-result .warning { color: #ed6c02; font-weight: 500; }
+
+/* Адаптивность для карты */
 @media (max-width: 768px) {
-    .yandex-map-container {
-        height: 300px; /* Меньшая высота на мобильных устройствах */
-    }
+  .yandex-map-container {
+    height: 300px; /* Делаем карту чуть ниже на мобильных */
+  }
 }

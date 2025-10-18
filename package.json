@@ -3,16 +3,17 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-"scripts": {
-  "dev": "concurrently \"npm:client\" \"npm:server\"",
-  "client": "vite",
-  "server": "nodemon",
-  "build": "vite build",
-  "start": "node src/server.js",
-  "lint": "eslint ."
-},
+  "scripts": {
+    "dev": "concurrently \"npm:client\" \"npm:server\"",
+    "client": "vite",
+    "server": "nodemon",
+    "build": "vite build",
+    "start": "node src/server.js",
+    "lint": "eslint ."
+  },
   "dependencies": {
     "@a2seven/yoo-checkout": "^1.1.4",
+    "@tmcw/togeojson": "^7.1.2",
     "axios": "^1.10.0",
     "cors": "^2.8.5",
     "dotenv": "^17.0.1",

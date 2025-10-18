@@ -2,7 +2,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import dotenv from 'dotenv';
 dotenv.config();
 
- // const card = {
+// const card = {
 //   "id": "ORDER6",
 //   "customer_name": "Лиза",
 //   "phone": "+79998887766",

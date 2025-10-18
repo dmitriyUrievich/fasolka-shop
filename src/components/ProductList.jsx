@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import Pagination from './Pagination';
-import Map from './Map';
+import YandexMap from './YandexMap';
 import '../ProductList.css';
 import getPortion from '../utils/getPortion';
 const storageKey = 'ageConfirmedGlobal';
@@ -170,13 +170,13 @@ const ProductList = ({
       </div>
      <div className="map-section">
         <h2 className="map-title">Наш Магазин на Карте</h2>
-        <Map
+        {/* <YandexMap
           center={[44.675898, 37.642492]}
           zoom={12}
           placemark={[44.675898, 37.642492]}
           placemarkHint="Фасоль"
           placemarkBalloon="Мы находимся по адресу: пер. Торпедный д4."
-        />
+        /> */}
       </div>
     </>
   );

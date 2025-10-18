@@ -13,8 +13,17 @@
   box-sizing: border-box;
   font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   position: relative;
-  max-height: 90vh; /* Ограничиваем высоту, чтобы форма не вылезала за экран */
+  max-height: 90vh;
+  overflow-y: auto; /* Ограничиваем высоту, чтобы форма не вылезала за экран */
 /* Включаем внутреннюю прокрутку, если контент не влезает */
+}
+
+#form-title { /* Применяем стили к h2 по его ID */
+  text-align: center; 
+  color: #2c3e50; 
+  margin-bottom: 28px; 
+  font-size: 1.8em; 
+  font-weight: 600; 
 }
 .form-title { 
   text-align: center; 
@@ -123,10 +132,16 @@
 /* Адаптивность на мобильных */
 @media (max-width: 540px) {
   .order-form-container {
-    padding: 16px;
+    padding: 20px 15px;
     margin: 10px;
+    width: auto;
     max-width: 100%;
     border-radius: 8px;
+  }
+  
+  #form-title {
+    font-size: 1.5em;
+    margin-bottom: 20px;
   }
 
   .order-form-container h2 {
