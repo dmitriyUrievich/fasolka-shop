@@ -13,6 +13,27 @@ const CartBasket = React.lazy(() => import('./components/CartBasket'));
 const Modal = React.lazy(() => import('./components/Modal'));
 const OrderForm = React.lazy(() => import('./components/OrderForm'));
 
+const totalSum = (cartItems) => {
+  let total = 0;
+  let totalWithReserve = 0;
+
+  cartItems.forEach(item => {
+    const itemTotal = item.sellPricePerUnit * item.quantityInCart;
+    total += itemTotal;
+
+    if (item.unit === 'Kilogram') {
+      totalWithReserve += itemTotal * 1.15;
+    } else {
+      totalWithReserve += itemTotal;
+    }
+  });
+
+  return {
+    total: parseFloat(total.toFixed(2)),
+    totalWithReserve: parseFloat(totalWithReserve.toFixed(2))
+  };
+};
+
 function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState('none');
@@ -214,7 +235,11 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
   };
 
 const handleSubmitOrder = async (customerData) => {
-    
+    if (cartItems.length === 0) {
+      Swal.fire('Корзина пуста', 'Пожалуйста, добавьте товары в корзину.', 'warning');
+      return;
+    }
+    const { total, totalWithReserve } = totalSum (cartItems);
     // 1. Формируем полный объект заказа
     const orderData = {
       id: generateDailyOrderId(),
@@ -223,8 +248,10 @@ const handleSubmitOrder = async (customerData) => {
       address: customerData.address,
       comment: customerData.comment,
       deliveryTime: customerData.deliveryTime,
-      total: totalCartPrice,
+      total: total,
+      totalWithReserve: totalWithReserve, // Сумма с запасом (ХОЛДИРОВАНИЯ)
       cart: cartItems.map((item) => ({
+        id: item.id,
         name: item.name,
         quantity: item.quantityInCart,
         price: item.sellPricePerUnit,
@@ -245,7 +272,6 @@ const handleSubmitOrder = async (customerData) => {
       handleCloseOrderForm();
     }
   };
-
 
   const onClearCart = () => {
     setCartItems([]);

@@ -4,7 +4,7 @@ import { Router } from 'express';
 import { YooCheckout } from '@a2seven/yoo-checkout';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
-import { sendPaidOrderNotification } from './api_Telegram.js';
+import { sendOrderForAssemblyNotification, sendPaidOrderNotification } from './api_Telegram.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -16,122 +16,103 @@ const YOUKASSA_SECRET_KEY = process.env.YOUKASSA_KEY;
 const YOUKASSA_SHOP_ID = process.env.YOUKASSA_ID;
 
 if (!YOUKASSA_SECRET_KEY || !YOUKASSA_SHOP_ID) {
-  // Выбрасываем ошибку, чтобы остановить сервер при неверной конфигурации
   throw new Error('Учетные данные YooKassa не заданы в .env файле.');
 }
+
+// Два файла для хранения: один для ожидающих оплаты, другой для ожидающих сборки
 const pendingOrdersPath = path.resolve('pendingOrders.json');
+const assemblyOrdersPath = path.resolve('assemblyOrders.json');
 
-const readPendingOrders = () => {
-  if (!fs.existsSync(pendingOrdersPath)) {
-    return {};
-  }
+const readFile = (filePath) => {
+  if (!fs.existsSync(filePath)) return {};
   try {
-    const data = fs.readFileSync(pendingOrdersPath, 'utf8');
-    if (data.trim() === '') {
-      return {};
-    }
-    return JSON.parse(data);
-  } catch (error) {
-    console.error(`Ошибка чтения или парсинга файла pendingOrders.json:`, error);
-    return {};
-  }
+    const data = fs.readFileSync(filePath, 'utf8');
+    return data ? JSON.parse(data) : {};
+  } catch (error) { console.error(`Ошибка чтения ${filePath}:`, error); return {}; }
 };
+const writeFile = (filePath, data) => fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 
-// 4. Функция для записи заказов в файл
-const writePendingOrders = (orders) => {
-  fs.writeFileSync(pendingOrdersPath, JSON.stringify(orders, null, 2));
-};
+const YooKassa = new YooCheckout({ shopId: YOUKASSA_SHOP_ID, secretKey: YOUKASSA_SECRET_KEY });
 
-const YooKassa = new YooCheckout({
-  shopId: YOUKASSA_SHOP_ID,
-  secretKey: YOUKASSA_SECRET_KEY,
-});
-
+// ШАГ 1: Создание платежа с ХОЛДИРОВАНИЕМ
 router.post('/payment', async (req, res) => {
   try {
-   
-    const { id: orderId, total, cart, customer_name, phone, address, deliveryTime, comment } = req.body;
+    const { id: orderId, totalWithReserve, cart, ...customerData } = req.body;
 
     const createPayload = {
-      amount: {
-        value: Number(total).toFixed(2),
-        currency: 'RUB',
-      },
-      capture: true,
-      confirmation: {
-        type: 'redirect',
-        return_url: 'https://fasol-nvrsk.ru',
-      },
-      description: `Заказ №${orderId}`,
-      metadata: {
-        orderId: orderId,
-      },
-      receipt: {
-        customer: {
-          phone: phone,
-        },
-        items: cart.map(item => ({
-          description: item.name,
-          quantity: item.quantity.toString(),
-          amount: {
-            value: Number(item.price).toFixed(2),
-            currency: 'RUB'
-          },
-          vat_code: '1',
-        })),
-      }
+      amount: { value: Number(totalWithReserve).toFixed(2), currency: 'RUB' },
+      capture: false, // ГЛАВНОЕ ИЗМЕНЕНИЕ: НЕ списываем, а холдируем
+      confirmation: { type: 'redirect', return_url: 'https://fasol-nvrsk.ru' },
+      description: `Заказ №${orderId} (резервирование средств)`,
+      metadata: { orderId },
     };
 
     const payment = await YooKassa.createPayment(createPayload, uuidv4());
 
-   const pendingOrders = readPendingOrders();
-    pendingOrders[payment.id] = {
-      id: orderId, total, cart, customer_name, phone, address, deliveryTime, comment,
-    };
-    console.log(`[Payment] Создан платеж для заказа №${orderId} с paymentId: ${payment.id}`);
-    writePendingOrders(pendingOrders);
-    // Отправляем клиенту объект с платежом (включая confirmation_url)
-    res.json({ payment });
+    const pendingOrders = readFile(pendingOrdersPath);
+    pendingOrders[payment.id] = { id: orderId, totalWithReserve, cart, ...customerData };
+    writeFile(pendingOrdersPath, pendingOrders);
 
+    console.log(`[Payment] Создан платеж с холдированием для заказа №${orderId}. PaymentId: ${payment.id}`);
+    res.json({ payment });
   } catch (error) {
     console.error('Ошибка при создании платежа:', error.data || error);
     res.status(400).json({ error: error.data || { message: 'Неизвестная ошибка' } });
   }
 });
 
-// Роут для приема вебхуков (уведомлений) от ЮKassa
+// ШАГ 2: Уведомление от ЮKassa о том, что деньги ЗАХОЛДИРОВАНЫ
 router.post('/payment/notifications', async (req, res) => {
-  console.log('start')
-  console.log('[Webhook] ПОЛУЧЕН ЗАПРОС НА /api/payment/notifications. Тело запроса:', req.body);
   try {
     const notification = req.body;
     if (notification.event === 'payment.succeeded' && notification.object.status === 'succeeded') {
       const paymentId = notification.object.id;
-      
-      // Находим заказ в нашем временном хранилище
-      const pendingOrders = readPendingOrders();
+      const pendingOrders = readFile(pendingOrdersPath);
       const orderData = pendingOrders[paymentId];
-      
       if (orderData) {
-        console.log(`[Webhook] Найден заказ №${orderData.id} для оплаченного paymentId ${paymentId}`);
-        
-        // Вызываем функцию для отправки уведомления в Telegram
-        await sendPaidOrderNotification(orderData);
-        
-        // Удаляем обработанный заказ из хранилища
+        console.log(`[Webhook] Средства для заказа №${orderData.id} успешно захолдированы.`);
+        const assemblyOrders = readFile(assemblyOrdersPath);
+        assemblyOrders[orderData.id] = { ...orderData, paymentId: paymentId };
+        writeFile(assemblyOrdersPath, assemblyOrders);
         delete pendingOrders[paymentId];
-        writePendingOrders(pendingOrders);
-        
-      } else {
-        console.warn(`[Webhook] Не найден заказ для оплаченного paymentId: ${paymentId}. Возможно, он уже был обработан.`);
+        writeFile(pendingOrdersPath, pendingOrders);
+        await sendOrderForAssemblyNotification(orderData);
       }
     }
-    
     res.status(200).json('OK');
-
   } catch (error) {
     console.error('[Webhook] Ошибка обработки уведомления:', error);
     res.status(200).json('OK');
+  }
+});
+
+// ШАГ 3: Эндпоинт для подтверждения списания ТОЧНОЙ суммы
+router.post('/payment/capture', async (req, res) => {
+  try {
+    const { orderId, finalCart } = req.body;
+    if (!orderId || !finalCart) return res.status(400).json({ message: 'Нет ID или финальной корзины.' });
+    
+    const assemblyOrders = readFile(assemblyOrdersPath);
+    const orderData = assemblyOrders[orderId];
+    if (!orderData) return res.status(404).json({ message: 'Заказ не найден.' });
+
+    const finalTotal = finalCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    const capturePayload = { amount: { value: finalTotal.toFixed(2), currency: 'RUB' } };
+
+    await YooKassa.capturePayment(orderData.paymentId, capturePayload, uuidv4());
+    console.log(`[Capture] Списание для заказа №${orderId} на сумму ${finalTotal.toFixed(2)} успешно.`);
+    
+    const finalOrderData = { ...orderData, cart: finalCart, total: finalTotal };
+    await sendPaidOrderNotification(finalOrderData);
+
+    delete assemblyOrders[orderId];
+    writeFile(assemblyOrdersPath, assemblyOrders);
+
+    res.status(200).json({ success: true, message: 'Списание подтверждено.' });
+  } catch (error) {
+    console.error('[Capture] Ошибка при списании:', error.data || error);
+    res.status(500).json({ error: error.data || { message: 'Ошибка сервера' } });
   }
 });
 
