@@ -2,7 +2,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import Pagination from './Pagination';
-import YandexMap from './YandexMap';
 import '../ProductList.css';
 import getPortion from '../utils/getPortion';
 const storageKey = 'ageConfirmedGlobal';
@@ -30,11 +29,21 @@ const ProductList = ({
     setAgeConfirmed(true);
     localStorage.setItem(storageKey, 'true');
   };
+console.log(products.find(product => product.id === '15aacd70-5f3d-4eab-8fdf-25f923cdd3be'));
 
   useEffect(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved === 'true') setAgeConfirmed(true);
   }, []);
+
+const specialOfferCategoryId = useMemo(() => {
+    if (!Array.isArray(categories)) {
+      return null;
+    }
+    // Ищем категорию по точному названию
+    const specialCategory = categories.find(cat => cat.name === 'АКЦИЯ МЕСЯЦА');
+    return specialCategory ? specialCategory.id : null;
+  }, [categories]);
 
  const blacklistedCategoryIds = useMemo(() => {
     const blacklistNames = ['ОБОРУДОВАНИЕ', 'Без группы',];
@@ -155,6 +164,7 @@ const ProductList = ({
               onConfirmAge={handleConfirmAge}
               cartItems={cartItems}
               updateCartQuantity={updateCartQuantity}
+              isDiscount={product.groupId === specialOfferCategoryId}
             />
           ))}
         </div>

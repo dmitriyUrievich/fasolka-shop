@@ -433,7 +433,7 @@ const handleSubmitOrder = async (customerData) => {
             </div>
           </main>
 
-          {/* Корзина справа на десктопе */}
+          {/* Корзина на десктопе */}
           {isDesktop && isCartOpen && (
             <aside className="cart-sidebar">
               <React.Suspense fallback={<div>Загрузка корзины...</div>}>
@@ -460,6 +460,7 @@ const handleSubmitOrder = async (customerData) => {
             <CartBasket
               isSidebar={false}
               cartItems={cartItems}
+              onClearCart={onClearCart}
               removeFromCart={removeFromCart}
               updateCartQuantity={updateCartQuantity}
               totalPrice={totalCartPrice}

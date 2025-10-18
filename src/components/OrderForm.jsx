@@ -101,15 +101,14 @@ console.log('---',totalAmount)
 
         <div className='map-section'>
           <YandexMap
-            address={address} // <-- Передаем текущий адрес в карту
-            onZoneCheck={setIsAddressInZone} // <-- Карта вызовет эту функцию с true/false
-            center={[44.665, 37.79]} // Координаты центра карты
+            address={address}
+            onZoneCheck={setIsAddressInZone}
+            center={[44.665, 37.79]}
             zoom={12}
-            placemark={[44.67590828940214,37.64249692460607]} // Координаты магазина
-            kmlUrl="/map.kml" // Убедитесь, что файл лежит в public/
+            placemark={[44.67590828940214,37.64249692460607]}
+            kmlUrl="/map.kml"
           />
         </div>
-
          <div className="form-agreement-text">
           Нажимая «Перейти к оплате», вы соглашаетесь с условиями{' '}
           <a href="/user-agreement.pdf" target="_blank" rel="noopener noreferrer">

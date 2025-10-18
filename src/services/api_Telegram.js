@@ -16,6 +16,7 @@ dotenv.config();
 
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const ALLOWED_CHAT_IDS = (process.env.TELEGRAM_CHAT_IDS || '')
+const DB_FILE_PATH = path.join(process.cwd(), 'orders.json');
   .split(',')
   .map(id => id.trim())
   .filter(id => id);
@@ -27,13 +28,35 @@ if (ALLOWED_CHAT_IDS.length === 0) {
 console.log('TOKEN----:', TOKEN);
 console.log('Разрешённые CHAT_ID:', ALLOWED_CHAT_IDS);
 
-// Проверка авторизации пользователя
 function isAuthorized(chatId) {
   return ALLOWED_CHAT_IDS.includes(chatId.toString());
 }
 
+function saveOrders(orders) {
+  try {
+    fs.writeFileSync(DB_FILE_PATH, JSON.stringify(orders, null, 2));
+  } catch (error) {
+    console.error('Ошибка при сохранении заказов:', error);
+  }
+}
+
+function loadOrders() {
+  try {
+    if (fs.existsSync(DB_FILE_PATH)) {
+      const data = fs.readFileSync(DB_FILE_PATH, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Ошибка при загрузке заказов, начинаем с пустого списка:', error);
+  }
+  return {};
+}
+
+
+
+
 const bot = new TelegramBot(TOKEN, { polling: true });
-const orders = new Map();
+let orders = loadOrders();
 
 /**
  * Отправляет уведомление об успешной оплате заказа в Telegram.
@@ -51,8 +74,7 @@ export const sendPaidOrderNotification = async (orderData) => {
   const deliveryText = orderData.deliveryTime ? `\n⏰ Время доставки: ${orderData.deliveryTime}` : '';
 
   const message = `
-✅ <b>Поступила новая ОПЛАТА</b>
-
+✅ <b>Поступил новый ЗАКАЗ</b>
 🧾 Номер заказа: <code>${orderData.id}</code>
 👤 Имя: ${orderData.customer_name}
 📞 Телефон: ${orderData.phone}
@@ -67,13 +89,20 @@ ${cartText}
   `.trim();
 
   try {
-    // Сохраняем заказ в локальное хранилище для дальнейшего управления через бота
-    // Статус "new" означает, что заказ новый и ожидает обработки.
-    orders.set(orderData.id.toString(), { ...orderData, status: 'new' });
+    orders[orderData.id.toString()] = { ...orderData, status: 'new' };
+    saveOrders(orders);
 
-    // Отправляем сообщение всем разрешенным админам
+    const options = {
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: 'Взять в работу', callback_data: `get_${orderData.id}` }]
+        ]
+      }
+    };
+
     const promises = ALLOWED_CHAT_IDS.map(chatId => 
-      bot.sendMessage(chatId, message, { parse_mode: 'HTML' })
+      bot.sendMessage(chatId, message, options)
     );
     await Promise.all(promises);
     console.log(`[Telegram] Уведомление об оплаченном заказе №${orderData.id} успешно отправлено.`);
@@ -84,7 +113,6 @@ ${cartText}
 
 export default function initializeBot(app) {
 
-// Русские названия статусов
 const STATUS_LABEL = {
   new: 'Новый',
   in_progress: 'В работе',
@@ -120,7 +148,7 @@ bot.onText(/^Все заказы$/, (msg) => {
     return bot.sendMessage(chatId, '🚫 Доступ запрещён.');
   }
 
-  const list = Array.from(orders.values()).filter(o => 
+  const list = Object.values(orders).filter(o => 
     o.status === 'new' || o.status === 'in_progress'
   );
 
@@ -130,11 +158,11 @@ bot.onText(/^Все заказы$/, (msg) => {
 
   list.forEach(o => {
     const text = `
-📋 Заказ ${o.id}
-Имя: ${o.customer_name}
-Адрес: ${o.address}
-Телефон: ${o.phone}
-Статус: ${STATUS_LABEL[o.status]}
+      📋 Заказ ${o.id}
+      Имя: ${o.customer_name}
+      Адрес: ${o.address}
+      Телефон: ${o.phone}
+      Статус: ${STATUS_LABEL[o.status]}
     `.trim();
 
     const buttons = [];
@@ -158,10 +186,9 @@ bot.onText(/^Новые заказы$/, (msg) => {
     return bot.sendMessage(chatId, '🚫 Доступ запрещён.');
   }
 
-  const list = Array.from(orders.values()).filter(o => o.status === 'new');
-  if (list.length === 0) {
-    return bot.sendMessage(chatId, 'Нет новых заказов.');
-  }
+  const list = Object.values(orders).filter(o => o.status === 'new');
+  if (list.length === 0) return bot.sendMessage(chatId, 'Нет новых заказов.');
+  
 
   list.forEach(o => {
     const text = `
@@ -188,18 +215,16 @@ bot.onText(/^В работе$/, (msg) => {
     return bot.sendMessage(chatId, '🚫 Доступ запрещён.');
   }
 
-  const list = Array.from(orders.values()).filter(o => o.status === 'in_progress');
-  if (list.length === 0) {
-    return bot.sendMessage(chatId, 'Нет заказов в работе.');
-  }
+  const list = Object.values(orders).filter(o => o.status === 'in_progress');
+  if (list.length === 0) return bot.sendMessage(chatId, 'Нет заказов в работе.');
 
   list.forEach(o => {
     const text = `
-📋 Заказ ${o.id}
-Имя: ${o.customer_name}
-Адрес: ${o.address}
-Телефон: ${o.phone}
-Статус: ${STATUS_LABEL[o.status]}
+      📋 Заказ ${o.id}
+      Имя: ${o.customer_name}
+      Адрес: ${o.address}
+      Телефон: ${o.phone}
+      Статус: ${STATUS_LABEL[o.status]}
     `.trim();
 
     bot.sendMessage(chatId, text, {
@@ -222,7 +247,7 @@ bot.on('callback_query', async (q) => {
   }
 
   const [action, id] = q.data.split('_');
-  const o = orders.get(id);
+  const o = orders[id];
 
   if (!o) {
     return bot.answerCallbackQuery(q.id, {
@@ -280,10 +305,10 @@ app.post('/order', async (req, res) => {
       message: 'Неверный формат заказа' 
     });
   }
-
-  // Установка статуса
   o.status = 'new';
-  orders.set(o.id, o);
+
+  orders[o.id] = o;
+  saveOrders(orders); 
 
   // Формируем список товаров
   let cartText = '';

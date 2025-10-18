@@ -7,7 +7,7 @@ import getPortion from '../utils/getPortion';
 const capitalizeFirstLetter = (string) =>
   string ? string.charAt(0).toUpperCase() + string.slice(1) : '';
 
-const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageConfirmed, onConfirmAge }) => {
+const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageConfirmed, onConfirmAge, isDiscount  }) => {
   const { id, name: rawName, sellPricePerUnit, rests, productType, unit } = product || {};
 
   const imageLoaderRef = useRef(null);
@@ -97,6 +97,11 @@ const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageCon
   return (
     <div className="product-card">
       <div className="product-card__image-wrapper">
+        {isDiscount && (
+          <div className="product-card__special-offer">
+            <span>Акция</span>
+          </div>
+        )}
         <img
           src={imageSrc}
           loading="lazy"
