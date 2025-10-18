@@ -39,13 +39,37 @@ router.post('/payment', async (req, res) => {
   try {
     const { id: orderId, totalWithReserve, cart, ...customerData } = req.body;
 
-    const createPayload = {
-      amount: { value: Number(totalWithReserve).toFixed(2), currency: 'RUB' },
-      capture: false, // ГЛАВНОЕ ИЗМЕНЕНИЕ: НЕ списываем, а холдируем
-      confirmation: { type: 'redirect', return_url: 'https://fasol-nvrsk.ru' },
-      description: `Заказ №${orderId} (резервирование средств)`,
-      metadata: { orderId },
-    };
+   const createPayload = {
+    amount: {
+        value: Number(totalWithReserve).toFixed(2),
+        currency: 'RUB',
+    },
+    capture: false,
+    confirmation: {
+        type: 'redirect',
+        return_url: 'https://fasol-nvrsk.ru',
+    },
+    description: `Заказ №${orderId} (резервирование средств)`,
+    metadata: { orderId },
+    
+    receipt: {
+        customer: {
+            phone: customerData.phone,
+        },
+        items: cart.map(item => ({
+            description: item.name.substring(0, 128), // Ограничение ЮKassa
+            quantity: item.quantity.toString(),
+            amount: {
+                value: item.price.toFixed(2), 
+                currency: 'RUB'
+            },
+            vat_code: '1', // "Без НДС"
+            payment_mode: 'full_prepayment',
+            payment_subject: 'commodity',
+        })),
+    }
+};
+
 
     const payment = await YooKassa.createPayment(createPayload, uuidv4());
 
