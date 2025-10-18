@@ -37,39 +37,59 @@ const YooKassa = new YooCheckout({ shopId: YOUKASSA_SHOP_ID, secretKey: YOUKASSA
 // ШАГ 1: Создание платежа с ХОЛДИРОВАНИЕМ
 router.post('/payment', async (req, res) => {
   try {
-    const { id: orderId, totalWithReserve, cart, ...customerData } = req.body;
+    const { id: orderId, cart, ...customerData } = req.body;
 
-   const createPayload = {
-    amount: {
-        value: Number(totalWithReserve).toFixed(2),
-        currency: 'RUB',
-    },
-    capture: false,
-    confirmation: {
-        type: 'redirect',
-        return_url: 'https://fasol-nvrsk.ru',
-    },
-    description: `Заказ №${orderId} (резервирование средств)`,
-    metadata: { orderId },
+    // --- НАЧАЛО ИСПРАВЛЕНИЯ: Пересчитываем все суммы на бэкенде ---
+    let realTotal = 0;
+    let totalWithReserve = 0;
+
+    cart.forEach(item => {
+      const itemTotal = Number(item.price) * Number(item.quantity);
+      realTotal += itemTotal;
+      if (item.unit === 'Kilogram') {
+        totalWithReserve += itemTotal * 1.15;
+      } else {
+        totalWithReserve += itemTotal;
+      }
+    });
     
-    receipt: {
-        customer: {
-            phone: customerData.phone,
-        },
-        items: cart.map(item => ({
-            description: item.name.substring(0, 128), // Ограничение ЮKassa
-            quantity: item.quantity.toString(),
-            amount: {
-                value: item.price.toFixed(2), 
-                currency: 'RUB'
-            },
-            vat_code: '1', // "Без НДС"
-            payment_mode: 'full_prepayment',
-            payment_subject: 'commodity',
-        })),
-    }
-};
+    realTotal = parseFloat(realTotal.toFixed(2));
+    totalWithReserve = parseFloat(totalWithReserve.toFixed(2));
+    const reserveDifference = parseFloat((totalWithReserve - realTotal).toFixed(2));
+    // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
 
+    const createPayload = {
+      amount: {
+        value: totalWithReserve.toFixed(2),
+        currency: 'RUB',
+      },
+      capture: false,
+      confirmation: { type: 'redirect', return_url: 'https://fasol-nvrsk.ru' },
+      description: `Заказ №${orderId} (резервирование средств)`,
+      metadata: { orderId },
+      receipt: {
+        customer: { phone: customerData.phone },
+        items: cart.map(item => ({
+          description: item.name.substring(0, 128),
+          quantity: item.quantity.toString(),
+          amount: { value: Number(item.price).toFixed(2), currency: 'RUB' },
+          vat_code: '1',
+          payment_mode: 'full_prepayment',
+          payment_subject: 'commodity',
+        })),
+      }
+    };
+    
+    if (reserveDifference > 0) {
+      createPayload.receipt.items.push({
+        description: 'Резервирование средств за весовой товар',
+        quantity: '1.00',
+        amount: { value: reserveDifference.toFixed(2), currency: 'RUB' },
+        vat_code: '1',
+        payment_mode: 'full_prepayment',
+        payment_subject: 'service',
+      });
+    }
 
     const payment = await YooKassa.createPayment(createPayload, uuidv4());
 
@@ -77,7 +97,6 @@ router.post('/payment', async (req, res) => {
     pendingOrders[payment.id] = { id: orderId, totalWithReserve, cart, ...customerData };
     writeFile(pendingOrdersPath, pendingOrders);
 
-    console.log(`[Payment] Создан платеж с холдированием для заказа №${orderId}. PaymentId: ${payment.id}`);
     res.json({ payment });
   } catch (error) {
     console.error('Ошибка при создании платежа:', error.data || error);
