@@ -11,15 +11,30 @@ const CartBasket = ({
   onClose, 
   onProceedToOrder 
 }) => {
-  const subtotal = useMemo(() => {
-    return cartItems.reduce(
-      (sum, item) => sum + (item.sellPricePerUnit || 0) * item.quantityInCart,
-      0
-    );
+  // Шаг 1: Рассчитываем все суммы в одном месте
+  const { subtotal, reserveAmount, hasWeightedItems } = useMemo(() => {
+    let calculatedSubtotal = 0;
+    let calculatedReserve = 0;
+    const weighted = cartItems.some(item => item.unit === 'Kilogram');
+
+    cartItems.forEach(item => {
+      const itemTotal = (item.sellPricePerUnit || 0) * item.quantityInCart;
+      calculatedSubtotal += itemTotal;
+      if (item.unit === 'Kilogram') {
+        calculatedReserve += itemTotal * 0.15;
+      }
+    });
+
+    return {
+      subtotal: calculatedSubtotal,
+      reserveAmount: calculatedReserve,
+      hasWeightedItems: weighted,
+    };
   }, [cartItems]);
 
+ // Шаг 2: Расчет доставки ведется от РЕАЛЬНОЙ стоимости товаров (subtotal)
   const deliveryInfo = useMemo(() => {
-    if (subtotal < 5) {
+    if (subtotal < 10) {
       return { cost: null, text: 'от 1000 ₽', showFreeHint: false };
     }
     if (subtotal >= 3000) {
@@ -28,10 +43,11 @@ const CartBasket = ({
     return { cost: 200, text: '200 ₽', showFreeHint: true };
   }, [subtotal]);
 
+  // Шаг 3: Финальная сумма для показа включает резерв
   const { cost: deliveryCost, text: deliveryText, showFreeHint } = deliveryInfo;
   const isOrderValid = deliveryCost !== null;
-  const total = isOrderValid ? subtotal + deliveryCost : 0;
-console.log(total,'====')
+  const totalWithReserve = isOrderValid ? subtotal + reserveAmount : 0 //+ deliveryCost : 0;
+
   return (
     <div className="cart-container">
       <div className="cart-header">
@@ -67,12 +83,19 @@ console.log(total,'====')
 
       <div className="cart-summary">
         <p className="cart-subtotal">
-          Товары: <span>{subtotal.toLocaleString('ru-RU')} ₽</span>
+          Товары: <span>{subtotal.toLocaleString('ru-RU', { minimumFractionDigits: 2 })} ₽</span>
         </p>
 
         <p className={`cart-delivery-info ${!isOrderValid ? 'cart-delivery-info--warning' : ''}`}>
           🚚 Доставка: <span>{deliveryText}</span>
         </p>
+        
+        {/* Новая строка, которая появляется только для весовых товаров */}
+        {hasWeightedItems && (
+          <p className="cart-reserve-info">
+            Резерв за вес (+15%): <span>+{reserveAmount.toLocaleString('ru-RU', { minimumFractionDigits: 2 })} ₽</span>
+          </p>
+        )}
 
         {showFreeHint && (
           <p className="cart-delivery-hint">
@@ -81,10 +104,18 @@ console.log(total,'====')
             чтобы получить <strong>бесплатную доставку</strong>!
           </p>
         )}
+        
+        {/* Новый текст-пояснение */}
+        {hasWeightedItems && (
+            <div className="cart-warning-message" style={{ /* стили можно вынести в CSS */ }}>
+                Мы резервируем эту сумму для весовых товаров с 
+                запасом. После взвешивания с карты спишется только точная стоимость.
+            </div>
+        )}
 
         {isOrderValid && (
           <p className="cart-total">
-            Итого: <span>{total.toLocaleString('ru-RU')} ₽</span>
+            {hasWeightedItems ? 'Итого к резервированию' : 'Итого'}: <span>{totalWithReserve.toLocaleString('ru-RU', { minimumFractionDigits: 2 })} ₽</span>
           </p>
         )}
 
@@ -93,7 +124,7 @@ console.log(total,'====')
           disabled={!isOrderValid}
           onClick={isOrderValid ? onProceedToOrder : undefined}
         >
-          {subtotal < 1000 ? `Ещё ${1000 - subtotal.toFixed()} ₽ до заказа` : 'Далее'}
+          {subtotal < 1000 ? `Ещё ${(1000 - subtotal).toFixed()} ₽ до заказа` : 'Далее'}
         </button>
       </div>
     </div>
