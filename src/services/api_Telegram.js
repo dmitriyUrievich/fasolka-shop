@@ -8,7 +8,6 @@ import axios from 'axios'; // Убедитесь, что axios установл�
 
 dotenv.config();
 
-// --- Константы и настройки ---
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const ALLOWED_CHAT_IDS = (process.env.TELEGRAM_CHAT_IDS || '').split(',').map(id => id.trim()).filter(id => id);
 
@@ -33,17 +32,12 @@ const writeFile = (filePath, data) => {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 };
 
-
 // --- Инициализация бота и состояния ---
 const bot = new TelegramBot(TOKEN, { polling: true });
 
 // { chatId: { action: 'adjust_weight', orderId: '...', itemIndex: '...', messageId: '...' } }
 const userState = {};
 
-
-// --- Конструкторы сообщений ---
-
-/** Создает текст и кнопки для заказа, который находится НА СБОРКЕ */
 const buildAssemblyMessageAndOptions = (orderData) => {
     const cartText = orderData.cart.map((item, i) => {
         const isWeighted = item.unit === 'Kilogram';
@@ -55,18 +49,21 @@ const buildAssemblyMessageAndOptions = (orderData) => {
     const finalTotal = orderData.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     const message = `
-🛒 <b>Заказ на сборку:</b> <code>${orderData.id}</code>
-👤 ${orderData.customer_name}, ${orderData.phone}
-🏠 ${orderData.address}
-⏰ ${orderData.deliveryTime || 'Не указано'}
-${orderData.comment ? `\n💬 Комментарий: ${orderData.comment}`: ''}
+        🛒 <b>Заказ на сборку:</b> <code>${orderData.id}</code>
+        👤 ${orderData.customer_name}, ${orderData.phone}
+        🏠 ${orderData.address}
+        ⏰ ${orderData.deliveryTime || 'Не указано'}
+        ${orderData.comment ? `\n💬 Комментарий: ${orderData.comment}`: ''}
 
-📦 <b>Корзина:</b>
-${cartText}
+        📦 <b>Корзина:</b>
+        ${cartText}
 
-💰 <b>Итого к списанию: ~${finalTotal.toFixed(2)} ₽</b>
-<i>(Заморожено на карте: ${Number(orderData.totalWithReserve).toFixed(2)} ₽)</i>
+        💰 <b>Итого к списанию: ~${finalTotal.toFixed(2)} ₽</b>
+        <i>(Заморожено на карте: ${Number(orderData.totalWithReserve).toFixed(2)} ₽)</i>
     `.trim();
+
+  // можно зарегистрировать чеки без ккт, это способ без офд(), в настройках ккт в раздел и там меняете на без ккт (при закрытии есть чеки не зарегистрированные, будет расхождение, нужно отказаться от чека коррекции, нужно обнулить )
+  // раз в неделю ручным актом списания 
 
     const buttons = orderData.cart
         .map((item, index) => ({ item, index }))

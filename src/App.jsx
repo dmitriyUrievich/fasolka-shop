@@ -13,27 +13,6 @@ const CartBasket = React.lazy(() => import('./components/CartBasket'));
 const Modal = React.lazy(() => import('./components/Modal'));
 const OrderForm = React.lazy(() => import('./components/OrderForm'));
 
-const totalSum = (cartItems) => {
-  let total = 0;
-  let totalWithReserve = 0;
-
-  cartItems.forEach(item => {
-    const itemTotal = item.sellPricePerUnit * item.quantityInCart;
-    total += itemTotal;
-
-    if (item.unit === 'Kilogram') {
-      totalWithReserve += itemTotal * 1.15;
-    } else {
-      totalWithReserve += itemTotal;
-    }
-  });
-
-  return {
-    total: parseFloat(total.toFixed(2)),
-    totalWithReserve: parseFloat(totalWithReserve.toFixed(2))
-  };
-};
-
 function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState('none');
@@ -139,6 +118,43 @@ useEffect(() => {
     loadAllData();
   }, []);
 
+ const cartCalculations = useMemo(() => {
+    let subtotal = 0; // Сумма только за товары
+    let totalWithReserve = 0; // Сумма товаров с резервом за вес
+  
+    cartItems.forEach(item => {
+      const itemTotal = item.sellPricePerUnit * item.quantityInCart;
+      subtotal += itemTotal;
+  
+      if (item.unit === 'Kilogram') {
+        totalWithReserve += itemTotal * 1.15;
+      } else {
+        totalWithReserve += itemTotal;
+      }
+    });
+
+    // Расчет доставки (логика из CartBasket.js)
+    let deliveryCost = 0;
+    if (subtotal > 0 && subtotal < 1000) {
+      // Сумма меньше минимальной, доставка невозможна (но для расчета оставим 200)
+       deliveryCost = 200;
+    } else if (subtotal >= 1000 && subtotal < 3000) {
+       deliveryCost = 200;
+    } else {
+      // subtotal >= 3000 или корзина пуста
+       deliveryCost = 0;
+    }
+    
+    // Финальная сумма для отображения и оплаты
+    const finalAmountForPayment = totalWithReserve //+ deliveryCost;
+
+    return {
+      subtotal: parseFloat(subtotal.toFixed(2)),
+      totalWithReserve: parseFloat(totalWithReserve.toFixed(2)),
+      finalAmountForPayment: parseFloat(finalAmountForPayment.toFixed(2))
+    };
+  }, [cartItems]);
+
   // Работа с корзиной
   const addToCart = useCallback((productToAdd) => {
     setCartItems((prev) => {
@@ -196,11 +212,6 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
     [cartItems]
   );
 
-  const totalCartPrice = useMemo(
-    () => cartItems.reduce((sum, item) => sum + item.sellPricePerUnit * item.quantityInCart, 0),
-    [cartItems]
-  );
-
   const handleProceedToOrder = () => {
     setIsCartOpen(false);
     setIsOrderFormOpen(true);
@@ -239,7 +250,7 @@ const handleSubmitOrder = async (customerData) => {
       Swal.fire('Корзина пуста', 'Пожалуйста, добавьте товары в корзину.', 'warning');
       return;
     }
-    const { total, totalWithReserve } = totalSum (cartItems);
+    const { subtotal, totalWithReserve } = cartCalculations;
     // 1. Формируем полный объект заказа
     const orderData = {
       id: generateDailyOrderId(),
@@ -248,7 +259,7 @@ const handleSubmitOrder = async (customerData) => {
       address: customerData.address,
       comment: customerData.comment,
       deliveryTime: customerData.deliveryTime,
-      total: total,
+      total: subtotal,
       totalWithReserve: totalWithReserve, // Сумма с запасом (ХОЛДИРОВАНИЯ)
       cart: cartItems.map((item) => ({
         id: item.id,
@@ -470,7 +481,6 @@ const handleSubmitOrder = async (customerData) => {
                   cartItems={cartItems}
                   removeFromCart={removeFromCart}
                   updateCartQuantity={updateCartQuantity}
-                  totalPrice={totalCartPrice}
                   onProceedToOrder={handleProceedToOrder}
                 />
               </React.Suspense>
@@ -489,7 +499,6 @@ const handleSubmitOrder = async (customerData) => {
               onClearCart={onClearCart}
               removeFromCart={removeFromCart}
               updateCartQuantity={updateCartQuantity}
-              totalPrice={totalCartPrice}
               onProceedToOrder={handleProceedToOrder}
               onClose={() => setIsCartOpen(false)}
             />
@@ -501,7 +510,7 @@ const handleSubmitOrder = async (customerData) => {
       {isOrderFormOpen && (
         <React.Suspense fallback={null}>
           <Modal isOpen={isOrderFormOpen} onClose={handleCloseOrderForm}>
-            <OrderForm onSubmit={handleSubmitOrder} onClose={handleCloseOrderForm} totalAmount={totalCartPrice}/>
+            <OrderForm onSubmit={handleSubmitOrder} onClose={handleCloseOrderForm} totalAmount={cartCalculations.finalAmountForPayment}/>
           </Modal>
         </React.Suspense>
       )}

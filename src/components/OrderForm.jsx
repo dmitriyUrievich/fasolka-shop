@@ -32,7 +32,6 @@ const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
 
     if (!isAddressInZone) newErrors.address = 'Адрес должен быть в зоне доставки.';
     
-    
   if (!deliveryTime) newErrors.deliveryTime = 'Выберите интервал доставки.';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
