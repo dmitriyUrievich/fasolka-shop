@@ -35,61 +35,72 @@ const YooKassa = new YooCheckout({ shopId: YOUKASSA_SHOP_ID, secretKey: YOUKASSA
 router.post('/payment', async (req, res) => {
   try {
     const { 
-      id: orderId, cart, subtotal, totalWithReserve, deliveryCost, amountToPay, ...customerData 
+      id: orderId, cart, subtotal, totalWithReserve, deliveryCost, ...customerData 
     } = req.body;
 
-    if (!amountToPay || amountToPay <= 0) {
-      return res.status(400).json({ message: 'Некорректная сумма для оплаты.' });
+    // Шаг 1: Формируем массив позиций для чека из товаров в корзине.
+    const receiptItems = cart.map(item => ({
+      description: item.name.substring(0, 128),
+      quantity: item.quantity.toString(),
+      amount: { value: Number(item.price).toFixed(2), currency: 'RUB' },
+      vat_code: '1',
+      payment_mode: 'full_prepayment',
+      payment_subject: 'commodity',
+      measure: item.unit === 'Kilogram' ? 'kilogram' : 'piece'
+    }));
+
+    // Шаг 2: Вычисляем разницу для "Резервирования" и добавляем как отдельную позицию, если она есть.
+    // Это необходимо для весовых товаров, где итоговая сумма может измениться.
+    const reserveDifference = parseFloat((totalWithReserve - subtotal).toFixed(2));
+    if (reserveDifference > 0) {
+      receiptItems.push({
+        description: 'Резервирование средств за весовой товар',
+        quantity: '1', // Резервирование - это одна услуга
+        amount: { value: reserveDifference.toFixed(2), currency: 'RUB' },
+        vat_code: '1',
+        payment_mode: 'full_prepayment',
+        payment_subject: 'service', // Это услуга
+        measure: 'piece'
+      });
     }
 
-    // Вычисляем разницу для "Резервирования"
-    const reserveDifference = parseFloat((totalWithReserve - subtotal).toFixed(2));
+    // Шаг 3: Добавляем доставку как отдельную позицию в чек, если она есть.
+    if (deliveryCost > 0) {
+      receiptItems.push({
+        description: 'Доставка',
+        quantity: '1',
+        amount: { value: deliveryCost.toFixed(2), currency: 'RUB' },
+        vat_code: '1',
+        payment_mode: 'full_prepayment',
+        payment_subject: 'service', // Доставка - это услуга
+        measure: 'piece'
+      });
+    }
+
+    // Шаг 4: Рассчитываем итоговую сумму платежа на сервере.
+    // Это ключевое исправление. Сумма считается как сумма всех позиций в чеке.
+    // Используем безопасный метод, чтобы избежать ошибок с плавающей точкой.
+    const finalAmount = receiptItems.reduce((sum, item) => {
+        const itemTotal = Number(item.amount.value) * 100 * Number(item.quantity);
+        return (sum * 100 + itemTotal) / 100;
+    }, 0);
+
+    // Проверяем, что итоговая сумма больше нуля.
+    if (finalAmount <= 0) {
+      return res.status(400).json({ message: 'Некорректная итоговая сумма для оплаты.' });
+    }
 
     const createPayload = {
-      amount: { value: amountToPay.toFixed(2), currency: 'RUB' },
-      capture: false,
+      amount: { value: finalAmount.toFixed(2), currency: 'RUB' }, 
       confirmation: { type: 'redirect', return_url: 'https://fasol-nvrsk.ru/thank-you' },
       description: `Заказ №${orderId} (резервирование средств)`,
       metadata: { orderId },
       receipt: {
         customer: { phone: customerData.phone },
-        items: cart.map(item => ({
-          description: item.name.substring(0, 128),
-          quantity: item.quantity.toString(),
-          amount: { value: Number(item.price).toFixed(2), currency: 'RUB' },
-          vat_code: '1',
-          payment_mode: 'full_prepayment',
-          payment_subject: 'commodity',
-          measure: item.unit === 'Kilogram' ? 'kilogram' : 'piece'
-        })),
+        items: receiptItems // Используем сформированный массив позиций
       }
     };
     
-    // --- ИСПРАВЛЕНИЕ: ВОЗВРАЩАЕМ ЭТОТ ВАЖНЫЙ БЛОК ---
-    // Добавляем в чек позицию "Резервирование", если она есть
-    if (reserveDifference > 0) {
-      createPayload.receipt.items.push({
-        description: 'Резервирование средств за весовой товар',
-        quantity: '1.00',
-        amount: { value: reserveDifference.toFixed(2), currency: 'RUB' },
-        vat_code: '1',
-        payment_mode: 'full_prepayment',
-        payment_subject: 'service',
-      });
-    }
-
-    // Добавляем в чек позицию "Доставка", если она есть
-    if (deliveryCost > 0) {
-      createPayload.receipt.items.push({
-        description: 'Доставка',
-        quantity: '1.00',
-        amount: { value: deliveryCost.toFixed(2), currency: 'RUB' },
-        vat_code: '1',
-        payment_mode: 'full_prepayment',
-        payment_subject: 'service',
-      });
-    }
-
     const payment = await YooKassa.createPayment(createPayload, uuidv4());
     
     const pendingOrders = readFile(pendingOrdersPath);
@@ -99,6 +110,7 @@ router.post('/payment', async (req, res) => {
     res.json({ payment });
 
   } catch (error) {
+    // Выводим более подробную информацию об ошибке от ЮKassa
     console.error('Ошибка при создании платежа:', error.data || error);
     res.status(400).json({ error: error.data || { message: 'Неизвестная ошибка' } });
   }
@@ -164,8 +176,6 @@ router.post('/payment/capture', async (req, res) => {
       return res.status(404).json({ message: 'Заказ для списания не найден.' });
     }
 
-    // --- НАЧАЛО ИЗМЕНЕНИЙ ---
-
     // 1. Считаем итоговую стоимость ТОЛЬКО товаров из финальной (взвешенной) корзины
     const finalItemsTotal = finalCart.reduce((sum, item) => {
         // Используем более безопасный метод для работы с деньгами, чтобы избежать ошибок с плавающей точкой
@@ -173,7 +183,6 @@ router.post('/payment/capture', async (req, res) => {
     }, 0);
 
     // 2. Достаем стоимость доставки из данных заказа, сохраненных при холдировании
-    // (Если deliveryCost не было, считаем его равным 0)
     const deliveryCost = orderData.deliveryCost || 0;
 
     // 3. Считаем НАСТОЯЩУЮ итоговую сумму для списания
@@ -202,7 +211,8 @@ router.post('/payment/capture', async (req, res) => {
             amount: { value: deliveryCost.toFixed(2), currency: 'RUB' },
             vat_code: '1',
             payment_mode: 'full_prepayment',
-            payment_subject: 'service'
+            payment_subject: 'service',
+            measure: 'piece'
         });
     }
 
