@@ -1,4 +1,3 @@
-// src/App.js
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import './App.css';
@@ -214,7 +213,8 @@ const handleSubmitOrder = async (customerData) => {
       Swal.fire('Корзина пуста', 'Пожалуйста, добавьте товары в корзину.', 'warning');
       return;
     }
-    const { subtotal, totalWithReserve } = cartCalculations;
+    const { subtotal, totalWithReserve,finalAmountForPayment  } = cartCalculations;
+    const deliveryCost = finalAmountForPayment - totalWithReserve;
     // 1. Формируем полный объект заказа
     const orderData = {
       id: generateDailyOrderId(),
@@ -224,7 +224,9 @@ const handleSubmitOrder = async (customerData) => {
       comment: customerData.comment,
       deliveryTime: customerData.deliveryTime,
       total: subtotal,
-      totalWithReserve: totalWithReserve, // Сумма с запасом (ХОЛДИРОВАНИЯ)
+      totalWithReserve: totalWithReserve,// Сумма с запасом (ХОЛДИРОВАНИЯ)
+      amountToPay: finalAmountForPayment, // общая сумма 
+      deliveryCost: deliveryCost, 
       cart: cartItems.map((item) => ({
         id: item.id,
         name: item.name,

@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { sendOrderForAssemblyNotification, sendPaidOrderNotification } from './api_Telegram.js';
 import fs from 'fs';
 import path from 'path';
+import { updateLocalStock } from './syncService.js';
 
 dotenv.config();
 
@@ -17,7 +18,6 @@ if (!YOUKASSA_SECRET_KEY || !YOUKASSA_SHOP_ID) {
   throw new Error('Учетные данные YooKassa не заданы в .env файле.');
 }
 
-// Два файла для хранения: один для ожидающих оплаты, другой для ожидающих сборки
 const pendingOrdersPath = path.resolve('pendingOrders.json');
 const assemblyOrdersPath = path.resolve('assemblyOrders.json');
 
@@ -32,39 +32,40 @@ const writeFile = (filePath, data) => fs.writeFileSync(filePath, JSON.stringify(
 
 const YooKassa = new YooCheckout({ shopId: YOUKASSA_SHOP_ID, secretKey: YOUKASSA_SECRET_KEY });
 
-// ШАГ 1: Создание платежа с ХОЛДИРОВАНИЕМ и ПРАВИЛЬНЫМ чеком
 router.post('/payment', async (req, res) => {
   try {
-    const { id: orderId, cart, ...customerData } = req.body;
+    // 1. Получаем ВСЕ необходимые данные от фронтенда
+    const { 
+      id: orderId, 
+      cart, 
+      subtotal,           // Чистая стоимость товаров
+      totalWithReserve,   // Стоимость товаров + резерв
+      deliveryCost,       // Стоимость доставки
+      amountToPay,        // Итоговая сумма для ХОЛДА (totalWithReserve + deliveryCost)
+      ...customerData 
+    } = req.body;
 
-    let realTotal = 0;
-    let totalWithReserve = 0;
+    // 2. Проверка, что итоговая сумма корректна
+    if (!amountToPay || amountToPay <= 0) {
+      return res.status(400).json({ message: 'Некорректная сумма для оплаты.' });
+    }
 
-    cart.forEach(item => {
-      const itemTotal = Number(item.price) * Number(item.quantity);
-      realTotal += itemTotal;
-      if (item.unit === 'Kilogram') {
-        totalWithReserve += itemTotal * 1.15;
-      } else {
-        totalWithReserve += itemTotal;
-      }
-    });
-    
-    realTotal = parseFloat(realTotal.toFixed(2));
-    totalWithReserve = parseFloat(totalWithReserve.toFixed(2));
-    const reserveDifference = parseFloat((totalWithReserve - realTotal).toFixed(2));
- 
+    // 3. Вычисляем разницу для "Резервирования"
+    const reserveDifference = parseFloat((totalWithReserve - subtotal).toFixed(2));
+
+    // 4. Формируем payload для ЮKassa
     const createPayload = {
       amount: {
-        value: totalWithReserve.toFixed(2),
+        value: amountToPay.toFixed(2), // <-- Используем ПОЛНУЮ сумму для холдирования
         currency: 'RUB',
       },
-      capture: false,
-      confirmation: { type: 'redirect', return_url: 'https://fasol-nvrsk.ru' },
+      capture: false, // Двухстадийная оплата
+      confirmation: { type: 'redirect', return_url: 'https://fasol-nvrsk.ru/thank-you' },
       description: `Заказ №${orderId} (резервирование средств)`,
       metadata: { orderId },
       receipt: {
         customer: { phone: customerData.phone },
+        // Сначала добавляем в чек все реальные товары
         items: cart.map(item => ({
           description: item.name.substring(0, 128),
           quantity: item.quantity.toString(),
@@ -72,13 +73,12 @@ router.post('/payment', async (req, res) => {
           vat_code: '1',
           payment_mode: 'full_prepayment',
           payment_subject: 'commodity',
-          // --- ИСПРАВЛЕНИЕ №1 ---
-          // Добавляем единицу измерения в зависимости от типа товара
           measure: item.unit === 'Kilogram' ? 'kilogram' : 'piece'
         })),
       }
     };
     
+    // 5. Добавляем в чек позицию "Резервирование", если она есть
     if (reserveDifference > 0) {
       createPayload.receipt.items.push({
         description: 'Резервирование средств за весовой товар',
@@ -87,25 +87,37 @@ router.post('/payment', async (req, res) => {
         vat_code: '1',
         payment_mode: 'full_prepayment',
         payment_subject: 'service',
-        // Для услуг единица измерения не нужна, но можно указать 'pc' для совместимости
-        measure: 'piece'
       });
     }
 
+    // 6. Добавляем в чек позицию "Доставка", если она есть
+    if (deliveryCost > 0) {
+      createPayload.receipt.items.push({
+        description: 'Доставка',
+        quantity: '1.00',
+        amount: { value: deliveryCost.toFixed(2), currency: 'RUB' },
+        vat_code: '1',
+        payment_mode: 'full_prepayment',
+        payment_subject: 'service',
+      });
+    }
+
+    // 7. Отправляем запрос в ЮKassa
     const payment = await YooKassa.createPayment(createPayload, uuidv4());
 
+    // 8. Сохраняем ВЕСЬ заказ, чтобы иметь доступ ко всем данным позже
     const pendingOrders = readFile(pendingOrdersPath);
-    pendingOrders[payment.id] = { id: orderId, totalWithReserve, cart, ...customerData };
+    pendingOrders[payment.id] = req.body; // Сохраняем всё, что пришло с фронтенда
     writeFile(pendingOrdersPath, pendingOrders);
 
     res.json({ payment });
+
   } catch (error) {
-    console.error('Ошибка при создании платежа:', error.data || error);
+   console.error('Ошибка при создании платежа:', error.data || error);
     res.status(400).json({ error: error.data || { message: 'Неизвестная ошибка' } });
   }
 });
 
-// ШАГ 2: Уведомление от ЮKassa о том, что деньги ЗАХОЛДИРОВАНЫ
 router.post('/payment/notifications', async (req, res) => {
   console.log('-----------------------------------------');
   console.log(`[Webhook] ${new Date().toISOString()} - Получено новое уведомление!`);
@@ -114,7 +126,6 @@ router.post('/payment/notifications', async (req, res) => {
   try {
     const notification = req.body;
 
-    // Реагируем на событие успешного холдирования
     if (notification.event === 'payment.waiting_for_capture' && notification.object?.status === 'waiting_for_capture') {
       const paymentId = notification.object.id;
       console.log(`[Webhook] Это успешное холдирование для платежа ID: ${paymentId}`);
@@ -154,21 +165,35 @@ router.post('/payment/notifications', async (req, res) => {
   console.log('-----------------------------------------\n');
 });
 
-// ШАГ 3: Эндпоинт для подтверждения списания ТОЧНОЙ суммы с ПРАВИЛЬНЫМ чеком
 router.post('/payment/capture', async (req, res) => {
   try {
     const { orderId, finalCart } = req.body;
-    if (!orderId || !finalCart) return res.status(400).json({ message: 'Нет ID или финальной корзины.' });
+    if (!orderId || !finalCart) {
+      return res.status(400).json({ message: 'Нет ID заказа или финальной корзины.' });
+    }
     
     const assemblyOrders = readFile(assemblyOrdersPath);
     const orderData = assemblyOrders[orderId];
-    if (!orderData) return res.status(404).json({ message: 'Заказ не найден.' });
+    if (!orderData) {
+      return res.status(404).json({ message: 'Заказ для списания не найден.' });
+    }
 
-    const finalTotal = finalCart.reduce((sum, item) => {
-        return (sum * 100 + (item.price * 100 * item.quantity)) / 100;
+    // --- НАЧАЛО ИЗМЕНЕНИЙ ---
+
+    // 1. Считаем итоговую стоимость ТОЛЬКО товаров из финальной (взвешенной) корзины
+    const finalItemsTotal = finalCart.reduce((sum, item) => {
+        // Используем более безопасный метод для работы с деньгами, чтобы избежать ошибок с плавающей точкой
+        return (sum * 100 + (Number(item.price) * 100 * Number(item.quantity))) / 100;
     }, 0);
-    
-    // Формируем новый, финальный чек для отправки в налоговую
+
+    // 2. Достаем стоимость доставки из данных заказа, сохраненных при холдировании
+    // (Если deliveryCost не было, считаем его равным 0)
+    const deliveryCost = orderData.deliveryCost || 0;
+
+    // 3. Считаем НАСТОЯЩУЮ итоговую сумму для списания
+    const finalTotalWithDelivery = finalItemsTotal + deliveryCost;
+
+    // 4. Формируем финальный чек, который ТАКЖЕ включает доставку
     const finalReceipt = {
         customer: { phone: orderData.phone },
         items: finalCart.map(item => ({
@@ -184,21 +209,38 @@ router.post('/payment/capture', async (req, res) => {
           measure: item.unit === 'Kilogram' ? 'kilogram' : 'piece'
         })),
     };
+    if (deliveryCost > 0) {
+        finalReceipt.items.push({
+            description: 'Доставка',
+            quantity: '1.00',
+            amount: { value: deliveryCost.toFixed(2), currency: 'RUB' },
+            vat_code: '1',
+            payment_mode: 'full_prepayment',
+            payment_subject: 'service'
+        });
+    }
 
+    // 5. Создаем payload для списания с правильной суммой и чеком
     const capturePayload = { 
         amount: { 
-            value: finalTotal.toFixed(2), 
+            value: Number(finalTotalWithDelivery).toFixed(2), // <-- Используем сумму С доставкой
             currency: 'RUB' 
         },
         receipt: finalReceipt
     };
 
+    // Отправляем запрос на списание в ЮKassa
     await YooKassa.capturePayment(orderData.paymentId, capturePayload, uuidv4());
-    console.log(`[Capture] Списание для заказа №${orderId} на сумму ${finalTotal.toFixed(2)} успешно.`);
+    console.log(`[Capture] Списание для заказа №${orderId} на сумму ${finalTotalWithDelivery.toFixed(2)} успешно.`);
     
-    const finalOrderData = { ...orderData, cart: finalCart, total: finalTotal };
+    // Вызываем списание остатков из локальной базы данных
+    await updateLocalStock(finalCart);
+
+    // Готовим финальные данные для уведомления в Telegram
+    const finalOrderData = { ...orderData, cart: finalCart, total: finalTotalWithDelivery };
     await sendPaidOrderNotification(finalOrderData);
 
+    // Очищаем заказ из файла "на сборке"
     delete assemblyOrders[orderId];
     writeFile(assemblyOrdersPath, assemblyOrders);
 

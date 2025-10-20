@@ -2,10 +2,11 @@
 import fs from 'fs/promises';
 import path from 'path';
 import fetch from 'node-fetch';
+import dotenv from 'dotenv';
+dotenv.config();
 
-const PRODUCTS_DB_PATH = path.join(process.cwd(), 'data', 'products.json');
-const KONTUR_API_BASE_URL = 'https://market.kontur.ru/api/v1';
-
+const PRODUCTS_DB_PATH = path.join(process.cwd(), 'src', 'products.json');
+const KONTUR_API_BASE_URL = 'https://api.kontur.ru/market/v1';
 const getApiHeaders = () => ({
     'X-Kontur-Apikey': process.env.KONTUR_API_KEY,
     'Content-Type': 'application/json',
@@ -106,3 +107,39 @@ export const getLocalProducts = async () => {
         throw error;
     }
 };
+
+export const updateLocalStock = async (cartItems) => {
+    console.log('[Stock] Начинаем списание остатков для заказа...');
+    try {
+        const data = await getLocalProducts();
+        
+        // Для быстрого поиска товаров используем Map
+        const productsMap = new Map(data.products.map(p => [p.id, p]));
+
+        let updatedCount = 0;
+        cartItems.forEach(itemInCart => {
+            const productToUpdate = productsMap.get(itemInCart.id);
+            
+            if (productToUpdate) {
+                // Вычитаем заказанное количество, не даем остаткам уйти в минус
+                const newRest = Math.max(0, productToUpdate.rests - Number(itemInCart.quantity));
+                productToUpdate.rests = newRest;
+                productsMap.set(itemInCart.id, productToUpdate);
+                updatedCount++;
+            }
+        });
+
+        // Если были обновления, конвертируем Map обратно в массив и перезаписываем файл
+        if (updatedCount > 0) {
+            data.products = Array.from(productsMap.values());
+            await fs.writeFile(PRODUCTS_DB_PATH, JSON.stringify(data, null, 2));
+            console.log(`[Stock] Успешно списано ${updatedCount} позиций из локальной базы.`);
+        } else {
+            console.log('[Stock] Не найдено товаров для списания в локальной базе.');
+        }
+
+    } catch (error) {
+        console.error('[Stock Error] Критическая ошибка: не удалось обновить остатки в файле products.json:', error);
+    }
+    
+}
