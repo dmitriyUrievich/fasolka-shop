@@ -7,7 +7,6 @@ import CategorySidebar from './components/CategorySidebar';
 import { generateDailyOrderId } from './utils/orderUtils';
 import getPortion from './utils/getPortion';
 import Swal from 'sweetalert2';
-import { fetchProductsWithRests, getCatalog, getShops } from './services/konturMarketApi';
 
 const CartBasket = React.lazy(() => import('./components/CartBasket'));
 const Modal = React.lazy(() => import('./components/Modal'));
@@ -57,59 +56,26 @@ useEffect(() => {
 
   useEffect(() => {
     const loadAllData = async () => {
-      const CACHE_TTL = 10 * 60 * 1000;
-      const now = Date.now();
-
-      const cachedProducts = localStorage.getItem('products_cache_v3');
-      const cachedCatalog = localStorage.getItem('catalog_cache_v2');
-
-      let productsData = null;
-      let catalogData = null;
-
-      if (cachedProducts) {
-        try {
-          const { data, timestamp } = JSON.parse(cachedProducts);
-          if (now - timestamp < CACHE_TTL) productsData = data;
-        } catch (e) {
-          console.warn('Кэш продуктов повреждён');
-        }
-      }
-
-      if (cachedCatalog) {
-        try {
-          const { data, timestamp } = JSON.parse(cachedCatalog);
-          if (now - timestamp < CACHE_TTL) catalogData = data;
-        } catch (e) {
-          console.warn('Кэш каталога повреждён');
-        }
-      }
-
-      if (productsData && catalogData) {
-        setProducts(productsData);
-        setCatalogGroups(catalogData);
-        setLoading(false);
-        return;
-      }
-
+      setLoading(true);
       try {
-        const shops = await getShops();
-        if (!shops || shops.length === 0 || !shops[0]?.id) {
-          throw new Error('Не удалось получить ID магазина');
+        // Для продакшена - относительный путь /api/products-data или полный https://домен.ru/api/products-data
+        const response = await fetch('/api/products-data'); 
+        
+        if (!response.ok) {
+          throw new Error(`Ошибка сети: ${response.statusText}`);
         }
+        
+        const data = await response.json();
 
-        const shopId = shops[0].id;
-        const [fetchedProducts, fetchedCatalog] = await Promise.all([
-          fetchProductsWithRests(),
-          getCatalog(shopId),
-        ]);
-
-        setProducts(fetchedProducts);
-        setCatalogGroups(fetchedCatalog);
-
-        localStorage.setItem('products_cache_v3', JSON.stringify({ data: fetchedProducts, timestamp: now }));
-        localStorage.setItem('catalog_cache_v2', JSON.stringify({ data: fetchedCatalog, timestamp: now }));
+        setProducts(data.products || []);
+        setCatalogGroups(data.catalog || []);
       } catch (err) {
-        console.error('Ошибка загрузки данных:', err);
+        console.error('Ошибка загрузки данных с сервера:', err);
+        Swal.fire({
+          title: 'Ошибка',
+          text: 'Не удалось загрузить каталог товаров. Попробуйте обновить страницу.',
+          icon: 'error',
+        });
       } finally {
         setLoading(false);
       }
@@ -119,8 +85,8 @@ useEffect(() => {
   }, []);
 
  const cartCalculations = useMemo(() => {
-    let subtotal = 0; // Сумма только за товары
-    let totalWithReserve = 0; // Сумма товаров с резервом за вес
+    let subtotal = 0;
+    let totalWithReserve = 0;
   
     cartItems.forEach(item => {
       const itemTotal = item.sellPricePerUnit * item.quantityInCart;
@@ -145,8 +111,7 @@ useEffect(() => {
        deliveryCost = 0;
     }
     
-    // Финальная сумма для отображения и оплаты
-    const finalAmountForPayment = totalWithReserve //+ deliveryCost;
+    const finalAmountForPayment = totalWithReserve + deliveryCost;
 
     return {
       subtotal: parseFloat(subtotal.toFixed(2)),
@@ -193,7 +158,6 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
           if (item.unit !== 'Kilogram' && !portion) {
             qty = Math.floor(qty); // штуки — только целые
           } else {
-            // Для кг: округляем к ближайшему шагу (вниз)
             qty = ((qty / step) * step).toFixed(2);
           }
 

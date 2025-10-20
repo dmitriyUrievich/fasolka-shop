@@ -4,16 +4,14 @@ import TelegramBot from 'node-telegram-bot-api';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import axios from 'axios'; // Убедитесь, что axios установлен: npm install axios
+import axios from 'axios';
 
 dotenv.config();
 
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const ALLOWED_CHAT_IDS = (process.env.TELEGRAM_CHAT_IDS || '').split(',').map(id => id.trim()).filter(id => id);
-
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
 
-// Разделяем хранилища: одно для заказов на сборке, другое для завершенных
 const ASSEMBLY_ORDERS_PATH = path.join(process.cwd(), 'assemblyOrders.json');
 const COMPLETED_ORDERS_PATH = path.join(process.cwd(), 'orders.json');
 
@@ -165,7 +163,7 @@ const capturePayment = async (orderId) => {
 };
 
 
-export default function initializeBot(app) {
+export default function initializeBot(syncProductsFromApi) {
     /**
      * Обработчик текстовых сообщений (для ввода веса и команд)
      */
@@ -210,11 +208,22 @@ export default function initializeBot(app) {
             const keyboard = [['Все заказы'], ['Новые заказы', 'В работе']];
             bot.sendMessage(chatId, 'Привет! Выберите действие:', { reply_markup: { keyboard, resize_keyboard: true } });
         }
-    });
 
-    /**
-     * Обработчик нажатий на инлайн-кнопки
-     */
+        if (msg.text === '/sync_products') {
+            await bot.sendMessage(chatId, '🚀 Начинаю синхронизацию товаров с Контур.Маркет...');
+            
+            const result = await syncProductsFromApi();
+
+            if (result.success) {
+                await bot.sendMessage(chatId, `✅ Синхронизация успешно завершена. ${result.message}`);
+            } else {
+                await bot.sendMessage(chatId, `❌ Произошла ошибка во время синхронизации: ${result.message}`);
+            }
+            return;
+        }
+
+    });
+    
     bot.on('callback_query', async (q) => {
         const chatId = q.message.chat.id.toString();
         if (!ALLOWED_CHAT_IDS.includes(chatId)) {

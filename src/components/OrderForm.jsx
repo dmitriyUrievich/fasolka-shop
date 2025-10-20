@@ -36,7 +36,6 @@ const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [customerName, phoneNumber, address, deliveryTime,isAddressInZone]);
-console.log('---',totalAmount)
   // Стандартный обработчик отправки формы
   const handleSubmit = async (e) => {
     e.preventDefault(); 

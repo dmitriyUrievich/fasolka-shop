@@ -258,7 +258,17 @@
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   min-height: 36px;
 }
+.cart-warning-message {
+  /* background-color: #e0f7fa; Голубой фон */
+  color: #01579b;
+  border: 1px solid #4dd0e1;
 
+  font-size: 0.8em;
+  margin: 4px 0 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  line-height: 1.3;
+}
 .cart-clear-button:hover:not(:disabled) {
   transform: translateY(-1px);
 }
