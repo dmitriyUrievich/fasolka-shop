@@ -34,38 +34,25 @@ const YooKassa = new YooCheckout({ shopId: YOUKASSA_SHOP_ID, secretKey: YOUKASSA
 
 router.post('/payment', async (req, res) => {
   try {
-    // 1. Получаем ВСЕ необходимые данные от фронтенда
     const { 
-      id: orderId, 
-      cart, 
-      subtotal,           // Чистая стоимость товаров
-      totalWithReserve,   // Стоимость товаров + резерв
-      deliveryCost,       // Стоимость доставки
-      amountToPay,        // Итоговая сумма для ХОЛДА (totalWithReserve + deliveryCost)
-      ...customerData 
+      id: orderId, cart, subtotal, totalWithReserve, deliveryCost, amountToPay, ...customerData 
     } = req.body;
 
-    // 2. Проверка, что итоговая сумма корректна
     if (!amountToPay || amountToPay <= 0) {
       return res.status(400).json({ message: 'Некорректная сумма для оплаты.' });
     }
 
-    // 3. Вычисляем разницу для "Резервирования"
+    // Вычисляем разницу для "Резервирования"
     const reserveDifference = parseFloat((totalWithReserve - subtotal).toFixed(2));
 
-    // 4. Формируем payload для ЮKassa
     const createPayload = {
-      amount: {
-        value: amountToPay.toFixed(2), // <-- Используем ПОЛНУЮ сумму для холдирования
-        currency: 'RUB',
-      },
-      capture: false, // Двухстадийная оплата
+      amount: { value: amountToPay.toFixed(2), currency: 'RUB' },
+      capture: false,
       confirmation: { type: 'redirect', return_url: 'https://fasol-nvrsk.ru/thank-you' },
       description: `Заказ №${orderId} (резервирование средств)`,
       metadata: { orderId },
       receipt: {
         customer: { phone: customerData.phone },
-        // Сначала добавляем в чек все реальные товары
         items: cart.map(item => ({
           description: item.name.substring(0, 128),
           quantity: item.quantity.toString(),
@@ -78,7 +65,8 @@ router.post('/payment', async (req, res) => {
       }
     };
     
-    // 5. Добавляем в чек позицию "Резервирование", если она есть
+    // --- ИСПРАВЛЕНИЕ: ВОЗВРАЩАЕМ ЭТОТ ВАЖНЫЙ БЛОК ---
+    // Добавляем в чек позицию "Резервирование", если она есть
     if (reserveDifference > 0) {
       createPayload.receipt.items.push({
         description: 'Резервирование средств за весовой товар',
@@ -90,7 +78,7 @@ router.post('/payment', async (req, res) => {
       });
     }
 
-    // 6. Добавляем в чек позицию "Доставка", если она есть
+    // Добавляем в чек позицию "Доставка", если она есть
     if (deliveryCost > 0) {
       createPayload.receipt.items.push({
         description: 'Доставка',
@@ -102,22 +90,20 @@ router.post('/payment', async (req, res) => {
       });
     }
 
-    // 7. Отправляем запрос в ЮKassa
     const payment = await YooKassa.createPayment(createPayload, uuidv4());
-
-    // 8. Сохраняем ВЕСЬ заказ, чтобы иметь доступ ко всем данным позже
+    
     const pendingOrders = readFile(pendingOrdersPath);
-    pendingOrders[payment.id] = req.body; // Сохраняем всё, что пришло с фронтенда
+    pendingOrders[payment.id] = req.body;
     writeFile(pendingOrdersPath, pendingOrders);
 
     res.json({ payment });
 
   } catch (error) {
-   console.error('Ошибка при создании платежа:', error.data || error);
+    console.error('Ошибка при создании платежа:', error.data || error);
     res.status(400).json({ error: error.data || { message: 'Неизвестная ошибка' } });
   }
 });
-
+// ------------------
 router.post('/payment/notifications', async (req, res) => {
   console.log('-----------------------------------------');
   console.log(`[Webhook] ${new Date().toISOString()} - Получено новое уведомление!`);
