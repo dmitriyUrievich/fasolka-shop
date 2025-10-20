@@ -37,16 +37,11 @@ export const getCatalog = async (shopId) => {
   }
 };
 
-/**
- * Получает остатки товаров для конкретного магазина.
- * API возвращает { results: [...] } или { items: [...] }, поэтому возвращаем их.
- */
+
 const getProductRests = async (shopId) => {
   try {
     const response = await apiClient.get(`/shops/${shopId}/product-rests`);
-    // console.log(`[API] Ответ product-rests для магазина ${shopId}:`, response.data); // Логируем полный ответ
-    // Контур.Маркет API для остатков часто возвращает 'results', но иногда может быть 'items'. Учитываем оба.
-    return response.data.results || response.data.items || [];
+   return response.data.results || response.data.items || [];
   } catch (error) {
     console.error(`[API Error] Ошибка при получении остатков для магазина ${shopId}:`, error.response?.data || error.message);
     throw error;
@@ -73,8 +68,6 @@ export const fetchProductsWithRests = async () => {
       getProductRests(shopId),
     ]);
 
-    // 4. Объединяем данные
-    // Создаем карту остатков для быстрого доступа: { productId: rests }
     const restsMap = new Map();
     if (Array.isArray(rests)) { // Убедимся, что rests - это массив
       rests.forEach(rest => {

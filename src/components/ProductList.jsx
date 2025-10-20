@@ -6,7 +6,7 @@ import '../ProductList.css';
 import getPortion from '../utils/getPortion';
 const storageKey = 'ageConfirmedGlobal';
 import { createImageLoader } from '../utils/imageUtils';
-
+import YandexMap from './YandexMap'
 const ProductList = ({
   products,
   categories,
@@ -29,8 +29,6 @@ const ProductList = ({
     setAgeConfirmed(true);
     localStorage.setItem(storageKey, 'true');
   };
-console.log(products.find(product => product.id === '15aacd70-5f3d-4eab-8fdf-25f923cdd3be'));
-
   useEffect(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved === 'true') setAgeConfirmed(true);
@@ -40,7 +38,6 @@ const specialOfferCategoryId = useMemo(() => {
     if (!Array.isArray(categories)) {
       return null;
     }
-    // Ищем категорию по точному названию
     const specialCategory = categories.find(cat => cat.name === 'АКЦИЯ МЕСЯЦА');
     return specialCategory ? specialCategory.id : null;
   }, [categories]);
@@ -94,7 +91,6 @@ const specialOfferCategoryId = useMemo(() => {
       return matchesCategory && matchesSearch && isAvailable;
     });
 
-    // Шаг 2: Дополнительная фильтрация по дефолтным фото (если включен режим)
     if (showOnlyFallback) {
       return initialFilter.filter((product) => {
         if (!product || !product.id) return false;
@@ -107,7 +103,6 @@ const specialOfferCategoryId = useMemo(() => {
       });
     }
 
-    // Если режим не включен, возвращаем результат основной фильтрации
     return initialFilter;
 
   }, [products, selectedCategoryId, searchTerm, blacklistedCategoryIds, showOnlyFallback]);
@@ -180,13 +175,13 @@ const specialOfferCategoryId = useMemo(() => {
       </div>
      <div className="map-section">
         <h2 className="map-title">Наш Магазин на Карте</h2>
-        {/* <YandexMap
+        <YandexMap
           center={[44.675898, 37.642492]}
           zoom={12}
           placemark={[44.675898, 37.642492]}
           placemarkHint="Фасоль"
           placemarkBalloon="Мы находимся по адресу: пер. Торпедный д4."
-        /> */}
+        /> 
       </div>
     </>
   );

@@ -11,7 +11,7 @@ const CartBasket = ({
   onClose, 
   onProceedToOrder 
 }) => {
-  // Шаг 1: Рассчитываем все суммы в одном месте
+
   const { subtotal, reserveAmount, hasWeightedItems } = useMemo(() => {
     let calculatedSubtotal = 0;
     let calculatedReserve = 0;
@@ -34,7 +34,7 @@ const CartBasket = ({
 
  // Шаг 2: Расчет доставки ведется от РЕАЛЬНОЙ стоимости товаров (subtotal)
   const deliveryInfo = useMemo(() => {
-    if (subtotal < 10) {
+    if (subtotal < 1000) {
       return { cost: null, text: 'от 1000 ₽', showFreeHint: false };
     }
     if (subtotal >= 3000) {
@@ -43,10 +43,9 @@ const CartBasket = ({
     return { cost: 200, text: '200 ₽', showFreeHint: true };
   }, [subtotal]);
 
-  // Шаг 3: Финальная сумма для показа включает резерв
   const { cost: deliveryCost, text: deliveryText, showFreeHint } = deliveryInfo;
   const isOrderValid = deliveryCost !== null;
-  const totalWithReserve = isOrderValid ? subtotal + reserveAmount : 0 //+ deliveryCost : 0;
+  const totalWithReserve = isOrderValid ? subtotal + reserveAmount + deliveryCost : 0;
 
   return (
     <div className="cart-container">
@@ -89,33 +88,28 @@ const CartBasket = ({
         <p className={`cart-delivery-info ${!isOrderValid ? 'cart-delivery-info--warning' : ''}`}>
           🚚 Доставка: <span>{deliveryText}</span>
         </p>
-        
-        {/* Новая строка, которая появляется только для весовых товаров */}
-        {hasWeightedItems && (
-          <p className="cart-reserve-info">
-            Резерв за вес (+15%): <span>+{reserveAmount.toLocaleString('ru-RU', { minimumFractionDigits: 2 })} ₽</span>
-          </p>
-        )}
-
-        {showFreeHint && (
+                {showFreeHint && (
           <p className="cart-delivery-hint">
             💡 Добавьте ещё на{' '}
             <strong>{(3000 - subtotal).toLocaleString('ru-RU')} ₽</strong>,{' '}
             чтобы получить <strong>бесплатную доставку</strong>!
           </p>
         )}
-        
-        {/* Новый текст-пояснение */}
+
+
         {hasWeightedItems && (
-            <div className="cart-warning-message" style={{ /* стили можно вынести в CSS */ }}>
-                Мы резервируем эту сумму для весовых товаров с 
-                запасом. После взвешивания с карты спишется только точная стоимость.
+            <div className="cart-warning-message" >
+            <p className="cart-reserve-info">
+            Резерв за весовой товар (+15%): <span>+{reserveAmount.toLocaleString('ru-RU', { minimumFractionDigits: 2 })} ₽</span>
+          </p>
+               <p>Мы резервируем эту сумму для весовых товаров с запасом. </p> 
+                <p>После взвешивания остаток автоматически вернется вам на карту.</p>
             </div>
         )}
 
         {isOrderValid && (
           <p className="cart-total">
-            {hasWeightedItems ? 'Итого к резервированию' : 'Итого'}: <span>{totalWithReserve.toLocaleString('ru-RU', { minimumFractionDigits: 2 })} ₽</span>
+            {hasWeightedItems ? 'Итого к оплате' : 'Итого'}: <span>{totalWithReserve.toLocaleString('ru-RU', { minimumFractionDigits: 2 })} ₽</span>
           </p>
         )}
 
