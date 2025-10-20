@@ -209,7 +209,7 @@ export default function initializeBot(syncProductsFromApi) {
             bot.sendMessage(chatId, 'Привет! Выберите действие:', { reply_markup: { keyboard, resize_keyboard: true } });
         }
 
-        if (msg.text === '/sync_products') {
+        if (msg.text === '/sync') {
             await bot.sendMessage(chatId, '🚀 Начинаю синхронизацию товаров с Контур.Маркет...');
             
             const result = await syncProductsFromApi();
