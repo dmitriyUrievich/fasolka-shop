@@ -223,7 +223,7 @@ const handleSubmitOrder = async (customerData) => {
       address: customerData.address,
       comment: customerData.comment,
       deliveryTime: customerData.deliveryTime,
-      total: subtotal,
+      subtotal: subtotal,
       totalWithReserve: totalWithReserve,// Сумма с запасом (ХОЛДИРОВАНИЯ)
       amountToPay: finalAmountForPayment, // общая сумма 
       deliveryCost: deliveryCost, 
