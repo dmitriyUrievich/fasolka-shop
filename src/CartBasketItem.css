@@ -170,14 +170,28 @@
     cursor: not-allowed;
     transform: none;
 }
+.cart-item-footer {
+  display: flex;
+  justify-content: space-between; /* Размещает элементы по краям */
+  align-items: center;
+  margin-top: 8px; /* Небольшой отступ сверху */
+}
 
+.cart-item-total-price {
+  font-size: 1.1em; /* Чуть крупнее, чем цена за единицу */
+  font-weight: 700; /* Жирный шрифт */
+  color: var(--farm-dark-green); /* Ваш фирменный темно-зеленый цвет */
+  margin: 0;
+}
 /* Адаптивность — на узких экранах */
 @media (max-width: 480px) {
     .cart-item {
         gap: 10px;
         padding: 8px;
     }
-
+    .cart-item-total-price {
+    font-size: 1em;
+  }
     .cart-item-image {
         width: 55px;
         height: 55px;

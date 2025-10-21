@@ -215,7 +215,6 @@ const handleSubmitOrder = async (customerData) => {
     }
     const { subtotal, totalWithReserve,finalAmountForPayment  } = cartCalculations;
     const deliveryCost = finalAmountForPayment - totalWithReserve;
-    // 1. Формируем полный объект заказа
     const orderData = {
       id: generateDailyOrderId(),
       customer_name: customerData.name,

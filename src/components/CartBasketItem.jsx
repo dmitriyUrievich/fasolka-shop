@@ -1,5 +1,5 @@
 // src/components/CartBasketItem.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useMemo  } from 'react';
 import '../CartBasketItem.css';
 import { createImageLoader } from '../utils/imageUtils';
 import getPortion from '../utils/getPortion';
@@ -20,11 +20,13 @@ const CartBasketItem = ({ item, updateCartQuantity, removeFromCart }) => {
   };
 
   const portion = item.unit === 'Kilogram' ? getPortion(item.name, item.unit) : null;
-  const unitLabel = item.unit === 'Kilogram'
-    ? `кг`
-    : `шт.`;
-
+  const unitLabel = item.unit === 'Kilogram' ? `кг` : `шт.`;
   const step = portion ? portion.weightInGrams / 1000 : item.unit === 'Kilogram' ? 0.1 : 1;
+ 
+  const itemTotalPrice = useMemo(() => {
+    return (item.sellPricePerUnit || 0) * item.quantityInCart;
+  }, [item.sellPricePerUnit, item.quantityInCart]);
+
 
   return (
     <div className="cart-item">
@@ -51,6 +53,7 @@ const CartBasketItem = ({ item, updateCartQuantity, removeFromCart }) => {
         <p className="cart-item-price">
           {(item.sellPricePerUnit || 0).toLocaleString('ru-RU')} ₽ / {unitLabel}
         </p>
+        <div className="cart-item-footer">
         <div className="cart-item-quantity-control">
           <button
             onClick={() => updateCartQuantity(item.id, item.quantityInCart - step)}
@@ -73,11 +76,14 @@ const CartBasketItem = ({ item, updateCartQuantity, removeFromCart }) => {
               >
                 +
               </button>
-              {/* Показываем подсказку, только если достигнут лимит */}
               {item.quantityInCart + step > item.rests && (
                 <span className="tooltip-text">Товара больше нет</span>
               )}
+            </div>
           </div>
+            <p className="cart-item-total-price">
+            {itemTotalPrice.toLocaleString('ru-RU', { minimumFractionDigits: 2 })} ₽
+          </p>
         </div>
       </div>
     </div>

@@ -10,35 +10,28 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(2px); /* Опционально: размытие фона */
+  backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
+  padding: 10px; 
+  box-sizing: border-box; /* Гарантирует, что padding не увеличит размер оверлея */
 }
 
-/* === Контент модалки === */
 .modal-content {
   background: white;
   border-radius: 12px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-  width: 90%;
-  max-width: 400px;
+  
+  width: 100%; 
+  max-width: 400px; 
+  
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
   padding: 16px;
-  margin: 20px;
+  box-sizing: border-box; 
+  
 }
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1100; /* Должен быть выше хедера */
-}
+
 /* На больших экранах — больше ширина */
 @media (min-width: 768px) {
   .modal-content {

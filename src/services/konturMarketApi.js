@@ -7,7 +7,6 @@ const apiClient = axios.create({
 export const getShops = async () => {
   try {
     const response = await apiClient.get('/shops');
-    // console.log('[API] Ответ shops:', response.data); // Логируем полный ответ
     return response.data.items || [];
   } catch (error) {
     console.error('[API Error] Ошибка при получении магазинов:', error.response?.data || error.message);
@@ -18,7 +17,6 @@ export const getShops = async () => {
 const getProducts = async (shopId) => {
   try {
     const response = await apiClient.get(`/shops/${shopId}/products`);
-    // console.log(`[API] Ответ products для магазина ${shopId}:`, response.data.items.);
     return response.data.items || [];
   } catch (error) {
     console.error(`[API Error] Ошибка при получении товаров для магазина ${shopId}:`, error.response?.data || error.message);
@@ -69,7 +67,7 @@ export const fetchProductsWithRests = async () => {
     ]);
 
     const restsMap = new Map();
-    if (Array.isArray(rests)) { // Убедимся, что rests - это массив
+    if (Array.isArray(rests)) { 
       rests.forEach(rest => {
         // Дополнительные проверки на существование полей перед добавлением в карту
         if (rest && rest.productId !== undefined && rest.rest !== undefined) {

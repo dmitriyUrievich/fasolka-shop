@@ -33,7 +33,6 @@ const writeFile = (filePath, data) => {
 // --- Инициализация бота и состояния ---
 const bot = new TelegramBot(TOKEN, { polling: true });
 
-// { chatId: { action: 'adjust_weight', orderId: '...', itemIndex: '...', messageId: '...' } }
 const userState = {};
 
 const buildAssemblyMessageAndOptions = (orderData) => {
@@ -85,13 +84,14 @@ const buildPaidOrderMessageAndOptions = (orderData) => {
     ).join('\n');
 
     const message = `
-${orderData.status === 'completed' ? '✅ <b>Заказ ЗАВЕРШЁН</b>' : '📋 <b>Заказ в работе</b>'}
-🧾 Номер: <code>${orderData.id}</code>
-👤 Имя: ${orderData.customer_name}
-📞 Телефон: ${orderData.phone}
-🏠 Адрес: ${orderData.address}
-📌 Статус: <b>${STATUS_LABEL[orderData.status]}</b>
-
+    ${orderData.status === 'completed' ? '✅ <b>Заказ ЗАВЕРШЁН</b>' : '📋 <b>Заказ в работе</b>'}
+    🧾 Номер: <code>${orderData.id}</code>
+    👤 Имя: ${orderData.customer_name}
+    📞 Телефон: ${orderData.phone}
+    🏠 Адрес: ${orderData.address}
+    ⏰ *Время доставки: ${orderData.deliveryTime}
+    📌 Статус: <b>${STATUS_LABEL[orderData.status]}</b>
+    
 📦 <b>Корзина:</b>
 ${cartText}
 💰 <b>Списано: ${orderData.total.toFixed(2)} ₽</b>
@@ -109,7 +109,6 @@ ${cartText}
 
 
 // --- Функции, вызываемые извне (из YooKassa.js) ---
-
 export const sendOrderForAssemblyNotification = async (orderData) => {
     const { message, options } = buildAssemblyMessageAndOptions(orderData);
     for (const chatId of ALLOWED_CHAT_IDS) {
@@ -134,6 +133,7 @@ export const sendPaidOrderNotification = async (finalOrderData) => {
       👤 Имя: ${finalOrderData.customer_name}
       📞 Телефон: ${finalOrderData.phone}
       🏠 Адрес: ${finalOrderData.address}
+      ⏰ *Время доставки:${finalOrderData.deliveryTime}
       📌 Статус: <b>Новый</b>
 
       📦 <b>Корзина:</b>
@@ -283,10 +283,9 @@ export default function initializeBot(syncProductsFromApi) {
             const { message, options } = buildPaidOrderMessageAndOptions(order);
             await bot.editMessageText(message, { chat_id: chatId, message_id: q.message.message_id, ...options });
             bot.answerCallbackQuery(q.id);
-            return; // Завершаем выполнение
+            return;
         }
 
-        // Если действие не подошло ни под одну категорию
         bot.answerCallbackQuery(q.id, { text: 'Неизвестное действие.', show_alert: true });
     });
 

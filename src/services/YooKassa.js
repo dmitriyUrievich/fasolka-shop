@@ -130,12 +130,10 @@ router.post('/payment/notifications', async (req, res) => {
 
       if (orderData) {
         console.log(`[Webhook] Найден ожидающий заказ №${orderData.id}. Начинаю обработку.`);
-        
         const assemblyOrders = readFile(assemblyOrdersPath);
         assemblyOrders[orderData.id] = { ...orderData, paymentId: paymentId };
         writeFile(assemblyOrdersPath, assemblyOrders);
         console.log(`[Webhook] Заказ №${orderData.id} перенесен в файл сборки (assemblyOrders.json).`);
-
         delete pendingOrders[paymentId];
         writeFile(pendingOrdersPath, pendingOrders);
         console.log(`[Webhook] Заказ удален из файла ожидания (pendingOrders.json).`);
