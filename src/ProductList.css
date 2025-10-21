@@ -83,64 +83,16 @@ color: var(--farm-green);
   font-weight: 600;
 }
 
-
-/* На экранах < 340px — гарантируем 1 колонку */
-@media (max-width: 339px) {
-    .product-grid {
-        grid-template-columns: 1fr; /* Только 1 карточка в ряду */
-        gap: 16px;
-        padding: 10px 0;
-    }
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 18px;
 }
 
-/* На экранах ≥ 340px — разрешаем 2+ колонки */
-@media (min-width: 340px) {
+@media (min-width: 768px) {
     .product-grid {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 18px;
-    }
-
-    .product-card__image-wrapper {
-        height: var(--card-image-height, 140px);
-    }
-
-    .product-card__name {
-        font-size: 0.95em;
-    }
-
-    .product-card__price {
-        font-size: 1.1rem;
-    }
-}
-
-/* Планшет: 768px — 2 колонки (если ширина позволяет) */
-@media (min-width: 768px) and (max-width: 899px) {
-    .product-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-    }
-}
-
-/* Десктоп: 900px — 3 колонки */
-@media (min-width: 900px) and (max-width: 1199px) {
-    .product-grid {
-        grid-template-columns: repeat(3, 1fr);
+        /* На десктопе карточки не будут сжиматься меньше 200px */
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 24px;
-    }
-}
-
-/* Большой десктоп: 1200px — 4 колонки */
-@media (min-width: 1200px) {
-    .product-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 26px;
-    }
-}
-
-/* Очень большой экран: 1400px — 5 колонок */
-@media (min-width: 1400px) {
-    .product-grid {
-        grid-template-columns: repeat(5, 1fr);
-        gap: 28px;
     }
 }

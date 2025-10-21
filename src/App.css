@@ -12,11 +12,11 @@ body.modal-open {
 }
 
 .app-header {
-  background-color: var(--farm-green); /* Задаем зеленый фон */
   color: white; /* Задаем белый цвет для текста и иконок внутри */
   padding: 10px 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  position: sticky; /* Делаем хедер "липким" при прокрутке */
+  min-height: var(--header-height);
+  position: sticky;
   top: 0;
   z-index: 1000;
   width: 100%;
@@ -219,7 +219,7 @@ body.modal-open {
 
 .products-and-cart-container {
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 5px;
   box-sizing: border-box;
   display: flex;
   gap: 30px;
@@ -238,7 +238,7 @@ body.modal-open {
   width: 450px; /* Фиксированная ширина */
   max-width: 100%; /* Не превышает родителя */
   min-width: 320px; /* Минимальная ширина */
-  height: calc(100vh - 80px);
+  height: calc(100vh - var(--header-height));
   overflow-y: auto;
   overflow-x: hidden;
   padding: 20px 16px;
@@ -266,6 +266,7 @@ body.modal-open {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE и Edge */
 }
+
 .category-menu-sidebar::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
 }
@@ -358,8 +359,10 @@ body.modal-open {
     margin-right: 10px;
   }
 }
-.cart-icon-button.desktop-cart {
-  margin-left: 0 !important;
+@media (max-width: 767.98px) {
+  .header-controls .cart-icon-button.desktop-cart {
+      margin-left: 0;
+  }
 }
 
 /* === Режим "только иконки" при очень узком экране === */

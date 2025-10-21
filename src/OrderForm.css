@@ -1,7 +1,5 @@
 /* src/components/OrderForm.css */
 
-/* src/components/OrderForm.css - ФИНАЛЬНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ */
-
 .order-form-container {
   padding: 25px;
   background-color: #ffffff;
@@ -25,13 +23,7 @@
   font-size: 1.8em; 
   font-weight: 600; 
 }
-.form-title { 
-  text-align: center; 
-  color: #2c3e50; 
-  margin-bottom: 28px; 
-  font-size: 1.8em; 
-  font-weight: 600; 
-}
+
 /* --- СТИЛИ ЗАГОЛОВКА, ПОЛЕЙ ВВОДА И ОШИБОК (остаются как в старой версии) --- */
 .order-form-container h2 { text-align: center; color: #2c3e50; margin-bottom: 28px; font-size: 1.8em; font-weight: 600; }
 .order-form-container .form-group { margin-bottom: 20px; }

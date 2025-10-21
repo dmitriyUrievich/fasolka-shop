@@ -9,6 +9,7 @@
     --text-color: #333;
     --light-gray: #f5f5f5;
     --border-color: #ddd;
+    --header-height: 80px;
     --card-width: 150px;   /* ширина карточки на мобильных */
     --card-height: auto;  /* высота карточки (включая все блоки) */
     --card-image-height: 140px; /* высота области изображения в карточке */
@@ -16,6 +17,7 @@
     --card-min-width: 150px;       /* Минимальная ширина карточки */
     --btn-quantity-size: 36px;     /* Размер кнопок + и - */
     --quantity-info-min-width: 60px; /
+    
 }
 
 /* Общие стили для body, сброс отступов и установка базового шрифта и фона */
@@ -57,7 +59,7 @@ button, input, select, textarea {
 }
 
 /* Общие стили для фокуса, чтобы они были единообразными и доступными */
-*:focus {
+a:focus, button:focus, input:focus, select:focus, textarea:focus {
     outline: none; /* Убираем стандартную обводку */
     box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.5); /* Зеленая тень для фокуса */
     border-color: var(--farm-green);
