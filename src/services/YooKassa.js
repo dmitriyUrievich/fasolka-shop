@@ -77,9 +77,6 @@ router.post('/payment', async (req, res) => {
       });
     }
 
-    // Шаг 4: Рассчитываем итоговую сумму платежа на сервере.
-    // Это ключевое исправление. Сумма считается как сумма всех позиций в чеке.
-    // Используем безопасный метод, чтобы избежать ошибок с плавающей точкой.
     const finalAmount = receiptItems.reduce((sum, item) => {
         const itemTotal = Number(item.amount.value) * 100 * Number(item.quantity);
         return (sum * 100 + itemTotal) / 100;
