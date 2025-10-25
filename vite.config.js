@@ -29,7 +29,6 @@ export default defineConfig(({ mode }) => {
 
        proxy: {
         // --- Правило для ВАШЕГО ЛОКАЛЬНОГО сервера ---
-        // Все запросы, начинающиеся с /local-api/...
         '/local-api': {
           target: 'http://localhost:3000', // Адрес вашего Node.js сервера
           changeOrigin: true,
@@ -38,7 +37,6 @@ export default defineConfig(({ mode }) => {
         },
 
         // --- Правило для ВНЕШНЕГО сервера Контура ---
-        // Все запросы, начинающиеся с /kontur-api/...
         '/kontur-api': {
           target: 'https://api.kontur.ru/market/v1',
           changeOrigin: true,
