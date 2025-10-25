@@ -58,7 +58,7 @@ useEffect(() => {
       setLoading(true);
       try {
         // Для продакшена - относительный путь /api/products-data или полный https://домен.ru/api/products-data
-        const response = await fetch('/api/products-data'); 
+        const response = await fetch('/local-api/products-data'); 
         
         if (!response.ok) {
           throw new Error(`Ошибка сети: ${response.statusText}`);
@@ -528,7 +528,7 @@ const handleSubmitOrder = async (customerData) => {
 
         </div>
         <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} Фасолька. Все права защищены.</p>
+          <p>&copy; {new Date().getFullYear()} Фасоль. Все права защищены.</p>
         </div>
       </footer>
     </div>

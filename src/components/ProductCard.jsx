@@ -47,7 +47,7 @@ const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageCon
   };
 
   const name = capitalizeFirstLetter(rawName);
-  const price = sellPricePerUnit;
+  const price = parseFloat(sellPricePerUnit) || 0;
   const disableBuyTypes = ['Tobacco'];
   const ageRestrictedTypes = ['Tobacco', 'LightAlcohol', 'Cigarettes'];
   
@@ -55,7 +55,7 @@ const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageCon
   const isAgeRestricted = ageRestrictedTypes.includes(productType) || containsLighterKeyword(rawName);
 
   const itemInCart = cartItems.find((item) => item.id === id);
-  const quantity = itemInCart ? itemInCart.quantityInCart : 0;
+  const quantity = itemInCart ? parseFloat(itemInCart.quantityInCart) : 0;
   const total = quantity * price;
 
   // 🔹 Определяем порцию ТОЛЬКО для Kilogram
@@ -159,7 +159,6 @@ const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageCon
                   <div className="total-price">{total.toLocaleString('ru-RU')} ₽</div>
                 </div>
 
-                <div className="tooltip">
                   <button
                     className="btn-quantity"
                     aria-label="Увеличить количество"
@@ -171,7 +170,6 @@ const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageCon
                   {(!nextStepAvailable && !disableBuy) && (
                     <span className="tooltip-text">Товара нет</span>
                   )}
-                </div>
               </div>
             ) : (
               <button

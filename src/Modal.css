@@ -13,25 +13,22 @@
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
   padding: 10px; 
-  box-sizing: border-box; /* Гарантирует, что padding не увеличит размер оверлея */
+  box-sizing: border-box;
 }
 
+/* === Контент модалки === */
 .modal-content {
   background: white;
   border-radius: 12px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-  
-  width: 100%; 
-  max-width: 400px; 
-  
+  width: 100%;
+  max-width: 400px;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
   padding: 16px;
-  box-sizing: border-box; 
-  
+  margin: 10px 0;
 }
-
 /* На больших экранах — больше ширина */
 @media (min-width: 768px) {
   .modal-content {

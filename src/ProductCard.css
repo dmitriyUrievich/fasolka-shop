@@ -1,4 +1,3 @@
-/* ========== Исправленные стили карточки ========== */
 /* файл product-card */
 .product-card {
   background-color: #fff;
@@ -142,27 +141,23 @@
 .quantity-control {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* кнопки по краям */
-  margin-top: 10px;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 6px;
+  overflow: hidden;
+  flex-wrap: nowrap;
 }
 
 .btn-quantity {
   background: linear-gradient(to right, var(--farm-green), #689F38);
-  border: none;
-  color: #fff;
-  font-size: 18px; /* Чуть меньше на мобиле */
-  width: var(--btn-quantity-size);
-  height: var(--btn-quantity-size);
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: all 0.2s ease;
+  border-radius: 35%;
   flex-shrink: 0;
-  box-shadow: 0 2px 5px rgba(46, 125, 50, 0.5);
-  touch-action: manipulation;
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
+  border: none;
+  background-color: #eee;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 .btn-quantity:disabled {
@@ -237,17 +232,8 @@
  transform: rotate(45deg) translate(10px, 0px);
 }
 
-@media (max-width: 420px) {
-  .product-card__triangle::before { border-left-width: 48px; border-bottom-width: 48px; }
-  .product-card__triangle span { top: 4px; right: -6px; font-size: 11px; width: 84px; }
-}
 @media (max-width: 480px) {
-  :root {
-    --card-width: 150px;           /* Уменьшаем минимальную ширину */
-    --btn-quantity-size: 32px;     /* Меньше кнопки */
-    --quantity-info-min-width: 56px;
-  }
-
+  
   .product-card__name {
     font-size: 0.95em;
     -webkit-line-clamp: 3;
@@ -294,30 +280,10 @@
 
 /* === Маленькие мобильные (320px – 420px) — экстремальный случай === */
 @media (max-width: 420px) {
-  :root {
-    --card-width: 140px;
-    --card-min-width: 140px;
-    --btn-quantity-size: 30px;
-    --quantity-info-min-width: 52px;
-  }
-
-  .product-card__image-wrapper {
-    height: 130px;
-  }
-
-  .product-card__name {
-    font-size: 0.9em;
-    -webkit-line-clamp: 2; /* Один ряд на очень узких экранах */
-    min-height: 1.4em;
-  }
-
-  .product-card__price {
-    font-size: 1em;
-  }
-
-  .quantity-control {
+.quantity-control {
+    flex-wrap: wrap;             /* ✅ теперь разрешён перенос */
+    justify-content: center;
     gap: 4px;
-    margin-top: 6px;
   }
 
   .btn-quantity {
@@ -325,13 +291,7 @@
     height: var(--btn-quantity-size);
     font-size: 14px;
   }
-
-  .quantity-info {
-    min-width: var(--quantity-info-min-width);
-  }
-
-  .quantity-info .quantity,
-  .quantity-info .total-price {
-    font-size: 0.8em;
+    .quantity-info .total-price {
+    font-size: 0.75em;
   }
 }

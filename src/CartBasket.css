@@ -1,6 +1,6 @@
 .cart-container {
   width: 100%;
-  max-width: 100%; /* 🔥 Главное: не больше родителя */
+
   min-width: 300px;
   background-color: #fff;
   padding: 15px;
@@ -94,7 +94,7 @@
 
 .cart-item-details {
   flex: 1;
-  min-width: 0; /* 🔥 Разрешает перенос */
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -104,7 +104,7 @@
   font-size: 0.9em;
   font-weight: 600;
   color: #333;
-  white-space: normal; /* Разрешаем перенос */
+  white-space: normal;
   word-wrap: break-word;
   overflow-wrap: break-word;
   line-height: 1.3;
@@ -273,17 +273,12 @@
   transform: translateY(-1px);
 }
 
-/* === Адаптивность — корзина всегда влезает === */
 @media (max-width: 600px) {
   .cart-container {
-    width: calc(100% - 16px); /* Учитываем padding .cart-sidebar */
-    max-width: 100%;
-    min-width: auto;
-    padding: 12px;
+    height: 95vh;
+    width: calc(100% - 16px);
     margin: 0 auto !important;
-    border-radius: 12px;
-    left: 8px; /* Корректировка позиционирования */
-    right: 8px;
+    border-radius: 15px;
     position: relative;
   }
   
@@ -322,9 +317,7 @@
 @media (max-width: 400px) {
   .cart-container {
     width: calc(100% - 16px); /* Учитываем padding .cart-sidebar */
-    max-width: 100%;
     min-width: auto;
-    padding: 12px;
     margin: 0 auto !important;
     border-radius: 12px;
     left: 8px; /* Корректировка позиционирования */
