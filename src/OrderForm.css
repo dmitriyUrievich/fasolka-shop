@@ -1,6 +1,7 @@
 /* src/components/OrderForm.css */
 
 .order-form-container {
+  -webkit-appearance: none;
   padding: 25px;
   background-color: #ffffff;
   border-radius: 12px;
@@ -11,17 +12,26 @@
   box-sizing: border-box;
   font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   position: relative;
-  max-height: 90vh;
+  max-height: 95dvh;
   overflow-y: auto; /* Ограничиваем высоту, чтобы форма не вылезала за экран */
-/* Включаем внутреннюю прокрутку, если контент не влезает */
 }
 
-#form-title { /* Применяем стили к h2 по его ID */
+.order-form-header {
+  display: flex;
+  justify-content: center; /* Центрируем заголовок по горизонтали */
+  align-items: center;    /* Выравниваем крестик и заголовок по вертикали */
+  position: relative;     /* Делаем этот блок контекстом для позиционирования крестика */
+  margin-bottom: 24px;    /* Отступ снизу, который раньше был у h2 */
+}
+
+#form-title { 
   text-align: center; 
   color: #2c3e50; 
-  margin-bottom: 28px; 
+  margin: 0; 
+  padding: 0 40px;
   font-size: 1.8em; 
   font-weight: 600; 
+  flex: 1;
 }
 
 /* --- СТИЛИ ЗАГОЛОВКА, ПОЛЕЙ ВВОДА И ОШИБОК (остаются как в старой версии) --- */
@@ -46,20 +56,29 @@
 .order-form-container .error-message { color: #e74c3c; font-size: 0.85em; margin-top: 6px; display: block; }
 .order-form-container select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; }
 
-/* --- НОВЫЕ СТИЛИ ДЛЯ КРЕСТИКА --- */
 .close-button {
-  position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 2.5rem; line-height: 1;
-  color: #cc0000; cursor: pointer; padding: 0; opacity: 0.7; transition: opacity 0.2s ease;
+  position: absolute; 
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  background: none; 
+  border: none; 
+  font-size: 2.5rem; 
+  line-height: 1;
+  color: #cc0000; 
+  cursor: pointer; 
+  padding: 0; 
+  opacity: 0.7; 
+  transition: opacity 0.2s ease;
 }
+
 .close-button:hover { opacity: 1; }
 
-/* Контейнер для кнопки теперь будет занимать всю ширину */
 .order-form-container .form-actions {
-  display: flex; /* Оставляем flex для выравнивания, если понадобится */
+  display: flex; 
   margin-top: 30px;
 }
 
-/* Основная кнопка отправки (взято из старых стилей) */
 .order-form-container .submit-button {
   flex: 1; /* Растягиваем на всю ширину контейнера */
   padding: 13px 24px;
@@ -133,7 +152,7 @@
   
   #form-title {
     font-size: 1.5em;
-    margin-bottom: 20px;
+    padding: 0 10px;
   }
 
   .order-form-container h2 {

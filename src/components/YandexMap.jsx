@@ -36,10 +36,7 @@ const loadYandexMaps = () => {
     document.head.appendChild(script);
   });
 };
-// +++ НОВЫЙ МОДУЛЬ (ФУНКЦИЯ-ПОМОЩНИК) +++
-/**
- * Меняет порядок координат в массиве с [долгота, широта] на [широта, долгота].
- */
+ //* Меняет порядок координат в массиве с [долгота, широта] на [широта, долгота].
 const swapCoordinatesInPolygon = (coordinates) => {
   if (!coordinates || !Array.isArray(coordinates)) {
     return [];

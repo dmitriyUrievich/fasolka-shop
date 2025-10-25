@@ -61,13 +61,13 @@ const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
   };
 
   return (
-   <div className="order-form-container">
-      {/* <-- 3. Кнопка "Отмена" заменена на крестик вверху */}
-      <button type="button" onClick={onClose} className="close-button" aria-label="Закрыть">
-        &times;
-      </button>
-
-      <h2 id="form-title">Оформление заказа</h2>
+<div className="order-form-container">
+    <div className="order-form-header"> {/* 🔥 Новый контейнер-обёртка */}
+        <h2 id="form-title">Оформление заказа</h2>
+        <button type="button" onClick={onClose} className="close-button" aria-label="Закрыть">
+            &times;
+        </button>
+    </div>
       <form onSubmit={handleSubmit}>     
         <div className="form-group">
           <label htmlFor="customerName">Имя:</label>

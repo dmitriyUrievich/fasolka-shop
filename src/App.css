@@ -12,11 +12,11 @@ body.modal-open {
 }
 
 .app-header {
+  background-color: var(--farm-green); /* Задаем зеленый фон */
   color: white; /* Задаем белый цвет для текста и иконок внутри */
   padding: 10px 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  min-height: var(--header-height);
-  position: sticky;
+  position: sticky; /* Делаем хедер "липким" при прокрутке */
   top: 0;
   z-index: 1000;
   width: 100%;
@@ -222,7 +222,7 @@ body.modal-open {
   padding: 0 5px;
   box-sizing: border-box;
   display: flex;
-  gap: 30px;
+  gap: 20px;
   justify-content: space-between;
 }
 
@@ -238,7 +238,7 @@ body.modal-open {
   width: 450px; /* Фиксированная ширина */
   max-width: 100%; /* Не превышает родителя */
   min-width: 320px; /* Минимальная ширина */
-  height: calc(100vh - var(--header-height));
+  height: calc(100vh - 80px);
   overflow-y: auto;
   overflow-x: hidden;
   padding: 20px 16px;
@@ -266,7 +266,6 @@ body.modal-open {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE и Edge */
 }
-
 .category-menu-sidebar::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
 }
@@ -359,10 +358,8 @@ body.modal-open {
     margin-right: 10px;
   }
 }
-@media (max-width: 767.98px) {
-  .header-controls .cart-icon-button.desktop-cart {
-      margin-left: 0;
-  }
+.cart-icon-button.desktop-cart {
+  margin-left: 0 !important;
 }
 
 /* === Режим "только иконки" при очень узком экране === */
