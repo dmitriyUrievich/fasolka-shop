@@ -584,7 +584,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 7
+      "rests": 5
     },
     {
       "id": "0200f9a5-988e-4f37-9c54-8ff133e351ff",
@@ -670,7 +670,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 4
+      "rests": 3
     },
     {
       "id": "0232f6a1-e8c7-4b6d-b9b8-75c0192cffe7",
@@ -3465,7 +3465,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 5
+      "rests": 4
     },
     {
       "id": "0aeac3da-b48c-4a15-9edf-5fd16756a480",
@@ -3957,7 +3957,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 3
+      "rests": 2
     },
     {
       "id": "0c5c7679-e6ed-49af-85ef-3151eb60d9e6",
@@ -4235,7 +4235,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 9
+      "rests": 8
     },
     {
       "id": "0d53483c-9613-46c7-aa46-eff304afaf3b",
@@ -5134,7 +5134,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 14
+      "rests": 13
     },
     {
       "id": "114f4e03-dd56-4c8a-af55-ba5e475c30ff",
@@ -5720,7 +5720,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 17
+      "rests": 15
     },
     {
       "id": "1398b409-1161-4b7b-aea5-d2a46dc7b509",
@@ -6201,7 +6201,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 20
+      "rests": 16
     },
     {
       "id": "152cb1ed-f293-4794-8309-dd57b414ef4c",
@@ -7201,7 +7201,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 9
+      "rests": 8
     },
     {
       "id": "17433135-1359-41cd-90db-9b8a3ef935d5",
@@ -8399,7 +8399,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 60
+      "rests": 59
     },
     {
       "id": "1b973c24-6527-48ab-8988-9b1f5b7065e1",
@@ -8612,7 +8612,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 44
+      "rests": 42
     },
     {
       "id": "1c82fe06-ad31-48a9-bd33-e6c0ebfefc47",
@@ -9080,7 +9080,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 22
+      "rests": 20
     },
     {
       "id": "1dfa78c0-c8ee-4a83-95f8-d02fab481ae0",
@@ -10072,7 +10072,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 17
+      "rests": 16
     },
     {
       "id": "214e81df-d13d-4d3f-93f3-8d0cc5094662",
@@ -10533,7 +10533,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1
+      "rests": 0
     },
     {
       "id": "22b61d9d-a99b-49c6-a10e-9fd97fc607ce",
@@ -11184,7 +11184,7 @@
       "isDiscountDisabled": true,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 7
+      "rests": 4
     },
     {
       "id": "24bf1e48-a967-43e1-be49-55276dc95122",
@@ -12386,7 +12386,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1
+      "rests": 0
     },
     {
       "id": "28918fc1-a8fa-447d-b802-5386646ac35f",
@@ -12512,7 +12512,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 59
+      "rests": 58
     },
     {
       "id": "29740817-32b4-4adb-9298-f82a77e0c8f8",
@@ -12580,7 +12580,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 20
+      "rests": 18
     },
     {
       "id": "29c28334-cd6a-4b43-be89-1c62750efc9e",
@@ -13350,7 +13350,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 231
+      "rests": 230
     },
     {
       "id": "2c3ab5b9-c2b4-4095-a641-5b0303f74ea0",
@@ -13562,7 +13562,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1
+      "rests": 0
     },
     {
       "id": "2c984407-6cdd-4945-915b-21e439bec4c8",
@@ -14158,7 +14158,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 8
+      "rests": 7
     },
     {
       "id": "2e861290-b004-480f-a4dd-cdd7078a1812",
@@ -14496,7 +14496,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 3
+      "rests": 2
     },
     {
       "id": "2f6ba22d-b412-4b69-a4b9-35d7454923fc",
@@ -15307,7 +15307,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 2
+      "rests": 1
     },
     {
       "id": "322fc145-e66d-43c4-81ce-19973b9edad9",
@@ -16211,7 +16211,7 @@
       "isDiscountDisabled": true,
       "isBonusDisabled": true,
       "isTechCardExcise": false,
-      "rests": 4
+      "rests": 3
     },
     {
       "id": "3504e40f-fe0b-484a-8b63-52e8446c8c1b",
@@ -16383,7 +16383,7 @@
       "isDiscountDisabled": true,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 20
+      "rests": 17
     },
     {
       "id": "3592b249-79e3-4fc6-9323-fa01985187d7",
@@ -16556,7 +16556,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 17
+      "rests": 14
     },
     {
       "id": "35efc5e3-f9b2-44c0-8311-64e6147bd811",
@@ -16664,7 +16664,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 16
+      "rests": 15
     },
     {
       "id": "364f5a3d-1c2b-44ef-9a92-837579df1600",
@@ -17635,7 +17635,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": true,
-      "rests": 11
+      "rests": 9
     },
     {
       "id": "391da3e1-b3a8-4a00-ba5a-77b5c47c4cb9",
@@ -17741,7 +17741,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 50
+      "rests": 48
     },
     {
       "id": "39723da9-28bd-428b-bb53-938494bbffdd",
@@ -17970,7 +17970,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 2
+      "rests": 0
     },
     {
       "id": "3a98ad8b-1458-43ba-ba3c-a0edf4f73de7",
@@ -18373,7 +18373,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 4.07
+      "rests": 3.446
     },
     {
       "id": "3c16175f-e99e-4cee-80c9-16b0fdeccefc",
@@ -19268,7 +19268,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 21
+      "rests": 20
     },
     {
       "id": "3e685c70-7319-4283-a95d-1cf44a877286",
@@ -20035,7 +20035,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 9
+      "rests": 8
     },
     {
       "id": "40fcb089-2902-41fb-9f8f-1ddc81958499",
@@ -20552,7 +20552,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 220
+      "rests": 218
     },
     {
       "id": "42b6bc65-4b55-4a9f-b5c8-8a29af279794",
@@ -20592,7 +20592,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 5
+      "rests": 4
     },
     {
       "id": "42d33c20-5a84-48e8-9637-5c23b0dccd0f",
@@ -20985,7 +20985,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 12
+      "rests": 9
     },
     {
       "id": "4407a37f-581c-46ba-b1de-949c5ee76433",
@@ -21946,7 +21946,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 4
+      "rests": 3
     },
     {
       "id": "4688a452-536b-4d05-8af1-b8107693d95e",
@@ -22294,7 +22294,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 24
+      "rests": 23
     },
     {
       "id": "47b9d2c4-7942-473d-a0bc-ef11d2644aab",
@@ -22316,7 +22316,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 2
+      "rests": 1
     },
     {
       "id": "47bb3e7d-3514-4837-9e51-a12e5517dd12",
@@ -22572,7 +22572,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 12.568
+      "rests": 12.272
     },
     {
       "id": "48572a32-a8a0-4db0-ba64-002e72d5e686",
@@ -22674,7 +22674,7 @@
       "isDiscountDisabled": true,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 9
+      "rests": 3
     },
     {
       "id": "489f4345-6e0f-459c-9565-069afccad4b1",
@@ -23254,7 +23254,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 3
+      "rests": 0
     },
     {
       "id": "4a3af97d-9f0b-4af5-bc23-87426fd00656",
@@ -23639,7 +23639,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 17
+      "rests": 15
     },
     {
       "id": "4b875390-572c-476d-84ad-a2d1134b5d72",
@@ -23955,7 +23955,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1
+      "rests": 0
     },
     {
       "id": "4cabbb03-8d30-47f5-b42a-d186bd667661",
@@ -24124,7 +24124,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 5
+      "rests": 2
     },
     {
       "id": "4d80ad43-adab-46be-a9d6-c647f036b5ec",
@@ -24144,7 +24144,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 38
+      "rests": 36
     },
     {
       "id": "4da6f43c-9079-433d-a554-5198069abb5d",
@@ -24591,7 +24591,7 @@
       "isDiscountDisabled": true,
       "isBonusDisabled": true,
       "isTechCardExcise": false,
-      "rests": 6
+      "rests": 5
     },
     {
       "id": "4f071118-a5f4-40b3-99a6-ce2bbafba96a",
@@ -25173,7 +25173,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 5
+      "rests": 4
     },
     {
       "id": "516594c5-7a6b-4bcf-90c0-c32db813766e",
@@ -25323,7 +25323,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 6
+      "rests": 5
     },
     {
       "id": "51c91955-44c8-4c29-bd72-42c8f407e8dc",
@@ -25363,7 +25363,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1
+      "rests": 0
     },
     {
       "id": "51cf5e9f-6f20-4785-b295-dace21ef5d10",
@@ -25776,7 +25776,7 @@
       "isDiscountDisabled": true,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 5
+      "rests": 1
     },
     {
       "id": "52b8e38c-b12c-4858-93b7-3f9958f55ef8",
@@ -25882,7 +25882,7 @@
       "isDiscountDisabled": true,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 2
+      "rests": 0
     },
     {
       "id": "52fdfe5d-d452-4be1-acd7-f10dfdb90698",
@@ -26227,7 +26227,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 3
+      "rests": 0
     },
     {
       "id": "543efeb3-166c-4e36-85b9-92492aa81e7b",
@@ -26527,7 +26527,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 5
+      "rests": 3
     },
     {
       "id": "54ffff73-8378-45fa-81f1-7cfffd2761eb",
@@ -27267,7 +27267,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 2
+      "rests": 1
     },
     {
       "id": "5797060c-fda9-4624-93cf-717d261a7416",
@@ -28018,7 +28018,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 9
+      "rests": 8
     },
     {
       "id": "5a7b9251-32d3-4858-86cb-00f733637d00",
@@ -28512,7 +28512,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 4
+      "rests": 3
     },
     {
       "id": "5c075b6a-8e4f-4a9b-ae79-22ae1c5c41ff",
@@ -29212,7 +29212,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1
+      "rests": 0
     },
     {
       "id": "5e2db5de-df6c-41fe-a2c7-9249fa141388",
@@ -29383,7 +29383,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 7
+      "rests": 6
     },
     {
       "id": "5eca5e9d-bdec-4206-a33b-de90aca8e2d1",
@@ -30395,7 +30395,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 11.104
+      "rests": 10.984
     },
     {
       "id": "61d84689-6b17-4fbc-a254-33c73c6e54bd",
@@ -31100,7 +31100,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 14
+      "rests": 13
     },
     {
       "id": "64a885dd-56ff-4596-843f-a7b340f6e1e2",
@@ -31359,7 +31359,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 20
+      "rests": 19
     },
     {
       "id": "6566a892-47dc-4c53-89de-b0dc2dcfa2b4",
@@ -32242,7 +32242,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 16
+      "rests": 15
     },
     {
       "id": "695c294b-d5f5-4061-bd68-3ccadef35305",
@@ -32265,7 +32265,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 25
+      "rests": 24
     },
     {
       "id": "695c31a4-3cd9-4ab1-bfe3-12ba0f53742a",
@@ -33013,7 +33013,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 6
+      "rests": 5
     },
     {
       "id": "6ce4ce95-519b-4f21-8d14-4afe16ed843b",
@@ -33145,7 +33145,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 943
+      "rests": 942
     },
     {
       "id": "6d293ecc-039a-48ce-9eb5-f81c6d129578",
@@ -33955,7 +33955,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 9
+      "rests": 7
     },
     {
       "id": "700097c2-de04-4c18-be3f-44d2b8752309",
@@ -34595,7 +34595,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 3
+      "rests": 1
     },
     {
       "id": "717a06dd-21df-4a7b-8420-a5b73c0b87c4",
@@ -35326,7 +35326,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 2
+      "rests": 0
     },
     {
       "id": "7449bb05-ca7b-4e95-91c6-31a711e6f8bc",
@@ -35390,7 +35390,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 9
+      "rests": 8
     },
     {
       "id": "745e57fc-8152-4632-a839-da9f15d31b26",
@@ -35412,7 +35412,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 2
+      "rests": 1
     },
     {
       "id": "746454fd-3525-4b47-b99c-8b6db4e5d090",
@@ -35647,7 +35647,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1
+      "rests": 0
     },
     {
       "id": "75577fd5-db56-41db-b6cf-197c2cfc751e",
@@ -36129,7 +36129,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 6.69
+      "rests": 6.482
     },
     {
       "id": "77a8f5ec-6fca-4d8b-a363-e8474587a533",
@@ -36532,7 +36532,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 11
+      "rests": 8
     },
     {
       "id": "796be36b-2245-4a68-a56e-52e7dfc07246",
@@ -37801,7 +37801,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 5
+      "rests": 4
     },
     {
       "id": "7cd9f53c-df90-43c4-88a3-c5f3cf0fb9e4",
@@ -38296,7 +38296,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 159
+      "rests": 157
     },
     {
       "id": "7e8bad75-e170-4f12-b786-dced10b5874c",
@@ -38318,7 +38318,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 3
+      "rests": 2
     },
     {
       "id": "7e91c4a1-86df-4f2c-a1f7-2b2f9744065c",
@@ -38427,7 +38427,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1
+      "rests": 0
     },
     {
       "id": "7f00b2f7-edfb-45b0-8b8c-5822d69ab22a",
@@ -39129,7 +39129,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 21
+      "rests": 20
     },
     {
       "id": "81f75bcc-c36f-4d0f-92c1-3b6f0fd31bab",
@@ -39697,7 +39697,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 14
+      "rests": 11
     },
     {
       "id": "8452c855-65ef-49d7-a0d0-c881f320592b",
@@ -40169,7 +40169,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 14
+      "rests": 11
     },
     {
       "id": "85d6339b-ab5a-41a9-b598-8acf4cce1bad",
@@ -41072,7 +41072,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 10
+      "rests": 9
     },
     {
       "id": "882ddb30-0f08-48ab-8925-9fd5c34bebab",
@@ -41326,7 +41326,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 4
+      "rests": 3
     },
     {
       "id": "88bc2aac-142e-4fdb-9a55-2b1ac0068b19",
@@ -42239,7 +42239,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 5
+      "rests": 4
     },
     {
       "id": "8bcf496d-fd51-488a-bd7f-6475ce1f811a",
@@ -42286,7 +42286,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 39.74
+      "rests": 38.198
     },
     {
       "id": "8bf6b23a-9cfa-4da8-b453-03f7b94acbf8",
@@ -42371,7 +42371,7 @@
       "isDiscountDisabled": true,
       "isBonusDisabled": true,
       "isTechCardExcise": false,
-      "rests": 13
+      "rests": 10
     },
     {
       "id": "8c1806f2-2233-49ab-9455-a10528a5480c",
@@ -42495,7 +42495,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 6
+      "rests": 5
     },
     {
       "id": "8c549311-7b0b-4bc5-a689-8ca683c16820",
@@ -43235,7 +43235,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 7
+      "rests": 6
     },
     {
       "id": "8f2eb49f-0f90-4a7f-8fd9-831380e1ea3e",
@@ -43257,7 +43257,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 3
+      "rests": 2
     },
     {
       "id": "8f530463-a291-46d7-abf9-f2c285d7c84f",
@@ -43713,7 +43713,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 28
+      "rests": 24
     },
     {
       "id": "9116c535-e589-480c-8119-e274d8ec4fb5",
@@ -44164,7 +44164,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 5
+      "rests": 4
     },
     {
       "id": "927516c6-7574-4695-b2bc-a025950f76d6",
@@ -44250,7 +44250,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 3
+      "rests": 2
     },
     {
       "id": "92b6c31e-c004-488f-91a5-35e17302f82f",
@@ -44684,7 +44684,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 32
+      "rests": 31
     },
     {
       "id": "93cd57d7-e269-41e3-a768-7d5338660e68",
@@ -44893,7 +44893,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 4
+      "rests": 0
     },
     {
       "id": "947a2b5e-ec88-4c1d-95f0-478724b6dec2",
@@ -45963,7 +45963,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 8
+      "rests": 7
     },
     {
       "id": "97b507fb-eabf-4e8c-b447-f4ad8117c995",
@@ -46183,7 +46183,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 12
+      "rests": 11
     },
     {
       "id": "97ff795e-83bb-486a-a6f6-aa285676e259",
@@ -46397,7 +46397,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 3
+      "rests": 2
     },
     {
       "id": "98b6d203-dffd-47a2-97b1-44d6867f2955",
@@ -46721,7 +46721,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 2
+      "rests": 1
     },
     {
       "id": "99610a86-d4e1-4eb0-9504-7350311897cc",
@@ -46937,7 +46937,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 10.21
+      "rests": 9.716
     },
     {
       "id": "99c1f7f0-e3a0-4a83-ac60-ef5df374519d",
@@ -47131,7 +47131,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 14
+      "rests": 12
     },
     {
       "id": "9a5002b6-8937-417c-898e-125d6fc88558",
@@ -47215,7 +47215,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1
+      "rests": 0
     },
     {
       "id": "9aa84902-88c4-4ece-b3ac-48a5c63ea52f",
@@ -47917,7 +47917,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 13
+      "rests": 12
     },
     {
       "id": "9cfd6e0c-6647-4fdc-99a8-5d4bd9407535",
@@ -48413,7 +48413,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 2
+      "rests": 0
     },
     {
       "id": "9f8f53a3-6c2b-4ca6-811e-87b845d494cc",
@@ -48697,7 +48697,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 8
+      "rests": 7
     },
     {
       "id": "a0620cdb-90c1-4892-85da-26a47126c4cb",
@@ -49352,7 +49352,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 58
+      "rests": 57
     },
     {
       "id": "a28d4e16-0579-4bc2-80c3-23997241238b",
@@ -49959,7 +49959,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 2
+      "rests": 0
     },
     {
       "id": "a4a65d23-be4f-4cbc-b0f6-c0206117deaf",
@@ -51451,7 +51451,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 9
+      "rests": 8
     },
     {
       "id": "a7dea2b8-9b1d-4387-849f-8e8e280e59cd",
@@ -51624,7 +51624,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 10
+      "rests": 9
     },
     {
       "id": "a82aad7a-61d8-4c6a-b6e9-ed9c6843cae3",
@@ -51648,7 +51648,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1.09
+      "rests": 0.054
     },
     {
       "id": "a833cbf4-4c51-4693-9380-737726f7df6e",
@@ -52190,7 +52190,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1
+      "rests": 0
     },
     {
       "id": "a9d96584-94a3-4d67-b953-c67188a6d608",
@@ -52412,7 +52412,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 17
+      "rests": 14
     },
     {
       "id": "aa9b01aa-83f6-457b-af6b-14f564c483f6",
@@ -52434,7 +52434,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1
+      "rests": 0
     },
     {
       "id": "aaa41928-ad84-4ec1-ba2c-63e6e3461a54",
@@ -52735,7 +52735,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 28
+      "rests": 25
     },
     {
       "id": "abc1e24f-1d6c-4e93-9be9-478dcd1e6f50",
@@ -53180,7 +53180,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 11
+      "rests": 7
     },
     {
       "id": "acf7c300-f64a-491b-98df-40fcf60a56df",
@@ -53789,7 +53789,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 14
+      "rests": 13
     },
     {
       "id": "aeecbc24-0e11-444e-ba1b-36ae1097b497",
@@ -53852,7 +53852,7 @@
       "isDiscountDisabled": true,
       "isBonusDisabled": true,
       "isTechCardExcise": false,
-      "rests": 4
+      "rests": 2
     },
     {
       "id": "aefeea46-d575-442d-a50a-37a1bee9d1fc",
@@ -54525,7 +54525,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 4
+      "rests": 3
     },
     {
       "id": "b17d3089-ad3b-477b-a237-a41f867bf979",
@@ -55368,7 +55368,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 12
+      "rests": 11
     },
     {
       "id": "b3fcce46-7dd4-465a-bda7-6600fed99dd3",
@@ -56250,7 +56250,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 7
+      "rests": 6
     },
     {
       "id": "b74d5c91-57ee-406f-8ab2-4b3d95431cd1",
@@ -56296,7 +56296,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 5
+      "rests": 2
     },
     {
       "id": "b74efdbb-5afe-4dc6-bc50-bc8aa60debb7",
@@ -56338,7 +56338,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 39
+      "rests": 38
     },
     {
       "id": "b780cc5f-561e-4fab-a562-9e7b5054a4b0",
@@ -56705,7 +56705,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 52
+      "rests": 51
     },
     {
       "id": "b85f3f28-8d40-44ea-b800-aa9901bb74f9",
@@ -58075,7 +58075,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 20
+      "rests": 19
     },
     {
       "id": "bce53e5f-2cb9-4e9c-b63b-1fb93e4d23aa",
@@ -58864,7 +58864,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 20
+      "rests": 18
     },
     {
       "id": "bef05a76-e889-4013-815b-5af7546245fc",
@@ -58948,7 +58948,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 28
+      "rests": 27
     },
     {
       "id": "bf4a5a40-12d1-49b2-a283-441c383b1b0c",
@@ -59164,7 +59164,7 @@
       "isDiscountDisabled": true,
       "isBonusDisabled": true,
       "isTechCardExcise": false,
-      "rests": 8
+      "rests": 7
     },
     {
       "id": "bfce9f45-35e3-47a0-811a-501c36d503ba",
@@ -60242,7 +60242,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1
+      "rests": 0
     },
     {
       "id": "c384cf1d-c22e-4da2-94af-2b7253311a94",
@@ -61336,7 +61336,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 15
+      "rests": 14
     },
     {
       "id": "c76010b2-7e8f-4571-9b75-e344d70d2e80",
@@ -61831,7 +61831,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 55
+      "rests": 54
     },
     {
       "id": "c85eaa9d-ff03-46a9-b14b-1fd4b598cc53",
@@ -62297,7 +62297,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 208
+      "rests": 193
     },
     {
       "id": "c9ed29e2-c5e0-4973-b967-dcfe5e361c27",
@@ -64217,7 +64217,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 23
+      "rests": 21
     },
     {
       "id": "d07ad5e7-3a76-4c12-9c00-6be5958a3aa0",
@@ -64259,7 +64259,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 18
+      "rests": 14
     },
     {
       "id": "d0920e94-7c33-4cab-841a-4e172bbb57fb",
@@ -64640,7 +64640,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 7
+      "rests": 6
     },
     {
       "id": "d19a54c3-7c01-4944-867b-c7acfa097acb",
@@ -64768,7 +64768,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 6
+      "rests": 5
     },
     {
       "id": "d22eacc9-0924-423e-a8d5-bf467f28bf57",
@@ -65260,7 +65260,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 2.38
+      "rests": 1.692
     },
     {
       "id": "d31e6d1f-3193-4710-91fb-7dbf6586edc1",
@@ -65302,7 +65302,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 5
+      "rests": 4
     },
     {
       "id": "d33e7f0b-8472-4358-8df6-971ec39a0767",
@@ -65518,7 +65518,7 @@
       "isDiscountDisabled": true,
       "isBonusDisabled": true,
       "isTechCardExcise": false,
-      "rests": 3
+      "rests": 2
     },
     {
       "id": "d39fedfc-ed16-415a-ace5-c8396f8a5eb3",
@@ -65539,7 +65539,7 @@
       "isDiscountDisabled": true,
       "isBonusDisabled": true,
       "isTechCardExcise": false,
-      "rests": 7
+      "rests": 5
     },
     {
       "id": "d3d05470-4f34-4e83-952a-72eb1ba08aec",
@@ -66878,7 +66878,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 2
+      "rests": 1
     },
     {
       "id": "d75006f6-e2e0-4f53-b61f-77e753e25b61",
@@ -67028,7 +67028,7 @@
       "isDiscountDisabled": true,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 18
+      "rests": 17
     },
     {
       "id": "d7d545b6-4def-425d-9a0a-f6c84c491bd7",
@@ -67779,7 +67779,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 6
+      "rests": 5
     },
     {
       "id": "da99d4f4-d4ff-48bb-9b6d-e57ef4c1fda0",
@@ -67909,7 +67909,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1
+      "rests": 0
     },
     {
       "id": "db033459-25d8-4026-b1e5-13eba518cfe8",
@@ -68039,7 +68039,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 5
+      "rests": 4
     },
     {
       "id": "dbbb64ab-ee8c-432d-9912-e07f6307c850",
@@ -68935,7 +68935,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 10
+      "rests": 9
     },
     {
       "id": "deb1782c-8f67-4750-b78b-d9053e4165b3",
@@ -70117,7 +70117,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 14
+      "rests": 13
     },
     {
       "id": "e28e8470-7035-4bbe-b6f6-6fb8e50702ff",
@@ -70183,7 +70183,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 5
+      "rests": 4
     },
     {
       "id": "e29df3f1-af82-4347-9530-f29d948f082b",
@@ -70327,7 +70327,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 6
+      "rests": 5
     },
     {
       "id": "e32e3585-1bd5-4f41-a863-f3ebb2d1484d",
@@ -71008,7 +71008,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1
+      "rests": 0
     },
     {
       "id": "e532fa65-9f56-472a-89cb-f46e98652091",
@@ -72135,7 +72135,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 13
+      "rests": 12
     },
     {
       "id": "e977b15f-4539-435b-8520-993dbf3fed35",
@@ -72243,7 +72243,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 15
+      "rests": 14
     },
     {
       "id": "e9c82344-643c-4e1b-ac9b-f180bdce6a65",
@@ -72287,7 +72287,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 33
+      "rests": 31
     },
     {
       "id": "e9fa99c6-60d1-40a0-b429-ca5ff1549f91",
@@ -72329,7 +72329,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 22
+      "rests": 20
     },
     {
       "id": "ea279c11-e0ac-466e-84e1-be39f3226778",
@@ -72479,7 +72479,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1
+      "rests": 0
     },
     {
       "id": "eacbf58c-9951-4cc1-8826-50f237604a45",
@@ -73058,7 +73058,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1
+      "rests": 0
     },
     {
       "id": "ed885e75-87eb-4142-bacc-e7cd810500f4",
@@ -73358,7 +73358,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1
+      "rests": 0
     },
     {
       "id": "ee3146e5-6bd8-4942-b85a-5554dd904c14",
@@ -73673,7 +73673,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 8
+      "rests": 7
     },
     {
       "id": "ef1fbbf6-e491-4c17-a38d-bb398384ad9d",
@@ -74613,7 +74613,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 12
+      "rests": 11
     },
     {
       "id": "f1bb942e-205a-4f90-ac9b-974a0d2848a8",
@@ -74655,7 +74655,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 16
+      "rests": 14
     },
     {
       "id": "f1fa0b15-6650-40ec-81b1-cd28e699630d",
@@ -75381,7 +75381,7 @@
       "isDiscountDisabled": true,
       "isBonusDisabled": true,
       "isTechCardExcise": false,
-      "rests": 3
+      "rests": 2
     },
     {
       "id": "f3d7fb7a-b454-4681-a589-af40882d6cf7",
@@ -75642,7 +75642,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 1.76
+      "rests": 1.544
     },
     {
       "id": "f49b1aa7-a0fd-4243-86ca-26d9e30b78a8",
@@ -75833,7 +75833,7 @@
       "isDiscountDisabled": true,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 9
+      "rests": 7
     },
     {
       "id": "f570a43d-fd00-4a4a-b41f-f2dd0a539d93",
@@ -75855,7 +75855,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 6
+      "rests": 5
     },
     {
       "id": "f5758c97-9f97-4044-8dc9-d9acb89797f3",
@@ -76203,7 +76203,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 15
+      "rests": 14
     },
     {
       "id": "f6e220df-bb28-4cee-884a-07b3b8ac5ee8",
@@ -76505,7 +76505,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 151
+      "rests": 137
     },
     {
       "id": "f7d1cc1e-dbb0-4cd0-914f-b500cdcfd0f5",
@@ -76697,7 +76697,7 @@
       "isDiscountDisabled": true,
       "isBonusDisabled": true,
       "isTechCardExcise": false,
-      "rests": 6
+      "rests": 4
     },
     {
       "id": "f8c6573c-5f57-4c32-a865-0960d1270281",
@@ -76996,7 +76996,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 4.77
+      "rests": 4.594
     },
     {
       "id": "f9bfe5f0-53e8-4a7e-b67b-c7e11e949c52",
@@ -78636,7 +78636,7 @@
       "isDiscountDisabled": false,
       "isBonusDisabled": false,
       "isTechCardExcise": false,
-      "rests": 22
+      "rests": 21
     },
     {
       "id": "fec2bb96-6b93-4965-b0c8-4495902b976a",
@@ -79290,5 +79290,5 @@
       "name": "Пиво"
     }
   ],
-  "lastSync": "2025-10-26T11:31:39.374Z"
+  "lastSync": "2025-10-26T16:58:24.122Z"
 }
