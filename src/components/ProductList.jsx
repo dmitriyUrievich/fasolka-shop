@@ -146,7 +146,6 @@ const specialOfferCategoryId = useMemo(() => {
       </div>
     );
   }
-    console.log(sortedProducts)
   return (
     <>
       <div className="product-list-container">

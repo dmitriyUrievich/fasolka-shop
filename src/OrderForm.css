@@ -12,7 +12,7 @@
   box-sizing: border-box;
   font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   position: relative;
-  max-height: 95dvh;
+  max-height: 90dvh;
   overflow-y: auto; /* Ограничиваем высоту, чтобы форма не вылезала за экран */
 }
 

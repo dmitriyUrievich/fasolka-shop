@@ -275,7 +275,7 @@
 
 @media (max-width: 600px) {
   .cart-container {
-    height: 95vh;
+    height: 90dvh;
     width: calc(100% - 16px);
     margin: 0 auto !important;
     border-radius: 15px;
