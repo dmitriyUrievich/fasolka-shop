@@ -58,7 +58,7 @@ useEffect(() => {
       setLoading(true);
       try {
         // Для продакшена - относительный путь /api/products-data или полный https://домен.ru/api/products-data
-        const response = await fetch('/local-api/products-data'); 
+        const response = await fetch('/api/products-data'); 
         
         if (!response.ok) {
           throw new Error(`Ошибка сети: ${response.statusText}`);
