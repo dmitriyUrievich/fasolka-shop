@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
 
        proxy: {
         // --- Правило для ВАШЕГО ЛОКАЛЬНОГО сервера ---
-        '/local-api': {
+        '/api': {
           target: 'http://localhost:3000', // Адрес вашего Node.js сервера
           changeOrigin: true,
           // Убираем /local-api, чтобы на ваш сервер пришел чистый путь /api/...

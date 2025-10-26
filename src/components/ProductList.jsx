@@ -7,6 +7,7 @@ import getPortion from '../utils/getPortion';
 const storageKey = 'ageConfirmedGlobal';
 import { createImageLoader } from '../utils/imageUtils';
 import YandexMap from './YandexMap'
+
 const ProductList = ({
   products,
   categories,
@@ -24,6 +25,7 @@ const ProductList = ({
   const itemsPerPage = 24;
 
   const [ageConfirmed, setAgeConfirmed] = useState(() => localStorage.getItem(storageKey) === 'true');
+
 
   const handleConfirmAge = () => {
     setAgeConfirmed(true);
@@ -144,7 +146,7 @@ const specialOfferCategoryId = useMemo(() => {
       </div>
     );
   }
-
+    console.log(sortedProducts)
   return (
     <>
       <div className="product-list-container">

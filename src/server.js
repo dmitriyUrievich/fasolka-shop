@@ -34,7 +34,6 @@ initializeBot(syncProductsFromApi);
 
 const apiRouter = express.Router();
 
-
 apiRouter.get('/products-data', async (req, res) => {
     try {
         const data = await getLocalProducts();
