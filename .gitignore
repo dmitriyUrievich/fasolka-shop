@@ -4,7 +4,7 @@ npm-debug.log*
 
 # Переменные окружения
 .env
-
+srs/products.json
 # Build output
 /dist
 /out
