@@ -43,10 +43,15 @@ const CartBasket = ({
     return { cost: 200, text: '200 ₽', showFreeHint: true };
   }, [subtotal]);
 
+    const requiresAgeVerification = useMemo(() => {
+    // Проверяем, есть ли в корзине хотя бы один товар с типом 'Softdrinks'
+    return cartItems.some(item => item.productType === 'Softdrinks');
+  }, [cartItems]);
+
   const { cost: deliveryCost, text: deliveryText, showFreeHint } = deliveryInfo;
   const isOrderValid = deliveryCost !== null;
   const totalWithReserve = isOrderValid ? subtotal + reserveAmount + deliveryCost : 0;
-
+console.log('----',cartItems)
   return (
     <div className="cart-container">
       <div className="cart-header">
@@ -96,6 +101,11 @@ const CartBasket = ({
           </p>
         )}
 
+        {requiresAgeVerification && (
+            <div className="cart-warning-message">
+                <p>Для получения заказа, содержащего товары 18+, потребуется документ, удостоверяющий личность.</p>
+            </div>
+        )}
 
         {hasWeightedItems && (
             <div className="cart-warning-message" >
