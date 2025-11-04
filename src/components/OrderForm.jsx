@@ -14,10 +14,10 @@ const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
   const [isAddressInZone, setIsAddressInZone] = useState(false);
 
   const timeSlots = [
-    '9:00–12:00',
+    '10:00–12:00',
     '12:00–15:00',
     '15:00–18:00',
-    '18:00–21:00',
+    '18:00–20:00',
   ];
 
   const validate = useCallback(() => {
