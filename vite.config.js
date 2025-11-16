@@ -6,27 +6,10 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    ssr: {
+    noExternal: ['react-helmet-async'],
+    },
     server: {
-      // proxy: {
-      //   // --- Существующая настройка для Kontur API ---
-      //   '/api': {
-      //     target: 'https://api.kontur.ru/market/v1',
-      //     changeOrigin: true,
-      //     rewrite: (path) => path.replace(/^\/api/, ''),
-      //     configure: (proxy, options) => {
-      //       proxy.on('proxyReq', (proxyReq, req, res) => {
-      //         proxyReq.setHeader('x-kontur-apikey', env.KONTUR_API_KEY);
-      //       });
-      //     },
-      //   },
-      //   // --- НОВАЯ настройка для вашего локального Node.js сервера ---
-      //   '/order': { // Здесь указываем путь, который использует ваш React-компонент
-      //     target: 'http://localhost:3000', // Здесь указываем адрес вашего Node.js сервера
-      //     changeOrigin: true, // Важно для корректной работы прокси
-      //     // rewrite: (path) => path.replace(/^\/order/, '/order'), // Необязательно, если путь на бэкенде совпадает
-      //   },
-      // },
-
        proxy: {
         // --- Правило для ВАШЕГО ЛОКАЛЬНОГО сервера ---
         '/api': {

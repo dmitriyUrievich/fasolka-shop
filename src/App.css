@@ -21,6 +21,7 @@ body.modal-open {
   z-index: 1000;
   width: 100%;
 }
+
 /* === Основной контейнер приложения === */
 .app-container {
   display: flex;
@@ -42,7 +43,17 @@ body.modal-open {
   gap: 15px;
   position: relative;
 }
-
+.category-icon-button {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  margin: 0;
+  transition: transform 0.2s ease;
+  animation: wiggle 0.5s ease;
+}
 .category-icon-button:hover {
   transform: scale(1.1);
 }

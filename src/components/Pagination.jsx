@@ -6,9 +6,18 @@ import { FaArrowCircleRight, FaArrowCircleLeft } from "react-icons/fa";
 const Pagination = ({ itemsPerPage, totalItems, paginate, currentPage }) => {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   
-  // 🔹 Определяем, является ли устройство мобильным
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 600);
-  
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth <= 500);
+    };
+    checkScreenSize();
+    
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth <= 500);

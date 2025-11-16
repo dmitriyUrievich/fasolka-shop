@@ -18,7 +18,7 @@ const CartBasket = ({
     const weighted = cartItems.some(item => item.unit === 'Kilogram');
 
     cartItems.forEach(item => {
-      const itemTotal = (item.sellPricePerUnit || 0) * item.quantityInCart;
+      const itemTotal = (parseFloat(item.sellPricePerUnit.replace(',', '.')) || 0) * item.quantityInCart;
       calculatedSubtotal += itemTotal;
       if (item.unit === 'Kilogram') {
         calculatedReserve += itemTotal * 0.15;

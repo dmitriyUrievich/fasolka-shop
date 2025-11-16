@@ -16,8 +16,8 @@
     --farm-dark-green-rgb: 46, 125, 50; /* для rgba */      /* Минимальная ширина на очень узких экранах */
     --card-min-width: 150px;       /* Минимальная ширина карточки */
     --btn-quantity-size: 36px;     /* Размер кнопок + и - */
-    --quantity-info-min-width: 60px; /
-    
+    --quantity-info-min-width: 60px; 
+    --farm-yellow: #FFD700;
 }
 
 /* Общие стили для body, сброс отступов и установка базового шрифта и фона */
@@ -65,3 +65,10 @@ a:focus, button:focus, input:focus, select:focus, textarea:focus {
     border-color: var(--farm-green);
 }
 
+.status-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+  font-size: 1.2em;
+  font-weight: 500;
+}
