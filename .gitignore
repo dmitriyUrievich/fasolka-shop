@@ -6,6 +6,9 @@ npm-debug.log*
 .env
 /srс/products.json
 srс/products.json
+pendingOrders.json
+assemblyOrders.json
+orders.json
 # Build output
 /dist
 /out
