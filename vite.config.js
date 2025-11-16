@@ -2,7 +2,7 @@ import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
+  //const env = loadEnv(mode, process.cwd(), '');
 
   return {
     plugins: [react()],
@@ -10,7 +10,14 @@ export default defineConfig(({ mode }) => {
     noExternal: ['react-helmet-async'],
     },
   server: {
-    host: '0.0.0.0' 
+    host: '0.0.0.0',
+    
+  hmr: {
+      // Указываем Vite, через какой хост и порт к нему нужно обращаться
+      // из браузера для обновлений.
+      host: 'fasol-nvrsk.ru',
+      protocol: 'wss',
+    },
   }
     // server: {
     //    proxy: {
