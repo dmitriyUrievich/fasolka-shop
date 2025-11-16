@@ -46,10 +46,11 @@ const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageCon
   };
 
   const name = capitalizeFirstLetter(rawName);
-  const price = parseFloat(sellPricePerUnit) || 0;
+
   const disableBuyTypes = ['Tobacco'];
   const ageRestrictedTypes = ['Tobacco', 'LightAlcohol', 'Cigarettes'];
-  
+  const price = parseFloat(sellPricePerUnit.replace(',', '.'));
+    
   const disableBuy = disableBuyTypes.includes(productType);
   const isAgeRestricted = ageRestrictedTypes.includes(productType) || containsLighterKeyword(rawName);
 
@@ -58,7 +59,7 @@ const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageCon
   const total = quantity * price;
 
   const portion = unit === 'Kilogram' ? getPortion(rawName, unit) : null;
-
+console.log(id,'logs.', price)
   const getRestsMessage = () => {
     const amount = rests;
     if (unit === 'Kilogram') {
@@ -102,7 +103,7 @@ const ProductCard = ({ product, cartItems, addToCart, updateCartQuantity, ageCon
         <h3 className="product-card__name">{name}</h3>
         {import.meta.env.DEV && <p>{id}</p>}
         <p className="product-card__price">
-          {price ? `${price.toLocaleString('ru-RU')} ₽` : 'Цена не указана'}
+          {price}
         </p>
         {portion && (
           <p className="product-card__portion">

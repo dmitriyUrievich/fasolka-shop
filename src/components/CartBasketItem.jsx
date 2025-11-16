@@ -3,7 +3,6 @@ import React, { useState, useEffect,useMemo  } from 'react';
 import '../CartBasketItem.css';
 import { createImageLoader } from '../utils/imageUtils';
 import getPortion from '../utils/getPortion';
-import { FaCircleXmark } from "react-icons/fa6";
 const CartBasketItem = ({ item, updateCartQuantity, removeFromCart }) => {
   const [imageSrc, setImageSrc] = useState(() => createImageLoader(item.id, item.name).getCurrentUrl());
 
@@ -18,14 +17,15 @@ const CartBasketItem = ({ item, updateCartQuantity, removeFromCart }) => {
       setImageSrc(loader.getCurrentUrl());
     }
   };
-
+  const price = parseFloat(item.sellPricePerUnit.replace(',', '.'));
+    
   const portion = item.unit === 'Kilogram' ? getPortion(item.name, item.unit) : null;
   const unitLabel = item.unit === 'Kilogram' ? `кг` : `шт.`;
   const step = portion ? portion.weightInGrams / 1000 : item.unit === 'Kilogram' ? 0.1 : 1;
  
   const itemTotalPrice = useMemo(() => {
-    return (item.sellPricePerUnit || 0) * item.quantityInCart;
-  }, [item.sellPricePerUnit, item.quantityInCart]);
+    return (price || 0) * item.quantityInCart;
+  }, [price, item.quantityInCart]);
 
 
   return (
@@ -51,7 +51,7 @@ const CartBasketItem = ({ item, updateCartQuantity, removeFromCart }) => {
            </button>
           </div>
         <p className="cart-item-price">
-          {(item.sellPricePerUnit || 0).toLocaleString('ru-RU')} ₽ / {unitLabel}
+          {price} ₽ / {unitLabel}
         </p>
         <div className="cart-item-footer">
         <div className="cart-item-quantity-control">
@@ -96,6 +96,6 @@ export default React.memo(CartBasketItem, (prevProps, nextProps) => {
     prevProps.item.id === nextProps.item.id &&
     prevProps.item.quantityInCart === nextProps.item.quantityInCart &&
     prevProps.item.rests === nextProps.item.rests &&
-    prevProps.item.sellPricePerUnit === nextProps.item.sellPricePerUnit
+    prevProps.price === nextProps.item.sellPricePerUnit
   );
 });

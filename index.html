@@ -4,22 +4,17 @@
     <meta charset="UTF-8" />
 
        <!-- SEO -->
-    <title>Фасоль — Ваш магазин продуктов с доставкой в Южной Озереевке</title>
-    <meta name="description" content="Свежие овощи, фрукты, мясо и молочная продукция с доставкой на дом.">
-    
+    <title>Фасоль - продуктовый магазин с доставкой</title>
+    <meta name="description" content="Свежие овощи, фрукты, мясо и молочная продукция с доставкой на дом .">
+    <meta name="keywords" content="Продуктовый магазин, Доставка продуктов " />
+    <meta name="robots" content="index"/>
     <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Фасоль — Ваш магазин продуктов" />
-    <meta property="og:description" content="Свежие овощи, фрукты, мясо и молочная продукция с доставкой на дом." />
-    <meta property="og:image" content="/basket.webp" />
-    <meta property="og:url" content="https://fasol-nvrsk.ru/" />
+    <meta property="og:type" content="website"/>
     <meta property="og:site_name" content="Фасоль" />
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Фасоль — Ваш магазин продуктов"/>
-    <meta name="twitter:description" content="Свежие овощи, фрукты, мясо и молочная продукция с доставкой на дом." />
-    <meta name="twitter:image" content="/basket.webp" />
+    <meta property="og:url" content="https://fasol-nvrsk.ru/"/>
+    <meta property="og:title" content="Фасоль — Ваш магазин продуктов"/>
+    <meta property="og:description" content="Свежие овощи, фрукты, мясо и молочная продукция с доставкой на дом." />
+    <meta property="og:image" content="/basket.webp"/> 
 
     <!-- Preconnect -->
     <link rel="preconnect" href="https://api-maps.yandex.ru">
@@ -37,177 +32,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#8bc34a" />
 
-    
-    <style id="critical-css">
-      .app-title {
-        height: 60px;
-        font-size: 2.5em;
-        margin: 0;
-        font-weight: bold;
-        color: var(--farm-yellow);
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        display: flex;
-        align-items: center;
-        white-space: nowrap;
-        font-size: 1.4em;
-        flex: 1 0 200px;
-        min-width: 180px;
-      }
-     /* Критические стили — только самое необходимое */
-      .app-header {
-        background: linear-gradient(to right, var(--farm-dark-green), #4CAF50);
-        color: white;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        padding: 5px 0;
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-      }
-    /* === Иконка корзины — единый стиль === */
-      .cart-icon-button {
-        background: none;
-        border: none;
-        color: white;
-        cursor: pointer;
-        position: relative;
-        padding: 0;
-        transition: transform 0.2s ease;
-        animation: wiggle 0.5s ease;
-        will-change: transform;
-      }
-    /* Бургер — всегда первым */
-      .category-icon-button {
-        flex: 0 0 auto;
-        background: none;
-        border: none;
-        color: white;
-        cursor: pointer;
-        padding: 8px;
-        margin: 0;
-        transition: transform 0.2s ease;
-      }
-      .product-card {
-        width: 100%;
-        min-width: var(--card-min-width);
-        min-height: 320px;
-        box-sizing: border-box;
-        border-radius: 15px;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        background-color: white;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(var(--farm-dark-green-rgb), 0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        animation: fadeInUp 0.5s ease forwards;
-        animation-delay: calc(var(--card-delay, 0) * 0.1s);
-      }
-      .status-message {
-        text-align: center;
-        padding: 40px 20px;
-        color: #666;
-        font-size: 1.2em;
-        font-weight: 500;
-      }
-  /* === Контейнер карточек === */
-  .product-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-    padding: 16px;
-    margin-top: 10px;
-  }
-
-  /* === Изображение товара — важно для отрисовки === */
-  .product-card__image-wrapper {
-    width: 100%;
-    height: 160px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #f8f8f8;
-    overflow: hidden;
-  }
-  .product-card__image {
-    max-width: 100%;
-    max-height: 140px;
-    object-fit: contain;
-    transition: opacity 0.3s ease;
-  }
-
-  /* === Название товара === */
-  .product-card__name {
-    font-size: 1em;
-    font-weight: 600;
-    color: #2c3e50;
-    margin: 10px 12px 6px;
-    line-height: 1.3;
-    min-height: 2.6em;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  /* === Цена === */
-  .product-card__price {
-    font-size: 1.1em;
-    font-weight: bold;
-    color: #27ae60;
-    margin: 0 12px 8px;
-  }
-
-  /* === Количество === */
-  .product-card__quantity {
-    font-size: 0.9em;
-    color: #7f8c8d;
-    margin: 0 12px 10px;
-  }
-
-  /* === Кнопка (заглушка) === */
-  .product-card__button {
-    margin: 0 12px 12px;
-    padding: 10px;
-    background-color: #8bc34a;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.95em;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  .product-card__button:disabled {
-    background-color: #b8d6a0;
-    cursor: not-allowed;
-  }
-
-  /* === Анимации === */
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  @keyframes wiggle {
-    0%, 100% { transform: rotate(0deg); }
-    25% { transform: rotate(-5deg); }
-    75% { transform: rotate(5deg); }
-  }
-
-  /* === Переменные (если ещё не заданы) === */
-  :root {
-    --farm-dark-green: 76, 175, 80; /* для rgba */
-    --farm-yellow: #FFD700;
-    --card-min-width: 280px;
-  }
-    </style>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx" defer></script>
+    <script type="module" src="/src/entry-client.jsx"></script>
   </body>
 </html>

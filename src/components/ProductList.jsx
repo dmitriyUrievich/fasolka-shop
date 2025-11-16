@@ -23,14 +23,18 @@ const ProductList = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 24;
-
-  const [ageConfirmed, setAgeConfirmed] = useState(() => localStorage.getItem(storageKey) === 'true');
-
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
 
   const handleConfirmAge = () => {
     setAgeConfirmed(true);
     localStorage.setItem(storageKey, 'true');
   };
+  useEffect(() => {
+    const saved = localStorage.getItem(storageKey);
+    if (saved === 'true') {
+      setAgeConfirmed(true);
+    }
+  }, []); 
   useEffect(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved === 'true') setAgeConfirmed(true);

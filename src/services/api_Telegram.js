@@ -1,4 +1,3 @@
-// Файл: src/services/api_Telegram.js
 
 import TelegramBot from 'node-telegram-bot-api';
 import dotenv from 'dotenv';
@@ -44,7 +43,6 @@ const buildAssemblyMessageAndOptions = (orderData) => {
     }).join('\n');
     
     const finalTotal = orderData.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
     const message = `
         🛒 <b>Заказ на сборку:</b> <code>${orderData.id}</code>
         👤 ${orderData.customer_name}, ${orderData.phone}
@@ -54,13 +52,10 @@ const buildAssemblyMessageAndOptions = (orderData) => {
 
         📦 <b>Корзина:</b>
         ${cartText}
-
-        💰 <b>Итого к списанию: ~${finalTotal.toFixed(2)} ₽</b>
+                
+        💰 <b>Итого к списанию: ~${amountToPay + finalTotal.toFixed(2)} ₽</b>
         <i>(Заморожено на карте: ${Number(orderData.totalWithReserve).toFixed(2)} ₽)</i>
     `.trim();
-
-  // можно зарегистрировать чеки без ккт, это способ без офд(), в настройках ккт в раздел и там меняете на без ккт (при закрытии есть чеки не зарегистрированные, будет расхождение, нужно отказаться от чека коррекции, нужно обнулить )
-  // раз в неделю ручным актом списания 
 
     const buttons = orderData.cart
         .map((item, index) => ({ item, index }))

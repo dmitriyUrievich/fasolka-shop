@@ -9,6 +9,7 @@
     align-items: flex-start;
     transition: background-color 0.2s ease;
 }
+
 /* Заголовок товара: название + крестик */
 .cart-item-header {
     display: flex;
@@ -64,8 +65,8 @@
 /* Цена за единицу */
 .cart-item-price {
     font-size: 0.85em;
-    color: #555;
-    margin: 0 0 6px 0;
+    color: var(--farm-green);
+    margin: 0;
 }
 
 /* Блок управления количеством */

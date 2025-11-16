@@ -15,7 +15,13 @@
     box-sizing: border-box;
     min-width: 0;
 }
-
+.status-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    font-size: 1.2em;
+    font-weight: 500;
+}
 .status-message.loading { color: var(--farm-brown); }
 .status-message.error-message { color: #D32F2F; font-weight: bold; }
 
@@ -83,6 +89,15 @@ color: var(--farm-green);
   font-weight: 600;
 }
 
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    padding: 16px;
+    margin-top: 10px;
+  }
+
+  
 /* На экранах < 340px — гарантируем 1 колонку */
 @media (max-width: 339px) {
     .product-grid {

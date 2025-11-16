@@ -1,131 +1,138 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Helmet } from 'react-helmet-async';
-import './App.css';
+
 import ProductList from './components/ProductList';
 import CategorySidebar from './components/CategorySidebar';
 import { generateDailyOrderId } from './utils/orderUtils';
 import getPortion from './utils/getPortion';
 import Swal from 'sweetalert2';
+import './App.css';
 
 const CartBasket = React.lazy(() => import('./components/CartBasket'));
 const Modal = React.lazy(() => import('./components/Modal'));
 const OrderForm = React.lazy(() => import('./components/OrderForm'));
 
-function App() {
+function App({ initialData }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState('none');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [showOnlyFallback, setShowOnlyFallback] = useState(false);
-  const [products, setProducts] = useState([]);
-  const [catalogGroups, setCatalogGroups] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState(initialData?.products || []);
+  const [catalogGroups, setCatalogGroups] = useState(initialData?.catalog || []);
+  const [loading, setLoading] = useState(!initialData);
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [cartItems, setCartItems] = useState([])
 
-  const [cartItems, setCartItems] = useState(() => {
+  useEffect(() => {
     try {
       const saved = localStorage.getItem('cartItems');
-      if (!saved) {
-        return []; 
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setCartItems(Array.isArray(parsed) ? parsed : []);
       }
-      const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
       console.warn("Не удалось прочитать корзину из localStorage:", error);
-      return []; 
     }
-  });
-useEffect(() => {
+  }, []);
+
+  // Сохранение корзины в localStorage (только на клиенте) - ПРАВИЛЬНО
+  useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem('cartItems', JSON.stringify(cartItems));
     }, 300);
     return () => clearTimeout(timer);
   }, [cartItems]);
 
-  // Адаптивность
+  // 2. ✅ ИСПРАВЛЕНИЕ: Логика для определения размера экрана вынесена в useEffect.
+  //    Этот хук выполнится только в браузере.
   useEffect(() => {
     const handleResize = () => {
       setIsDesktop(window.innerWidth >= 1024);
     };
+    // Вызываем один раз при загрузке, чтобы установить правильное начальное значение
+    handleResize(); 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // 3. ✅ ИСПРАВЛЕНИЕ: Удален дублирующийся useEffect для загрузки данных.
+  //    Этот хук будет загружать данные только если они не пришли от сервера.
   useEffect(() => {
-    const loadAllData = async () => {
-      setLoading(true);
-      try {
-        // Для продакшена - относительный путь /api/products-data или полный https://домен.ru/api/products-data
-        const response = await fetch('/api/products-data'); 
-        
-        if (!response.ok) {
-          throw new Error(`Ошибка сети: ${response.statusText}`);
+    if (!initialData) {
+      const loadAllData = async () => {
+        setLoading(true);
+        try {
+          const response = await fetch('/api/products-data'); 
+          if (!response.ok) {
+            throw new Error(`Ошибка сети: ${response.statusText}`);
+          }
+          const data = await response.json();
+          setProducts(data.products || []);
+          setCatalogGroups(data.catalog || []);
+        } catch (err) {
+          console.error('Ошибка загрузки данных с сервера:', err);
+          // Swal - это браузерная библиотека, ее можно вызывать только на клиенте
+          Swal.fire({
+            title: 'Ошибка',
+            text: 'Не удалось загрузить каталог товаров. Попробуйте обновить страницу.',
+            icon: 'error',
+          });
+        } finally {
+          setLoading(false);
         }
-        
-        const data = await response.json();
+      };
+      loadAllData();
+    }
+  }, [initialData]);
 
-        setProducts(data.products || []);
-        setCatalogGroups(data.catalog || []);
-      } catch (err) {
-        console.error('Ошибка загрузки данных с сервера:', err);
-        Swal.fire({
-          title: 'Ошибка',
-          text: 'Не удалось загрузить каталог товаров. Попробуйте обновить страницу.',
-          icon: 'error',
-        });
-      } finally {
-        setLoading(false);
+  // Закрытие по Esc (только на клиенте) - ПРАВИЛЬНО
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        setIsCategoryMenuOpen(false);
+        setIsCartOpen(false);
       }
     };
-
-    loadAllData();
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
   }, []);
-
- const cartCalculations = useMemo(() => {
+  
+  // ... ВСЯ ОСТАЛЬНАЯ ЛОГИКА (cartCalculations, addToCart, handleSubmitOrder и т.д.) ОСТАЕТСЯ БЕЗ ИЗМЕНЕНИЙ ...
+  const cartCalculations = useMemo(() => {
     let subtotal = 0;
     let totalWithReserve = 0;
-  
     cartItems.forEach(item => {
-      const itemTotal = item.sellPricePerUnit * item.quantityInCart;
+      
+      const itemTotal = parseFloat(item.sellPricePerUnit.replace(',', '.')) * item.quantityInCart;
       subtotal += itemTotal;
-  
       if (item.unit === 'Kilogram') {
         totalWithReserve += itemTotal * 1.15;
       } else {
         totalWithReserve += itemTotal;
       }
     });
-
-    // Расчет доставки (логика из CartBasket.js)
     let deliveryCost = 0;
     if (subtotal > 0 && subtotal < 1000) {
-      // Сумма меньше минимальной, доставка невозможна (но для расчета оставим 200)
-       deliveryCost = 200;
+      deliveryCost = 200;
     } else if (subtotal >= 1000 && subtotal < 3000) {
-       deliveryCost = 200;
+      deliveryCost = 200;
     } else {
-      // subtotal >= 3000 или корзина пуста
-       deliveryCost = 0;
+      deliveryCost = 0;
     }
-    
     const finalAmountForPayment = totalWithReserve + deliveryCost;
-
     return {
       subtotal: parseFloat(subtotal.toFixed(2)),
       totalWithReserve: parseFloat(totalWithReserve.toFixed(2)),
       finalAmountForPayment: parseFloat(finalAmountForPayment.toFixed(2))
     };
   }, [cartItems]);
-
-  // Работа с корзиной
   const addToCart = useCallback((productToAdd) => {
     setCartItems((prev) => {
       const { id, unit, rests } = productToAdd;
       const portion = unit === 'Kilogram' ? getPortion(productToAdd.name, unit) : null;
       const step = portion ? portion.weightInGrams / 1000 : unit === 'Kilogram' ? 0.1 : 1;
-
       const existing = prev.find((item) => item.id === id);
       if (existing) {
         const newQty = Math.min(existing.quantityInCart + step, existing.rests);
@@ -133,56 +140,46 @@ useEffect(() => {
           item.id === id ? { ...item, quantityInCart: newQty } : item
         );
       }
-
       if (rests >= step) {
         return [...prev, { ...productToAdd, quantityInCart: step }];
       }
-
       return prev;
     });
   }, []);
-
   const removeFromCart = useCallback((productId) => {
     setCartItems((prev) => prev.filter((item) => item.id !== productId));
   }, []);
-
-const updateCartQuantity = useCallback((productId, newQuantity) => {
-  setCartItems((prev) =>
-    prev.map((item) => {
-        if (item.id === productId) {
-          const portion = item.unit === 'Kilogram' ? getPortion(item.name, item.unit) : null;
-          const step = portion ? portion.weightInGrams / 1000 : item.unit === 'Kilogram' ? 0.1 : 1;
-
-          let qty = Math.max(0, newQuantity);
-          if (item.unit !== 'Kilogram' && !portion) {
-            qty = Math.floor(qty); // штуки — только целые
-          } else {
-            qty = ((qty / step) * step).toFixed(2);
+  const updateCartQuantity = useCallback((productId, newQuantity) => {
+    setCartItems((prev) =>
+      prev.map((item) => {
+          if (item.id === productId) {
+            const portion = item.unit === 'Kilogram' ? getPortion(item.name, item.unit) : null;
+            const step = portion ? portion.weightInGrams / 1000 : item.unit === 'Kilogram' ? 0.1 : 1;
+            let qty = Math.max(0, newQuantity);
+            if (item.unit !== 'Kilogram' && !portion) {
+              qty = Math.floor(qty);
+            } else {
+              qty = parseFloat(((qty / step) * step).toFixed(2));
+            }
+            qty = Math.min(qty, item.rests);
+            return qty === 0 ? null : { ...item, quantityInCart: qty };
           }
-
-          qty = Math.min(qty, item.rests);
-
-          return qty === 0 ? null : { ...item, quantityInCart: qty };
-        }
-        return item;
-      })
-      .filter(Boolean)
-  );
-}, []);
-
+          return item;
+        })
+        .filter(Boolean)
+    );
+  }, []);
   const totalCartItems = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.quantityInCart, 0),
     [cartItems]
   );
-
   const handleProceedToOrder = () => {
     setIsCartOpen(false);
     setIsOrderFormOpen(true);
   };
-
   const handleCloseOrderForm = () => setIsOrderFormOpen(false);
-
   const createYooKassaPayment = async (orderData) => {
+    console.log()
     try {
       const response = await fetch(`/api/payment`, {
         method: 'POST',
@@ -207,14 +204,14 @@ const updateCartQuantity = useCallback((productId, newQuantity) => {
       return false;
     }
   };
-
-const handleSubmitOrder = async (customerData) => {
+  const handleSubmitOrder = async (customerData) => {
     if (cartItems.length === 0) {
       Swal.fire('Корзина пуста', 'Пожалуйста, добавьте товары в корзину.', 'warning');
       return;
     }
     const { subtotal, totalWithReserve,finalAmountForPayment  } = cartCalculations;
     const deliveryCost = finalAmountForPayment - totalWithReserve;
+
     const orderData = {
       id: generateDailyOrderId(),
       customer_name: customerData.name,
@@ -223,8 +220,8 @@ const handleSubmitOrder = async (customerData) => {
       comment: customerData.comment,
       deliveryTime: customerData.deliveryTime,
       subtotal: subtotal,
-      totalWithReserve: totalWithReserve,// Сумма с запасом (ХОЛДИРОВАНИЯ)
-      amountToPay: finalAmountForPayment, // общая сумма 
+      totalWithReserve: totalWithReserve,
+      amountToPay: finalAmountForPayment,
       deliveryCost: deliveryCost, 
       cart: cartItems.map((item) => ({
         id: item.id,
@@ -234,9 +231,7 @@ const handleSubmitOrder = async (customerData) => {
         unit: item.unit,
       })),
     };
-
     const isPaymentInitiated = await createYooKassaPayment(orderData);
-
     if (isPaymentInitiated) {
       Swal.fire({
         title: '🎉 Заказ создан!',
@@ -248,37 +243,13 @@ const handleSubmitOrder = async (customerData) => {
       handleCloseOrderForm();
     }
   };
-
   const onClearCart = () => {
     setCartItems([]);
     setIsCartOpen(false);
   };
 
-  // Закрытие по Esc
-  useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === 'Escape') {
-        setIsCategoryMenuOpen(false);
-        setIsCartOpen(false);
-      }
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, []);
-
   return (
     <> 
-    <Helmet>
-      <title>Фасоль — ваш магазни продуктов</title>
-      <meta name="description" content="Свежие овощи, фрукты, мясо и молочка с доставкой от фермеров." />
-      <meta name="keywords" content="доставка овощей и фруктов, продуктовый магазин, молочка, мясо, Южная Озереевка" />
-      
-      {/* Open Graph — динамически (если нужно) */}
-      <meta property="og:title" content="Фасоль — Свежие продукты с доставкой" />
-      <meta property="og:description" content="Закажите свежие продукты с доставкой на дом." />
-      <meta property="og:image" content="%PUBLIC_URL%/basket.jpg" />
-      <meta property="og:url" content="https://fasol-nvrsk.ru/" />
-    </Helmet>
     <div className="app-container">
       <header className="app-header">
         <div className="header-content">
