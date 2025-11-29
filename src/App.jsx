@@ -1,15 +1,31 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-
+import React, { useState, useEffect } from 'react';
+import { useHydration } from './useHydration';
 import ProductList from './components/ProductList';
 import CategorySidebar from './components/CategorySidebar';
 import { generateDailyOrderId } from './utils/orderUtils';
-import getPortion from './utils/getPortion';
 import Swal from 'sweetalert2';
 import './App.css';
+import { useCartStore } from './store'
 
-const CartBasket = React.lazy(() => import('./components/CartBasket'));
-const Modal = React.lazy(() => import('./components/Modal'));
-const OrderForm = React.lazy(() => import('./components/OrderForm'));
+const CartBasket = React.lazy(() => import('/src/components/CartBasket.jsx'));
+const Modal = React.lazy(() => import('/src/components/Modal.jsx'));
+const OrderForm = React.lazy(() => import('/src/components/OrderForm.jsx'));
+const calculateOrderTotals = (cartItems) => {
+  let subtotal = 0;
+  let totalWithReserve = 0;
+  cartItems.forEach(item => {
+    const itemTotal = parseFloat(item.sellPricePerUnit.replace(',', '.')) * item.quantityInCart;
+    subtotal += itemTotal;
+    totalWithReserve += (item.unit === 'Kilogram') ? itemTotal * 1.15 : itemTotal;
+  });
+
+  let deliveryCost = 0;
+  if (subtotal > 0 && subtotal < 1000) deliveryCost = 200;
+  else if (subtotal >= 1000 && subtotal < 3000) deliveryCost = 200;
+
+  const finalAmountForPayment = totalWithReserve + deliveryCost;
+  return { subtotal, totalWithReserve, deliveryCost, finalAmountForPayment };
+}
 
 function App({ initialData }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,68 +33,38 @@ function App({ initialData }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
   const [showOnlyFallback, setShowOnlyFallback] = useState(false);
   const [products, setProducts] = useState(initialData?.products || []);
   const [catalogGroups, setCatalogGroups] = useState(initialData?.catalog || []);
   const [loading, setLoading] = useState(!initialData);
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
-  const [cartItems, setCartItems] = useState([])
+  const [isDesktop, setIsDesktop] = useState(false);
+  const hydrated = useHydration();
+  const [orderTotal, setOrderTotal] = useState(0);
 
+  const totalCartItems = useCartStore(state => state.items.reduce((sum, item) => sum + item.quantityInCart, 0));
+  const clearCart = useCartStore(state => state.clearCart);
+    
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('cartItems');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setCartItems(Array.isArray(parsed) ? parsed : []);
-      }
-    } catch (error) {
-      console.warn("Не удалось прочитать корзину из localStorage:", error);
-    }
-  }, []);
-
-  // Сохранение корзины в localStorage (только на клиенте) - ПРАВИЛЬНО
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      localStorage.setItem('cartItems', JSON.stringify(cartItems));
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [cartItems]);
-
-  // 2. ✅ ИСПРАВЛЕНИЕ: Логика для определения размера экрана вынесена в useEffect.
-  //    Этот хук выполнится только в браузере.
-  useEffect(() => {
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 1024);
-    };
-    // Вызываем один раз при загрузке, чтобы установить правильное начальное значение
-    handleResize(); 
+    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 3. ✅ ИСПРАВЛЕНИЕ: Удален дублирующийся useEffect для загрузки данных.
-  //    Этот хук будет загружать данные только если они не пришли от сервера.
   useEffect(() => {
     if (!initialData) {
       const loadAllData = async () => {
         setLoading(true);
         try {
-          const response = await fetch('/api/products-data'); 
-          if (!response.ok) {
-            throw new Error(`Ошибка сети: ${response.statusText}`);
-          }
+          const response = await fetch('/api/products-data');
+          if (!response.ok) throw new Error(`Ошибка сети: ${response.statusText}`);
           const data = await response.json();
           setProducts(data.products || []);
           setCatalogGroups(data.catalog || []);
         } catch (err) {
-          console.error('Ошибка загрузки данных с сервера:', err);
-          // Swal - это браузерная библиотека, ее можно вызывать только на клиенте
-          Swal.fire({
-            title: 'Ошибка',
-            text: 'Не удалось загрузить каталог товаров. Попробуйте обновить страницу.',
-            icon: 'error',
-          });
+          console.error('Ошибка загрузки данных:', err);
+          Swal.fire({ title: 'Ошибка', text: 'Не удалось загрузить каталог товаров.', icon: 'error' });
         } finally {
           setLoading(false);
         }
@@ -98,88 +84,20 @@ function App({ initialData }) {
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, []);
-  
-  // ... ВСЯ ОСТАЛЬНАЯ ЛОГИКА (cartCalculations, addToCart, handleSubmitOrder и т.д.) ОСТАЕТСЯ БЕЗ ИЗМЕНЕНИЙ ...
-  const cartCalculations = useMemo(() => {
-    let subtotal = 0;
-    let totalWithReserve = 0;
-    cartItems.forEach(item => {
-      
-      const itemTotal = parseFloat(item.sellPricePerUnit.replace(',', '.')) * item.quantityInCart;
-      subtotal += itemTotal;
-      if (item.unit === 'Kilogram') {
-        totalWithReserve += itemTotal * 1.15;
-      } else {
-        totalWithReserve += itemTotal;
-      }
-    });
-    let deliveryCost = 0;
-    if (subtotal > 0 && subtotal < 1000) {
-      deliveryCost = 200;
-    } else if (subtotal >= 1000 && subtotal < 3000) {
-      deliveryCost = 200;
-    } else {
-      deliveryCost = 0;
-    }
-    const finalAmountForPayment = totalWithReserve + deliveryCost;
-    return {
-      subtotal: parseFloat(subtotal.toFixed(2)),
-      totalWithReserve: parseFloat(totalWithReserve.toFixed(2)),
-      finalAmountForPayment: parseFloat(finalAmountForPayment.toFixed(2))
-    };
-  }, [cartItems]);
-  const addToCart = useCallback((productToAdd) => {
-    setCartItems((prev) => {
-      const { id, unit, rests } = productToAdd;
-      const portion = unit === 'Kilogram' ? getPortion(productToAdd.name, unit) : null;
-      const step = portion ? portion.weightInGrams / 1000 : unit === 'Kilogram' ? 0.1 : 1;
-      const existing = prev.find((item) => item.id === id);
-      if (existing) {
-        const newQty = Math.min(existing.quantityInCart + step, existing.rests);
-        return prev.map((item) =>
-          item.id === id ? { ...item, quantityInCart: newQty } : item
-        );
-      }
-      if (rests >= step) {
-        return [...prev, { ...productToAdd, quantityInCart: step }];
-      }
-      return prev;
-    });
-  }, []);
-  const removeFromCart = useCallback((productId) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== productId));
-  }, []);
-  const updateCartQuantity = useCallback((productId, newQuantity) => {
-    setCartItems((prev) =>
-      prev.map((item) => {
-          if (item.id === productId) {
-            const portion = item.unit === 'Kilogram' ? getPortion(item.name, item.unit) : null;
-            const step = portion ? portion.weightInGrams / 1000 : item.unit === 'Kilogram' ? 0.1 : 1;
-            let qty = Math.max(0, newQuantity);
-            if (item.unit !== 'Kilogram' && !portion) {
-              qty = Math.floor(qty);
-            } else {
-              qty = parseFloat(((qty / step) * step).toFixed(2));
-            }
-            qty = Math.min(qty, item.rests);
-            return qty === 0 ? null : { ...item, quantityInCart: qty };
-          }
-          return item;
-        })
-        .filter(Boolean)
-    );
-  }, []);
-  const totalCartItems = useMemo(
-    () => cartItems.reduce((sum, item) => sum + item.quantityInCart, 0),
-    [cartItems]
-  );
+
   const handleProceedToOrder = () => {
+    const cartItems = useCartStore.getState().items;
+
+   const { finalAmountForPayment } = calculateOrderTotals(cartItems);
+
+    setOrderTotal(parseFloat(finalAmountForPayment.toFixed(2)));
     setIsCartOpen(false);
     setIsOrderFormOpen(true);
   };
+
   const handleCloseOrderForm = () => setIsOrderFormOpen(false);
+
   const createYooKassaPayment = async (orderData) => {
-    console.log()
     try {
       const response = await fetch(`/api/payment`, {
         method: 'POST',
@@ -204,13 +122,15 @@ function App({ initialData }) {
       return false;
     }
   };
-  const handleSubmitOrder = async (customerData) => {
+
+ const handleSubmitOrder = async (customerData) => {
+    const { items: cartItems } = useCartStore.getState();
     if (cartItems.length === 0) {
       Swal.fire('Корзина пуста', 'Пожалуйста, добавьте товары в корзину.', 'warning');
       return;
     }
-    const { subtotal, totalWithReserve,finalAmountForPayment  } = cartCalculations;
-    const deliveryCost = finalAmountForPayment - totalWithReserve;
+    
+    const { subtotal, totalWithReserve, deliveryCost, finalAmountForPayment } = calculateOrderTotals(cartItems);
 
     const orderData = {
       id: generateDailyOrderId(),
@@ -219,9 +139,9 @@ function App({ initialData }) {
       address: customerData.address,
       comment: customerData.comment,
       deliveryTime: customerData.deliveryTime,
-      subtotal: subtotal,
-      totalWithReserve: totalWithReserve,
-      amountToPay: finalAmountForPayment,
+      subtotal: parseFloat(subtotal.toFixed(2)),
+      totalWithReserve: parseFloat(totalWithReserve.toFixed(2)),
+      amountToPay: parseFloat(finalAmountForPayment.toFixed(2)),
       deliveryCost: deliveryCost, 
       cart: cartItems.map((item) => ({
         id: item.id,
@@ -231,7 +151,8 @@ function App({ initialData }) {
         unit: item.unit,
       })),
     };
-    const isPaymentInitiated = await createYooKassaPayment(orderData);
+
+   const isPaymentInitiated = await createYooKassaPayment(orderData);
     if (isPaymentInitiated) {
       Swal.fire({
         title: '🎉 Заказ создан!',
@@ -239,17 +160,16 @@ function App({ initialData }) {
         icon: 'success',
         confirmButtonText: 'Отлично!',
       });
-      setCartItems([]);
+      clearCart();
       handleCloseOrderForm();
     }
   };
   const onClearCart = () => {
-    setCartItems([]);
+    clearCart();
     setIsCartOpen(false);
   };
 
   return (
-    <> 
     <div className="app-container">
       <header className="app-header">
         <div className="header-content">
@@ -264,13 +184,12 @@ function App({ initialData }) {
             </svg>
           </button>
 
-          {/* Логотип */}
           <h1 className="app-title">
-            <img src="/log-header.png" className="logo-header" alt="Логотип Фасоль" />   
+            <img src="/log-header.webp" className="logo-header" alt="Логотип Фасоль" />   
           </h1>
 
           {/* Мобильная корзина */}
-          <button
+          <button suppressHydrationWarning 
             className="cart-icon-button mobile-cart"
             onClick={() => setIsCartOpen(prev => !prev)}
             aria-label="Корзина"
@@ -278,7 +197,7 @@ function App({ initialData }) {
             <svg className="cart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
-            {totalCartItems > 0 && <span className="cart-item-count">{Math.ceil(totalCartItems)}</span>}
+            {hydrated && totalCartItems > 0 && <span className="cart-item-count">{Math.ceil(totalCartItems)}</span>}
           </button>
 
           {/* Поиск + сортировка + ДЕСКТОПНАЯ корзина */}
@@ -297,6 +216,7 @@ function App({ initialData }) {
             </div>
 
             <div className="sort-container">
+              <label htmlFor="product-sort"></label>
               <select
                 className="sort-select"
                 value={sortOption}
@@ -314,19 +234,8 @@ function App({ initialData }) {
                 </svg>
               </div>
             </div>
-              {/* <div className="fallback-toggle-container">
-                <input 
-                  type="checkbox" 
-                  id="fallback-toggle"
-                  className="fallback-toggle-checkbox"
-                  checked={showOnlyFallback} 
-                  onChange={(e) => setShowOnlyFallback(e.target.checked)} 
-                />
-                <label htmlFor="fallback-toggle" className="fallback-toggle-label">
-                  Без фото
-                </label>
-              </div> */}
-            <button
+
+            <button suppressHydrationWarning
               className="cart-icon-button desktop-cart"
               onClick={() => setIsCartOpen(prev => !prev)}
               aria-label="Корзина"
@@ -334,7 +243,7 @@ function App({ initialData }) {
               <svg className="cart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-              {totalCartItems > 0 && <span className="cart-item-count">{Math.ceil(totalCartItems)}</span>}
+              {hydrated && totalCartItems > 0 && <span className="cart-item-count">{Math.ceil(totalCartItems)}</span>}
             </button>
           </div>
         </div>
@@ -379,9 +288,6 @@ function App({ initialData }) {
                 loading={loading}
                 searchTerm={searchTerm}
                 sortOption={sortOption}
-                cartItems={cartItems}
-                updateCartQuantity={updateCartQuantity}
-                addToCart={addToCart}
                 selectedCategoryId={selectedCategoryId}
                 showOnlyFallback={showOnlyFallback}
                 listHeader={
@@ -414,9 +320,6 @@ function App({ initialData }) {
                   isSidebar={true}
                   onClose={() => setIsCartOpen(false)}
                   onClearCart={onClearCart}
-                  cartItems={cartItems}
-                  removeFromCart={removeFromCart}
-                  updateCartQuantity={updateCartQuantity}
                   onProceedToOrder={handleProceedToOrder}
                 />
               </React.Suspense>
@@ -431,10 +334,7 @@ function App({ initialData }) {
           <Modal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)}>
             <CartBasket
               isSidebar={false}
-              cartItems={cartItems}
               onClearCart={onClearCart}
-              removeFromCart={removeFromCart}
-              updateCartQuantity={updateCartQuantity}
               onProceedToOrder={handleProceedToOrder}
               onClose={() => setIsCartOpen(false)}
             />
@@ -442,11 +342,10 @@ function App({ initialData }) {
         </React.Suspense>
       )}
 
-      {/* Форма заказа */}
       {isOrderFormOpen && (
         <React.Suspense fallback={null}>
           <Modal isOpen={isOrderFormOpen} onClose={handleCloseOrderForm}>
-            <OrderForm onSubmit={handleSubmitOrder} onClose={handleCloseOrderForm} totalAmount={cartCalculations.finalAmountForPayment}/>
+            <OrderForm onSubmit={handleSubmitOrder} onClose={handleCloseOrderForm} totalAmount={orderTotal}/>
           </Modal>
         </React.Suspense>
       )}
@@ -499,11 +398,10 @@ function App({ initialData }) {
 
         </div>
         <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} Фасоль. Все права защищены.</p>
+          <p suppressHydrationWarning={true} >&copy; 2025 Фасоль. Все права защищены.</p>
         </div>
       </footer>
     </div>
-    </>
   );
 }
 

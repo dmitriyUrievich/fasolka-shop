@@ -2,15 +2,15 @@
 import React, { useMemo } from 'react';
 import '../CartBasket.css';
 import CartBasketItem from './CartBasketItem';
+import { useCartStore } from '../store';
 
 const CartBasket = ({ 
-  cartItems = [], 
-  removeFromCart, 
-  onClearCart, 
-  updateCartQuantity, 
   onClose, 
   onProceedToOrder 
 }) => {
+
+  const cartItems = useCartStore(state => state.items);
+  const clearCart = useCartStore(state => state.clearCart);
 
   const { subtotal, reserveAmount, hasWeightedItems } = useMemo(() => {
     let calculatedSubtotal = 0;
@@ -24,7 +24,6 @@ const CartBasket = ({
         calculatedReserve += itemTotal * 0.15;
       }
     });
-
     return {
       subtotal: calculatedSubtotal,
       reserveAmount: calculatedReserve,
@@ -32,25 +31,23 @@ const CartBasket = ({
     };
   }, [cartItems]);
 
- // Шаг 2: Расчет доставки ведется от РЕАЛЬНОЙ стоимости товаров (subtotal)
-  const deliveryInfo = useMemo(() => {
-    if (subtotal < 1000) {
-      return { cost: null, text: 'от 1000 ₽', showFreeHint: false };
-    }
-    if (subtotal >= 3000) {
-      return { cost: 0, text: 'Бесплатно 🎁', showFreeHint: false };
-    }
+
+const deliveryInfo = useMemo(() => {
+    if (subtotal < 1000) return { cost: null, text: 'от 1000 ₽', showFreeHint: false };
+    if (subtotal >= 3000) return { cost: 0, text: 'Бесплатно 🎁', showFreeHint: false };
     return { cost: 200, text: '200 ₽', showFreeHint: true };
   }, [subtotal]);
 
-    const requiresAgeVerification = useMemo(() => {
-    // Проверяем, есть ли в корзине хотя бы один товар с типом 'Softdrinks'
+  const requiresAgeVerification = useMemo(() => {
     return cartItems.some(item => item.productType === 'Softdrinks');
   }, [cartItems]);
 
   const { cost: deliveryCost, text: deliveryText, showFreeHint } = deliveryInfo;
   const isOrderValid = deliveryCost !== null;
   const totalWithReserve = isOrderValid ? subtotal + reserveAmount + deliveryCost : 0;
+
+
+
 console.log('----',cartItems)
   return (
     <div className="cart-container">
@@ -63,7 +60,7 @@ console.log('----',cartItems)
 
       <button
         className="cart-clear-button"
-        onClick={onClearCart}
+        onClick={clearCart}
         disabled={cartItems.length === 0}
         title={cartItems.length === 0 ? 'Корзина уже пуста' : 'Очистить корзину'}
       >
@@ -78,8 +75,6 @@ console.log('----',cartItems)
             <CartBasketItem
               key={item.id}
               item={item}
-              removeFromCart={removeFromCart}
-              updateCartQuantity={updateCartQuantity}
             />
           ))}
         </div>
@@ -135,15 +130,4 @@ console.log('----',cartItems)
   );
 };
 
-// 🔹 Добавляем memo
-export default React.memo(CartBasket, (prevProps, nextProps) => {
-  return (
-    prevProps.cartItems.length === nextProps.cartItems.length &&
-    prevProps.cartItems.every((item, i) =>
-      item.id === nextProps.cartItems[i]?.id &&
-      item.quantityInCart === nextProps.cartItems[i]?.quantityInCart &&
-      item.rests === nextProps.cartItems[i]?.rests
-    ) &&
-    prevProps.onProceedToOrder === nextProps.onProceedToOrder
-  );
-});
+export default React.memo(CartBasket)
