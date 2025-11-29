@@ -7,6 +7,8 @@ import getPortion from '../utils/getPortion';
 const storageKey = 'ageConfirmedGlobal';
 import { createImageLoader } from '../utils/imageUtils';
 import YandexMap from './YandexMap'
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css'
 
 const ProductList = ({
   products,
@@ -14,9 +16,6 @@ const ProductList = ({
   loading,
   searchTerm,
   sortOption,
-  cartItems,
-  updateCartQuantity,
-  addToCart,
   selectedCategoryId,
   listHeader,
   showOnlyFallback,
@@ -35,10 +34,6 @@ const ProductList = ({
       setAgeConfirmed(true);
     }
   }, []); 
-  useEffect(() => {
-    const saved = localStorage.getItem(storageKey);
-    if (saved === 'true') setAgeConfirmed(true);
-  }, []);
 
 const specialOfferCategoryId = useMemo(() => {
     if (!Array.isArray(categories)) {
@@ -61,13 +56,10 @@ const specialOfferCategoryId = useMemo(() => {
     return ids;
   }, [categories]);
 
-  // 🔹 Фильтрация: учитываем unit и минимальный остаток
   const filteredProducts = useMemo(() => {
-    // Шаг 1: Основная фильтрация
     const initialFilter = products.filter((product) => {
       if (!product) return false;
-      
-      // Отфильтровываем товары из "черного списка" категорий
+
       if (product.groupId && blacklistedCategoryIds.has(product.groupId)) {
         return false;
       }
@@ -101,10 +93,8 @@ const specialOfferCategoryId = useMemo(() => {
       return initialFilter.filter((product) => {
         if (!product || !product.id) return false;
         
-        // Создаем загрузчик для проверки, дефолтное ли фото
         const loader = createImageLoader(product.id, product.name);
         
-        // Используем метод isFallback() из вашей утилиты
         return loader.isFallback();
       });
     }
@@ -117,9 +107,9 @@ const specialOfferCategoryId = useMemo(() => {
     return [...filteredProducts].sort((a, b) => {
       switch (sortOption) {
         case 'price-asc':
-          return a.sellPricePerUnit - b.sellPricePerUnit;
+          return parseFloat(a.sellPricePerUnit) - parseFloat(b.sellPricePerUnit);
         case 'price-desc':
-          return b.sellPricePerUnit - a.sellPricePerUnit;
+          return parseFloat(b.sellPricePerUnit) - parseFloat(a.sellPricePerUnit);
         case 'quantity-asc':
           return a.rests - b.rests;
         case 'quantity-desc':
@@ -139,7 +129,19 @@ const specialOfferCategoryId = useMemo(() => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   if (loading) {
-    return <div className="status-message loading">Загрузка товаров...</div>;
+    return (
+      <div className="product-grid">
+        {Array.from({ length: 12 }).map((_, index) => (
+          <div key={index} className="product-card-skeleton">
+            <Skeleton height={200} style={{ borderRadius: '15px 15px 0 0' }} />
+            <div style={{ padding: '12px 14px' }}>
+              <Skeleton count={2} />
+              <Skeleton height={44} style={{ marginTop: '1rem', borderRadius: '15px' }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   }
 
   if (sortedProducts.length === 0) {
@@ -155,15 +157,13 @@ const specialOfferCategoryId = useMemo(() => {
       <div className="product-list-container">
         {listHeader && <>{listHeader}</>}
         <div className="product-grid">
-          {currentItems.map((product) => (
+          {currentItems.map((product,index) => (
             <ProductCard
               key={product.id}
               product={product}
-              addToCart={addToCart}
               ageConfirmed={ageConfirmed}
+              isPriority={index < 2}
               onConfirmAge={handleConfirmAge}
-              cartItems={cartItems}
-              updateCartQuantity={updateCartQuantity}
               isDiscount={product.groupId === specialOfferCategoryId}
             />
           ))}

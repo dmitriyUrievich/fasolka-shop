@@ -1,8 +1,8 @@
 // src/components/Pagination.js
 import React, { useMemo, useState, useEffect } from 'react';
 import '../Pagination.css';
-import { FaArrowCircleRight, FaArrowCircleLeft } from "react-icons/fa";
-
+import LeftArrowComponent from './LeftArrowComponent'
+import RightArrowComponent from './RightArrowComponent'
 const Pagination = ({ itemsPerPage, totalItems, paginate, currentPage }) => {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   
@@ -67,7 +67,7 @@ const Pagination = ({ itemsPerPage, totalItems, paginate, currentPage }) => {
               onClick={() => paginate(currentPage - 1)}
               className="pagination-button"
             >
-             <FaArrowCircleLeft />
+             <LeftArrowComponent />
             </button>
           </li>
         )}
@@ -107,7 +107,7 @@ const Pagination = ({ itemsPerPage, totalItems, paginate, currentPage }) => {
               onClick={() => paginate(currentPage + 1)}
               className="pagination-button"
             >
-             <FaArrowCircleRight />
+             <RightArrowComponent />
             </button>
           </li>
         )}

@@ -1,10 +1,15 @@
 // src/components/CartBasketItem.js
-import React, { useState, useEffect,useMemo  } from 'react';
+import React, { useState, useEffect, useMemo  } from 'react';
 import '../CartBasketItem.css';
 import { createImageLoader } from '../utils/imageUtils';
 import getPortion from '../utils/getPortion';
-const CartBasketItem = ({ item, updateCartQuantity, removeFromCart }) => {
+import { useCartStore } from '../store';
+
+const CartBasketItem = ({ item }) => {
   const [imageSrc, setImageSrc] = useState(() => createImageLoader(item.id, item.name).getCurrentUrl());
+
+  const updateCartQuantity = useCartStore(state => state.updateCartQuantity);
+  const removeFromCart = useCartStore(state => state.removeFromCart);
 
   useEffect(() => {
     const loader = createImageLoader(item.id, item.name);
@@ -17,12 +22,17 @@ const CartBasketItem = ({ item, updateCartQuantity, removeFromCart }) => {
       setImageSrc(loader.getCurrentUrl());
     }
   };
-  const price = parseFloat(item.sellPricePerUnit.replace(',', '.'));
+  const price = useMemo(() => parseFloat(item.sellPricePerUnit.replace(',', '.')), [item.sellPricePerUnit]);
     
-  const portion = item.unit === 'Kilogram' ? getPortion(item.name, item.unit) : null;
-  const unitLabel = item.unit === 'Kilogram' ? `кг` : `шт.`;
-  const step = portion ? portion.weightInGrams / 1000 : item.unit === 'Kilogram' ? 0.1 : 1;
- 
+
+
+  const { portion, unitLabel, step } = useMemo(() => {
+    const p = item.unit === 'Kilogram' ? getPortion(item.name, item.unit) : null;
+    const label = item.unit === 'Kilogram' ? `кг` : `шт.`;
+    const s = p ? p.weightInGrams / 1000 : item.unit === 'Kilogram' ? 0.1 : 1;
+    return { portion: p, unitLabel: label, step: s };
+  }, [item.name, item.unit]);
+
   const itemTotalPrice = useMemo(() => {
     return (price || 0) * item.quantityInCart;
   }, [price, item.quantityInCart]);
@@ -90,12 +100,10 @@ const CartBasketItem = ({ item, updateCartQuantity, removeFromCart }) => {
   );
 };
 
-// 🔹 Мемоизация
 export default React.memo(CartBasketItem, (prevProps, nextProps) => {
   return (
     prevProps.item.id === nextProps.item.id &&
     prevProps.item.quantityInCart === nextProps.item.quantityInCart &&
-    prevProps.item.rests === nextProps.item.rests &&
-    prevProps.price === nextProps.item.sellPricePerUnit
+    prevProps.item.rests === nextProps.item.rests
   );
 });
