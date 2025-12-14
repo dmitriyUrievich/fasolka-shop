@@ -43,6 +43,8 @@ const buildAssemblyMessageAndOptions = (orderData) => {
     }).join('\n');
     
     const finalTotal = orderData.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const deliveryCost = orderData.deliveryCost || 0;
+    const totalWithDelivery = finalTotal + deliveryCost;
     const message = `
         🛒 <b>Заказ на сборку:</b> <code>${orderData.id}</code>
         👤 ${orderData.customer_name}, ${orderData.phone}
@@ -53,7 +55,7 @@ const buildAssemblyMessageAndOptions = (orderData) => {
         📦 <b>Корзина:</b>
         ${cartText}
                 
-        💰 <b>Итого к списанию: ~${amountToPay + finalTotal.toFixed(2)} ₽</b>
+        💰 <b>Итого к списанию: ~${totalWithDelivery.toFixed(2)} ₽</b>
         <i>(Заморожено на карте: ${Number(orderData.totalWithReserve).toFixed(2)} ₽)</i>
     `.trim();
 
@@ -192,7 +194,7 @@ export default function initializeBot(syncProductsFromApi) {
                 try {
                     await bot.editMessageText(message, { chat_id: chatId, message_id: messageId, ...options });
                     bot.sendMessage(chatId, `✅ Вес для "${item.name}" обновлен на ${newWeightGrams} гр.`);
-                } catch (e) { /* Игнорируем ошибку, если сообщение не изменилось */ }
+                } catch (e) { console.log(e.message) /* Игнорируем ошибку, если сообщение не изменилось */ }
             }
             delete userState[chatId];
             return;
