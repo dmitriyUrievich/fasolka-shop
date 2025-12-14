@@ -14,7 +14,6 @@ const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
 const ASSEMBLY_ORDERS_PATH = path.join(process.cwd(), 'assemblyOrders.json');
 const COMPLETED_ORDERS_PATH = path.join(process.cwd(), 'orders.json');
 
-// --- Вспомогательные функции для работы с файлами-БД ---
 const readFile = (filePath) => {
     if (!fs.existsSync(filePath)) return {};
     try {
@@ -29,26 +28,35 @@ const writeFile = (filePath, data) => {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 };
 
+const getDeliveryText = (cost) => {
+    return (cost && cost > 0)
+        ? `\n🚚 <b>Доставка:</b> ${cost.toFixed(2)} ₽`
+        : '';
+};
+const formatPrice = (price) => `${Number(price || 0).toFixed(2)} ₽`;
 // --- Инициализация бота и состояния ---
 const bot = new TelegramBot(TOKEN, { polling: true });
 
 const userState = {};
 
 const buildAssemblyMessageAndOptions = (orderData) => {
+
     const cartText = orderData.cart.map((item, i) => {
         const isWeighted = item.unit === 'Kilogram';
         const quantityLabel = isWeighted ? `${(item.quantity * 1000).toFixed(0)} гр.` : `${item.quantity} шт.`;
-        const originalLabel = isWeighted && item.originalQuantity ? ` (было ~${(item.originalQuantity * 1000).toFixed(0)} гр.)` : (isWeighted ? ` (заказано ~${(item.quantity * 1000).toFixed(0)} гр.)` : '');
+        const originalLabel = isWeighted && item.originalQuantity ?
+            ` (было ~${(item.originalQuantity * 1000).toFixed(0)} гр.)`
+            : (isWeighted ? ` (заказано ~${(item.quantity * 1000).toFixed(0)} гр.)` : '');
+
         return `${i + 1}) ${item.name} — <b>${quantityLabel}</b>${originalLabel}`;
     }).join('\n');
-    
+
+
     const finalTotal = orderData.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const deliveryCost = orderData.deliveryCost || 0;
     const totalWithDelivery = finalTotal + deliveryCost;
 
-    const deliveryText = deliveryCost > 0
-        ? `\n🚚 <b>Доставка:</b> ${deliveryCost.toFixed(2)} ₽`
-        : '';
+    const deliveryText = getDeliveryText(deliveryCost);
 
     const message = `
         🛒 <b>Заказ на сборку:</b> <code>${orderData.id}</code>
@@ -61,8 +69,8 @@ const buildAssemblyMessageAndOptions = (orderData) => {
         ${cartText}
         ${deliveryText}
                 
-        💰 <b>Итого к списанию: ~${totalWithDelivery.toFixed(2)} ₽</b>
-        <i>(Заморожено на карте(с доставкой): ${totalWithDelivery.toFixed(2)} ₽)</i>
+        💰 <b>Итого к списанию: ~${formatPrice(totalWithDelivery)}</b>
+        <i>(Заморожено: ${formatPrice(totalWithDelivery)})</i>
     `.trim();
 
     const buttons = orderData.cart
@@ -85,7 +93,8 @@ const buildPaidOrderMessageAndOptions = (orderData) => {
     const cartText = orderData.cart.map((item, i) =>
         `${i + 1}) ${item.name} — ${item.quantity} ${item.unit === 'Kilogram' ? 'кг' : 'шт.'} × ${item.price}₽`
     ).join('\n');
-
+    const deliveryCost = orderData.deliveryCost || 0;
+    const deliveryText = getDeliveryText(deliveryCost);
     const message = `
     ${orderData.status === 'completed' ? '✅ <b>Заказ ЗАВЕРШЁН</b>' : '📋 <b>Заказ в работе</b>'}
     🧾 Номер: <code>${orderData.id}</code>
@@ -95,9 +104,10 @@ const buildPaidOrderMessageAndOptions = (orderData) => {
     ⏰ *Время доставки: ${orderData.deliveryTime}
     📌 Статус: <b>${STATUS_LABEL[orderData.status]}</b>
     
-📦 <b>Корзина:</b>
-${cartText}
-💰 <b>Списано: ${orderData.total.toFixed(2)} ₽</b>
+    📦 <b>Корзина:</b>
+    ${cartText}
+    ${deliveryText}
+    💰 <b>Списано: ${formatPrice(orderData.total)}</b>
     `.trim();
 
     let buttons = [];
@@ -124,8 +134,9 @@ export const sendPaidOrderNotification = async (finalOrderData) => {
     // Сразу сохраняем финальные данные и статус "new"
     orders[finalOrderData.id] = { ...finalOrderData, status: 'new' };
     writeFile(COMPLETED_ORDERS_PATH, orders);
-
-    // --- Новый, более правильный конструктор сообщения ---
+    const deliveryCost = finalOrderData.deliveryCost || 0;
+    const deliveryText = getDeliveryText(deliveryCost);
+    // --- Новый конструктор сообщения ---
     const cartText = finalOrderData.cart.map((item, i) =>
         `${i + 1}) ${item.name} — ${item.quantity} ${item.unit === 'Kilogram' ? 'кг' : 'шт.'} × ${item.price}₽`
     ).join('\n');
@@ -141,7 +152,8 @@ export const sendPaidOrderNotification = async (finalOrderData) => {
 
       📦 <b>Корзина:</b>
       ${cartText}
-      💰 <b>Списано: ${finalOrderData.total.toFixed(2)} ₽</b>
+      ${deliveryText}
+      💰 <b>Списано: ${formatPrice(finalOrderData.total)}</b>
     `.trim();
 
     const options = {
@@ -164,7 +176,6 @@ const capturePayment = async (orderId) => {
     if (!orderData) throw new Error('Заказ уже обработан или не найден');
     await axios.post(`${API_BASE_URL}/api/payment/capture`, { orderId, finalCart: orderData.cart });
 };
-
 
 export default function initializeBot(syncProductsFromApi) {
     /**
