@@ -62,7 +62,7 @@ const buildAssemblyMessageAndOptions = (orderData) => {
         ${deliveryText}
                 
         💰 <b>Итого к списанию: ~${totalWithDelivery.toFixed(2)} ₽</b>
-        <i>(Заморожено на карте(с доставкой): ${Number(orderData.totalWithReserve).toFixed(2)} ₽)</i>
+        <i>(Заморожено на карте(с доставкой): ${totalWithDelivery.toFixed(2)} ₽)</i>
     `.trim();
 
     const buttons = orderData.cart
