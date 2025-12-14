@@ -47,8 +47,6 @@ const deliveryInfo = useMemo(() => {
   const totalWithReserve = isOrderValid ? subtotal + reserveAmount + deliveryCost : 0;
 
 
-
-console.log('----',cartItems)
   return (
     <div className="cart-container">
       <div className="cart-header">

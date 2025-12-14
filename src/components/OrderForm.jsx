@@ -3,12 +3,13 @@ import React, { useState, useCallback } from 'react';
 import './../OrderForm.css';
 import YandexMap from './YandexMap';
 import '../YandexMap.css';
+
 const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
   const [customerName, setCustomerName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
   const [comment, setComment] = useState('');
-  const [deliveryTime, setDeliveryTime] = useState(''); // теперь это строка-интервал
+  const [deliveryTime, setDeliveryTime] = useState('');
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddressInZone, setIsAddressInZone] = useState(false);
