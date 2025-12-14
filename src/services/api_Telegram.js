@@ -45,6 +45,11 @@ const buildAssemblyMessageAndOptions = (orderData) => {
     const finalTotal = orderData.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const deliveryCost = orderData.deliveryCost || 0;
     const totalWithDelivery = finalTotal + deliveryCost;
+
+    const deliveryText = deliveryCost > 0
+        ? `\n🚚 <b>Доставка:</b> ${deliveryCost.toFixed(2)} ₽`
+        : '';
+
     const message = `
         🛒 <b>Заказ на сборку:</b> <code>${orderData.id}</code>
         👤 ${orderData.customer_name}, ${orderData.phone}
@@ -54,9 +59,10 @@ const buildAssemblyMessageAndOptions = (orderData) => {
 
         📦 <b>Корзина:</b>
         ${cartText}
+        ${deliveryText}
                 
         💰 <b>Итого к списанию: ~${totalWithDelivery.toFixed(2)} ₽</b>
-        <i>(Заморожено на карте: ${Number(orderData.totalWithReserve).toFixed(2)} ₽)</i>
+        <i>(Заморожено на карте(с доставкой): ${Number(orderData.totalWithReserve).toFixed(2)} ₽)</i>
     `.trim();
 
     const buttons = orderData.cart
