@@ -14,12 +14,7 @@ const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddressInZone, setIsAddressInZone] = useState(false);
 
-  const timeSlots = [
-    '10:00–12:00',
-    '12:00–15:00',
-    '15:00–18:00',
-    '18:00–20:00',
-  ];
+  const timeSlots = [    '10:00–12:00',    '12:00–15:00',    '15:00–18:00',    '18:00–20:00',  ];
 // 1. Обработка ввода телефона (всегда начинается с +7)
   const handlePhoneChange = (e) => {
     const input = e.target.value;
