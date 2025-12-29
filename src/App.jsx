@@ -97,38 +97,58 @@ function App({ initialData }) {
 
   const handleCloseOrderForm = () => setIsOrderFormOpen(false);
 
-  const createYooKassaPayment = async (orderData) => {
+ const createYooKassaPayment = async (orderData) => {
     try {
       const response = await fetch(`/api/payment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData)
       });
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Не удалось прочитать ошибку сервера' }));
-        throw new Error(errorData.message || 'Ошибка сети при создании платежа');
+        const errorData = await response.json().catch(() => ({ message: 'Ошибка сервера' }));
+        throw new Error(errorData.message || 'Ошибка сети');
       }
+
       const data = await response.json();
       const confirmationUrl = data?.payment?.confirmation?.confirmation_url;
+
       if (confirmationUrl) {
-        window.open(confirmationUrl, '_blank');
+        // ДЛЯ IPHONE/SAFARI: Используем текущее окно, чтобы избежать блокировки всплывающих окон
+        window.location.href = confirmationUrl; 
         return true;
       } else {
-        throw new Error('Не получена ссылка на оплату');
+        throw new Error('Ссылка на оплату не получена');
       }
     } catch (error) {
       console.error("Ошибка при создании платежа:", error);
-      Swal.fire({ title: 'Ошибка оплаты', text: error.message, icon: 'error' });
+      Swal.fire({ 
+        title: 'Ошибка', 
+        text: 'Не удалось перейти к оплате: ' + error.message, 
+        icon: 'error',
+        confirmButtonColor: '#28a745'
+      });
       return false;
     }
   };
 
  const handleSubmitOrder = async (customerData) => {
     const { items: cartItems } = useCartStore.getState();
+    
     if (cartItems.length === 0) {
-      Swal.fire('Корзина пуста', 'Пожалуйста, добавьте товары в корзину.', 'warning');
+      Swal.fire('Корзина пуста', 'Добавьте товары перед оплатой', 'warning');
       return;
     }
+
+    // Показываем индикатор загрузки, пока ждем ответ от ЮKassa
+    Swal.fire({
+      title: 'Оформление...',
+      text: 'Создаем ваш заказ и переходим к оплате',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
     
     const { subtotal, totalWithReserve, deliveryCost, finalAmountForPayment } = calculateOrderTotals(cartItems);
 

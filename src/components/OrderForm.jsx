@@ -1,12 +1,12 @@
 // src/components/OrderForm.js
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import './../OrderForm.css';
 import YandexMap from './YandexMap';
 import '../YandexMap.css';
 
 const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
   const [customerName, setCustomerName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('+7');
   const [address, setAddress] = useState('');
   const [comment, setComment] = useState('');
   const [deliveryTime, setDeliveryTime] = useState('');
@@ -21,27 +21,62 @@ const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
     '18:00–20:00',
   ];
 
-  const validate = useCallback(() => {
-    const newErrors = {};
-    if (!customerName.trim()) newErrors.name = 'Введите имя.';
-    if (!phoneNumber.trim()) {
-      newErrors.phone = 'Введите телефон.';
-    } else if (!/^\+?\d{9,15}$/.test(phoneNumber.replace(/\D/g, ''))) {
-      newErrors.phone = 'Некорректный номер.';
+  // Очистка ошибки конкретного поля при изменении его значения
+  const clearError = (field) => {
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
     }
-    if (!address.trim()) newErrors.address = 'Введите адрес.';
+  };
+const handlePhoneChange = (e) => {
+  const input = e.target.value;
+  
+  // Если пользователь пытается удалить +7 или очистить поле, возвращаем +7
+  if (!input.startsWith('+7')) {
+    setPhoneNumber('+7');
+    return;
+  }
 
-    if (!isAddressInZone) newErrors.address = 'Адрес должен быть в зоне доставки.';
-    
-  if (!deliveryTime) newErrors.deliveryTime = 'Выберите интервал доставки.';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [customerName, phoneNumber, address, deliveryTime,isAddressInZone]);
-  // Стандартный обработчик отправки формы
+  const digitsAfterPrefix = input.slice(2).replace(/\D/g, '');
+  
+  const limitedDigits = digitsAfterPrefix.slice(0, 10);
+  
+  setPhoneNumber('+7' + limitedDigits);
+  clearError('phone');
+};
+const validate = useCallback(() => {
+  const newErrors = {};
+  
+  if (!customerName.trim()) {
+    newErrors.name = 'Пожалуйста, введите ваше имя';
+  }
+
+  if (phoneNumber.length < 12) {
+    newErrors.phone = 'Введите номер полностью (10 цифр после +7)';
+  }
+
+  if (!address.trim()) {
+    newErrors.address = 'Введите адрес доставки';
+  } else if (!isAddressInZone) {
+    newErrors.address = 'Этот адрес находится вне зоны нашей доставки';
+  }
+  
+  if (!deliveryTime) {
+    newErrors.deliveryTime = 'Выберите удобный интервал доставки';
+  }
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+}, [customerName, phoneNumber, address, deliveryTime, isAddressInZone]);
+
   const handleSubmit = async (e) => {
     e.preventDefault(); 
-    if (!validate() || !isAddressInZone) {
-      if(!isAddressInZone) alert("Пожалуйста, укажите адрес в зоне доставки.");
+    
+    if (!validate()) {
+      // Скролл к первой ошибке (опционально)
       return;
     }
 
@@ -62,36 +97,83 @@ const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
   };
 
   return (
-<div className="order-form-container">
-    <div className="order-form-header"> {/* 🔥 Новый контейнер-обёртка */}
+    <div className="order-form-container">
+      <div className="order-form-header">
         <h2 id="form-title">Оформление заказа</h2>
         <button type="button" onClick={onClose} className="close-button" aria-label="Закрыть">
-            &times;
+          &times;
         </button>
-    </div>
-      <form onSubmit={handleSubmit}>     
-        <div className="form-group">
+      </div>
+
+      <form onSubmit={handleSubmit} noValidate>     
+        {/* Поле: Имя */}
+        <div className={`form-group ${errors.name ? 'has-error' : ''}`}>
           <label htmlFor="customerName">Имя:</label>
-          <input type="text" id="customerName" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className={errors.name ? 'input-error' : ''} autoComplete="name" required />
+          <input 
+            type="text" 
+            id="customerName" 
+            value={customerName} 
+            onChange={(e) => { setCustomerName(e.target.value); clearError('name'); }} 
+            className={errors.name ? 'input-error' : ''} 
+            placeholder="Иван Иванов"
+            required 
+          />
           {errors.name && <span className="error-message">{errors.name}</span>}
         </div>
-        <div className="form-group">
+
+        {/* Поле: Телефон */}
+        <div className={`form-group ${errors.phone ? 'has-error' : ''}`}>
           <label htmlFor="phoneNumber">Телефон:</label>
-          <input type="tel" id="phoneNumber" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d+]/g, ''))} className={errors.phone ? 'input-error' : ''} autoComplete="tel" required />
+          <input 
+            type="tel" 
+            id="phoneNumber" 
+            value={phoneNumber} 
+            onChange={handlePhoneChange}
+            className={errors.phone ? 'input-error' : ''} 
+            placeholder="+7 (___) ___-__-__"
+            required 
+          />
           {errors.phone && <span className="error-message">{errors.phone}</span>}
         </div>
-        <div className="form-group">
+
+        {/* Поле: Адрес */}
+        <div className={`form-group ${errors.address ? 'has-error' : ''}`}>
           <label htmlFor="address">Адрес:</label>
-          <input type="text" id="address" value={address} onChange={(e) => setAddress(e.target.value)} className={errors.address ? 'input-error' : ''} autoComplete="street-address" required />
+          <input 
+            type="text" 
+            id="address" 
+            value={address} 
+            onChange={(e) => { setAddress(e.target.value); clearError('address'); }} 
+            className={errors.address ? 'input-error' : ''} 
+            placeholder="Улица, дом, квартира"
+            required 
+          />
           {errors.address && <span className="error-message">{errors.address}</span>}
         </div>
+
+        {/* Комментарий */}
         <div className="form-group">
-          <label htmlFor="comment">Комментарий к заказу, по желанию:</label>
-          <textarea id="comment" value={comment} onChange={(e) => setComment(e.target.value)} className="textarea-input" rows="3" placeholder="Например: оставить у двери." />
+          <label htmlFor="comment">Комментарий к заказу:</label>
+          <textarea 
+            id="comment" 
+            value={comment} 
+            onChange={(e) => setComment(e.target.value)} 
+            className="textarea-input" 
+            rows="2" 
+            placeholder="Например: код домофона или где оставить пакет" 
+          />
         </div>
-        <div className="form-group">
-          <label htmlFor="deliveryTime">Желаемое время доставки</label>
-          <select id="deliveryTime" value={deliveryTime} onChange={(e) => setDeliveryTime(e.target.value)} className={errors.deliveryTime ? 'input-error' : ''} required >
+
+        {/* Время доставки */}
+        <div className={`form-group ${errors.deliveryTime ? 'has-error' : ''}`}>
+          <label htmlFor="deliveryTime">Желаемое время доставки:</label>
+          <select 
+            id="deliveryTime" 
+            value={deliveryTime} 
+            onChange={(e) => { setDeliveryTime(e.target.value); clearError('deliveryTime'); }} 
+            className={errors.deliveryTime ? 'input-error' : ''} 
+            required 
+          >
             <option value="">Выберите интервал</option>
             {timeSlots.map((slot) => (<option key={slot} value={slot}>{slot}</option>))}
           </select>
@@ -101,31 +183,35 @@ const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
         <div className='map-section'>
           <YandexMap
             address={address}
-            onZoneCheck={setIsAddressInZone}
+            onZoneCheck={(isInZone) => {
+              setIsAddressInZone(isInZone);
+              if (isInZone) clearError('address');
+            }}
             center={[44.665, 37.79]}
             zoom={12}
-            placemark={[44.67590828940214,37.64249692460607]}
+            placemark={[44.67590828940214, 37.64249692460607]}
             kmlUrl="/map.kml"
           />
         </div>
-         <div className="form-agreement-text">
+
+        <div className="form-agreement-text">
           Нажимая «Перейти к оплате», вы соглашаетесь с условиями{' '}
-          <a href="/user-agreement.pdf" target="_blank" rel="noopener noreferrer">
-            Пользовательского соглашения
-          </a>{' '}
-          и{' '}
-          <a href="/privacy-policy.pdf" target="_blank" rel="noopener noreferrer">
-            Политикой конфиденциальности
-          </a>.
+          <a href="/user-agreement.pdf" target="_blank" rel="noopener noreferrer">Пользовательского соглашения</a>
+          {' '}и{' '}
+          <a href="/privacy-policy.pdf" target="_blank" rel="noopener noreferrer">Политикой конфиденциальности</a>.
         </div>
+
         <div className="form-actions">        
           <button
             type="submit"
-            className="submit-button"
-            disabled={isSubmitting || !isAddressInZone}
+            className={`submit-button ${!isAddressInZone ? 'disabled' : ''}`}
+            disabled={isSubmitting}
           >
-            {isSubmitting ? 'Отправка...' : `Перейти к оплате ${totalAmount.toFixed(2)} ₽`}
+            {isSubmitting ? 'Оформляем...' : `Перейти к оплате ${totalAmount.toFixed(2)} ₽`}
           </button>
+          {!isAddressInZone && address.trim() && !errors.address && (
+            <p className="hint-message">Укажите адрес внутри зеленой зоны на карте</p>
+          )}
         </div>
       </form>
     </div>
