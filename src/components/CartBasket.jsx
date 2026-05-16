@@ -46,7 +46,6 @@ const deliveryInfo = useMemo(() => {
   const isOrderValid = deliveryCost !== null;
   const totalWithReserve = isOrderValid ? subtotal + reserveAmount + deliveryCost : 0;
 
-
   return (
     <div className="cart-container">
       <div className="cart-header">

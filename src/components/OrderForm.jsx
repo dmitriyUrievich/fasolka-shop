@@ -63,7 +63,7 @@ const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
 
   return (
 <div className="order-form-container">
-    <div className="order-form-header"> {/* 🔥 Новый контейнер-обёртка */}
+    <div className="order-form-header">
         <h2 id="form-title">Оформление заказа</h2>
         <button type="button" onClick={onClose} className="close-button" aria-label="Закрыть">
             &times;

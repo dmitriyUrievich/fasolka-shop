@@ -10,6 +10,7 @@ import { useCartStore } from './store'
 const CartBasket = React.lazy(() => import('/src/components/CartBasket.jsx'));
 const Modal = React.lazy(() => import('/src/components/Modal.jsx'));
 const OrderForm = React.lazy(() => import('/src/components/OrderForm.jsx'));
+
 const calculateOrderTotals = (cartItems) => {
   let subtotal = 0;
   let totalWithReserve = 0;
@@ -18,10 +19,10 @@ const calculateOrderTotals = (cartItems) => {
     subtotal += itemTotal;
     totalWithReserve += (item.unit === 'Kilogram') ? itemTotal * 1.15 : itemTotal;
   });
-
+  let cartCost = 1000
   let deliveryCost = 0;
-  if (subtotal > 0 && subtotal < 1000) deliveryCost = 200;
-  else if (subtotal >= 1000 && subtotal < 3000) deliveryCost = 200;
+  if (subtotal > 0 && subtotal < cartCost) deliveryCost = 200;
+  else if (subtotal >= cartCost && subtotal < 3000) deliveryCost = 200;
 
   const finalAmountForPayment = totalWithReserve + deliveryCost;
   return { subtotal, totalWithReserve, deliveryCost, finalAmountForPayment };
