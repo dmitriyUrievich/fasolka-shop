@@ -180,7 +180,7 @@ router.post('/payment/capture', async (req, res) => {
     // 2. Достаем стоимость доставки из данных заказа, сохраненных при холдировании
     const deliveryCost = orderData.deliveryCost || 0;
 
-    // 3. Считаем НАСТОЯЩУЮ итоговую сумму для списания
+    // 3. Считаем итоговую сумму для списания
     const finalTotalWithDelivery = finalItemsTotal + deliveryCost;
 
     // 4. Формируем финальный чек, который ТАКЖЕ включает доставку
@@ -200,8 +200,18 @@ router.post('/payment/capture', async (req, res) => {
         })),
     };
     if (deliveryCost > 0) {
+      const clientAddress = orderData.address || '';
+      const deliveryTime = orderData.time ? `(${orderData.time})` : '';
+
+      let deliveryDescription = 'Доставка';
+      if (clientAddress || deliveryTime) {
+        deliveryDescription += `: ${clientAddress} ${deliveryTime}`.trim();
+      }
+
+      deliveryDescription = deliveryDescription.substring(0, 128);
+
         finalReceipt.items.push({
-            description: 'Доставка',
+            description: deliveryDescription,
             quantity: '1.00',
             amount: { value: deliveryCost.toFixed(2), currency: 'RUB' },
             vat_code: '1',
@@ -219,6 +229,10 @@ router.post('/payment/capture', async (req, res) => {
         },
         receipt: finalReceipt
     };
+
+    console.log(`\n--- [Capture] Чек перед отправкой в ЮKassa для заказа №${orderId} ---`);
+    console.log(JSON.stringify(capturePayload, null, 2));
+    console.log('---------------------------------------------------\n');
 
     // Отправляем запрос на списание в ЮKassa
     await YooKassa.capturePayment(orderData.paymentId, capturePayload, uuidv4());

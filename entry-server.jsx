@@ -1,14 +1,16 @@
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
-import App from './src/App';
+import { StaticRouter } from 'react-router-dom'
+import App from './src/App.jsx';
 
-export function render(initialData) {
-
-  const appHtml = ReactDOMServer.renderToString(
-    <React.StrictMode>
-        <App initialData={initialData} />
-    </React.StrictMode>
-  );
-
-  return { appHtml };
+export function render(url, initialData) {
+    const appHtml = ReactDOMServer.renderToString(
+        <React.StrictMode>
+            {/* StaticRouter дает контекст роутинга на сервере */}
+            <StaticRouter location={url}>
+                <App initialData={initialData} />
+            </StaticRouter>
+        </React.StrictMode>
+    );
+    return { appHtml };
 }

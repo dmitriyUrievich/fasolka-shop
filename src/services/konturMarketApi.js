@@ -34,7 +34,6 @@ export const getCatalog = async (shopId) => {
   }
 };
 
-
 const getProductRests = async (shopId) => {
   try {
     const response = await apiClient.get(`/shops/${shopId}/product-rests`);
