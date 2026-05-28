@@ -1,130 +1,158 @@
-// src/components/OrderForm.js
-import React, { useState, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import './../OrderForm.css';
 import YandexMap from './YandexMap';
 import '../YandexMap.css';
 
 const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
   const [customerName, setCustomerName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('+7');
   const [address, setAddress] = useState('');
   const [comment, setComment] = useState('');
   const [deliveryTime, setDeliveryTime] = useState('');
-  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddressInZone, setIsAddressInZone] = useState(false);
 
-  const timeSlots = [
-    '10:00–12:00',
-    '12:00–15:00',
-    '15:00–18:00',
-    '18:00–20:00',
-  ];
+  // Состояние "посещенных" полей
+  const [touched, setTouched] = useState({
+    name: false,
+    phone: false,
+    address: false,
+    deliveryTime: false
+  });
 
-  const validate = useCallback(() => {
-    const newErrors = {};
-    if (!customerName.trim()) newErrors.name = 'Введите имя.';
-    if (!phoneNumber.trim()) {
-      newErrors.phone = 'Введите телефон.';
-    } else if (!/^\+?\d{9,15}$/.test(phoneNumber.replace(/\D/g, ''))) {
-      newErrors.phone = 'Некорректный номер.';
-    }
-    if (!address.trim()) newErrors.address = 'Введите адрес.';
+  const timeSlots = ['10:00–12:00', '12:00–15:00', '15:00–18:00', '18:00–20:00'];
 
-    if (!isAddressInZone) newErrors.address = 'Адрес должен быть в зоне доставки.';
+  // Функция для отметки поля как "тронутого"
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
+
+  // Валидация
+  const formErrors = useMemo(() => {
+    const errors = {};
+    if (!customerName.trim()) errors.name = 'Введите имя';
     
-  if (!deliveryTime) newErrors.deliveryTime = 'Выберите интервал доставки.';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [customerName, phoneNumber, address, deliveryTime,isAddressInZone]);
-  // Стандартный обработчик отправки формы
-  const handleSubmit = async (e) => {
-    e.preventDefault(); 
-    if (!validate() || !isAddressInZone) {
-      if(!isAddressInZone) alert("Пожалуйста, укажите адрес в зоне доставки.");
+    const cleanPhone = phoneNumber.replace(/\D/g, '');
+    if (cleanPhone.length < 11) errors.phone = 'Введите полный номер';
+    
+    if (!address.trim()) {
+      errors.address = 'Введите адрес доставки';
+    } else if (!isAddressInZone) {
+      errors.address = 'Этот адрес вне зоны доставки';
+    }
+
+    if (!deliveryTime) errors.deliveryTime = 'Выберите время';
+
+    return errors;
+  }, [customerName, phoneNumber, address, isAddressInZone, deliveryTime]);
+
+  const isFormValid = Object.keys(formErrors).length === 0;
+
+  const handlePhoneChange = (e) => {
+    const input = e.target.value;
+    if (!input.startsWith('+7')) {
+      setPhoneNumber('+7');
       return;
     }
+    const digits = input.slice(2).replace(/\D/g, '').slice(0, 10);
+    setPhoneNumber('+7' + digits);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    // При попытке отправки помечаем ВСЕ поля как тронутые, чтобы показать ошибки
+    setTouched({ name: true, phone: true, address: true, deliveryTime: true });
+
+    if (!isFormValid || isSubmitting) return;
 
     setIsSubmitting(true);
-    try {
-      await onSubmit({
-        name: customerName,
-        phone: phoneNumber,
-        address,
-        comment: comment.trim() || null,
-        deliveryTime: deliveryTime || null,
-      });
-    } catch (error) {
-        console.error("Ошибка при обработке формы:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await onSubmit({
+      name: customerName,
+      phone: phoneNumber,
+      address,
+      comment: comment.trim(),
+      deliveryTime,
+    });
+    setIsSubmitting(false);
   };
 
   return (
-<div className="order-form-container">
-    <div className="order-form-header">
-        <h2 id="form-title">Оформление заказа</h2>
-        <button type="button" onClick={onClose} className="close-button" aria-label="Закрыть">
-            &times;
-        </button>
-    </div>
-      <form onSubmit={handleSubmit}>     
-        <div className="form-group">
-          <label htmlFor="customerName">Имя:</label>
-          <input type="text" id="customerName" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className={errors.name ? 'input-error' : ''} autoComplete="name" required />
-          {errors.name && <span className="error-message">{errors.name}</span>}
-        </div>
-        <div className="form-group">
-          <label htmlFor="phoneNumber">Телефон:</label>
-          <input type="tel" id="phoneNumber" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d+]/g, ''))} className={errors.phone ? 'input-error' : ''} autoComplete="tel" required />
-          {errors.phone && <span className="error-message">{errors.phone}</span>}
-        </div>
-        <div className="form-group">
-          <label htmlFor="address">Адрес:</label>
-          <input type="text" id="address" value={address} onChange={(e) => setAddress(e.target.value)} className={errors.address ? 'input-error' : ''} autoComplete="street-address" required />
-          {errors.address && <span className="error-message">{errors.address}</span>}
-        </div>
-        <div className="form-group">
-          <label htmlFor="comment">Комментарий к заказу, по желанию:</label>
-          <textarea id="comment" value={comment} onChange={(e) => setComment(e.target.value)} className="textarea-input" rows="3" placeholder="Например: оставить у двери." />
-        </div>
-        <div className="form-group">
-          <label htmlFor="deliveryTime">Желаемое время доставки</label>
-          <select id="deliveryTime" value={deliveryTime} onChange={(e) => setDeliveryTime(e.target.value)} className={errors.deliveryTime ? 'input-error' : ''} required >
-            <option value="">Выберите интервал</option>
-            {timeSlots.map((slot) => (<option key={slot} value={slot}>{slot}</option>))}
-          </select>
-          {errors.deliveryTime && (<span className="error-message">{errors.deliveryTime}</span>)}
+    <div className="order-form-container">
+      <div className="order-form-header">
+        <h2>Оформление заказа</h2>
+        <button type="button" onClick={onClose} className="close-button">&times;</button>
+      </div>
+
+      <form onSubmit={handleSubmit}>
+        {/* Имя */}
+        <div className={`form-group ${formErrors.name && touched.name ? 'has-error' : ''}`}>
+          <label>Имя:</label>
+          <input 
+            type="text" 
+            value={customerName} 
+            onChange={(e) => setCustomerName(e.target.value)}
+            onBlur={() => handleBlur('name')}
+            placeholder="Ваше имя"
+          />
+          {formErrors.name && touched.name && <span className="error-message">{formErrors.name}</span>}
         </div>
 
-        <div className='map-section'>
+        {/* Телефон */}
+        <div className={`form-group ${formErrors.phone && touched.phone ? 'has-error' : ''}`}>
+          <label>Телефон:</label>
+          <input 
+            type="tel" 
+            value={phoneNumber} 
+            onChange={handlePhoneChange}
+            onBlur={() => handleBlur('phone')}
+          />
+          {formErrors.phone && touched.phone && <span className="error-message">{formErrors.phone}</span>}
+        </div>
+
+        {/* Адрес */}
+        <div className={`form-group ${formErrors.address && touched.address ? 'has-error' : ''}`}>
+          <label>Адрес доставки:</label>
+          <input 
+            type="text" 
+            value={address} 
+            onChange={(e) => setAddress(e.target.value)}
+            onBlur={() => handleBlur('address')}
+            placeholder="Улица, дом, квартира"
+          />
+          {formErrors.address && touched.address && <span className="error-message">{formErrors.address}</span>}
+        </div>
+
+        {/* Время */}
+        <div className={`form-group ${formErrors.deliveryTime && touched.deliveryTime ? 'has-error' : ''}`}>
+          <label>Время доставки:</label>
+          <select 
+            value={deliveryTime} 
+            onChange={(e) => setDeliveryTime(e.target.value)}
+            onBlur={() => handleBlur('deliveryTime')}
+          >
+            <option value="">Выберите интервал</option>
+            {timeSlots.map(slot => <option key={slot} value={slot}>{slot}</option>)}
+          </select>
+          {formErrors.deliveryTime && touched.deliveryTime && <span className="error-message">{formErrors.deliveryTime}</span>}
+        </div>
+
+        <div className="map-section">
           <YandexMap
             address={address}
             onZoneCheck={setIsAddressInZone}
             center={[44.665, 37.79]}
             zoom={12}
-            placemark={[44.67590828940214,37.64249692460607]}
             kmlUrl="/map.kml"
           />
         </div>
-         <div className="form-agreement-text">
-          Нажимая «Перейти к оплате», вы соглашаетесь с условиями{' '}
-          <a href="/user-agreement.pdf" target="_blank" rel="noopener noreferrer">
-            Пользовательского соглашения
-          </a>{' '}
-          и{' '}
-          <a href="/privacy-policy.pdf" target="_blank" rel="noopener noreferrer">
-            Политикой конфиденциальности
-          </a>.
-        </div>
-        <div className="form-actions">        
+
+        <div className="form-actions">
           <button
             type="submit"
-            className="submit-button"
-            disabled={isSubmitting || !isAddressInZone}
+            className={`submit-button ${!isFormValid ? 'button-disabled' : ''}`}
+            disabled={!isFormValid || isSubmitting}
           >
-            {isSubmitting ? 'Отправка...' : `Перейти к оплате ${totalAmount.toFixed(2)} ₽`}
+            {isSubmitting ? 'Оформляем...' : `Оплатить ${totalAmount.toFixed(2)} ₽`}
           </button>
         </div>
       </form>
@@ -132,4 +160,4 @@ const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
   );
 };
 
-export default React.memo(OrderForm);
+export default OrderForm;
