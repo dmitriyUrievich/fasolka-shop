@@ -98,7 +98,7 @@ async function createServer() {
       }
 
       const initialData = await getLocalProducts();
-      const { appHtml } = render(initialData);
+      const { appHtml } = render(url, initialData);
 
       const html = template
         .replace(`<!--ssr-outlet-->`, appHtml)
