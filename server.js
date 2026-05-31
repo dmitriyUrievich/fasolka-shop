@@ -120,7 +120,7 @@ async function createServer() {
       }
 
       const initialData = await getLocalProducts();
-      const { appHtml } = render(initialData);
+      const { appHtml } = render(url, initialData);
 
       // Вставляем отрендеренный HTML и данные в шаблон
       const html = template

@@ -140,6 +140,17 @@
   transform: none;
   box-shadow: none;
 }
+
+.error-message {
+  color: #ff4d4f;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+.has-error input, .has-error select {
+  border-color: #ff4d4f !important;
+}
 /* Адаптивность на мобильных */
 @media (max-width: 540px) {
   .order-form-container {
