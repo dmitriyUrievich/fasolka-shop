@@ -3,13 +3,19 @@ import React, { useState, useCallback } from 'react';
 import './../OrderForm.css';
 import YandexMap from './YandexMap';
 import '../YandexMap.css';
+import {Select} from "../ui/Select.jsx";
+import {Textarea} from "../ui/Textarea.jsx";
+import {InputField} from "../ui/InputField.jsx";
 
 const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
-  const [customerName, setCustomerName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [address, setAddress] = useState('');
-  const [comment, setComment] = useState('');
-  const [deliveryTime, setDeliveryTime] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    address: '',
+    comment: '',
+    deliveryTime: ''
+  });
+
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddressInZone, setIsAddressInZone] = useState(false);
@@ -21,41 +27,42 @@ const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
     '18:00–20:00',
   ];
 
+
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    let cleanValue = value;
+
+    if (id === 'phone') cleanValue = value.replace(/[^\d+]/g, '');
+
+    setFormData(prev => ({ ...prev, [id]: cleanValue }));
+  };
+
   const validate = useCallback(() => {
     const newErrors = {};
-    if (!customerName.trim()) newErrors.name = 'Введите имя.';
-    if (!phoneNumber.trim()) {
+    if (!formData.name.trim()) newErrors.name = 'Введите имя.';
+    if (!formData.phone.trim()) {
       newErrors.phone = 'Введите телефон.';
-    } else if (!/^\+?\d{9,15}$/.test(phoneNumber.replace(/\D/g, ''))) {
+    } else if (!/^\+?\d{9,15}$/.test(formData.phone.replace(/\D/g, ''))) {
       newErrors.phone = 'Некорректный номер.';
     }
-    if (!address.trim()) newErrors.address = 'Введите адрес.';
-
+    if (!formData.address.trim()) newErrors.address = 'Введите адрес.';
     if (!isAddressInZone) newErrors.address = 'Адрес должен быть в зоне доставки.';
-    
-  if (!deliveryTime) newErrors.deliveryTime = 'Выберите интервал доставки.';
+    if (!formData.deliveryTime) newErrors.deliveryTime = 'Выберите интервал доставки.';
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [customerName, phoneNumber, address, deliveryTime,isAddressInZone]);
-  // Стандартный обработчик отправки формы
+  }, [formData, isAddressInZone]);
+
   const handleSubmit = async (e) => {
-    e.preventDefault(); 
-    if (!validate() || !isAddressInZone) {
-      if(!isAddressInZone) alert("Пожалуйста, укажите адрес в зоне доставки.");
-      return;
-    }
+    e.preventDefault();
+    if (!validate()) return;
 
     setIsSubmitting(true);
     try {
       await onSubmit({
-        name: customerName,
-        phone: phoneNumber,
-        address,
-        comment: comment.trim() || null,
-        deliveryTime: deliveryTime || null,
+        ...formData,
+        comment: formData.comment.trim() || null,
       });
-    } catch (error) {
-        console.error("Ошибка при обработке формы:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -69,38 +76,57 @@ const OrderForm = ({ onSubmit, onClose, totalAmount }) => {
             &times;
         </button>
     </div>
-      <form onSubmit={handleSubmit}>     
-        <div className="form-group">
-          <label htmlFor="customerName">Имя:</label>
-          <input type="text" id="customerName" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className={errors.name ? 'input-error' : ''} autoComplete="name" required />
-          {errors.name && <span className="error-message">{errors.name}</span>}
-        </div>
-        <div className="form-group">
-          <label htmlFor="phoneNumber">Телефон:</label>
-          <input type="tel" id="phoneNumber" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d+]/g, ''))} className={errors.phone ? 'input-error' : ''} autoComplete="tel" required />
-          {errors.phone && <span className="error-message">{errors.phone}</span>}
-        </div>
-        <div className="form-group">
-          <label htmlFor="address">Адрес:</label>
-          <input type="text" id="address" value={address} onChange={(e) => setAddress(e.target.value)} className={errors.address ? 'input-error' : ''} autoComplete="street-address" required />
-          {errors.address && <span className="error-message">{errors.address}</span>}
-        </div>
-        <div className="form-group">
-          <label htmlFor="comment">Комментарий к заказу, по желанию:</label>
-          <textarea id="comment" value={comment} onChange={(e) => setComment(e.target.value)} className="textarea-input" rows="3" placeholder="Например: оставить у двери." />
-        </div>
-        <div className="form-group">
-          <label htmlFor="deliveryTime">Желаемое время доставки</label>
-          <select id="deliveryTime" value={deliveryTime} onChange={(e) => setDeliveryTime(e.target.value)} className={errors.deliveryTime ? 'input-error' : ''} required >
-            <option value="">Выберите интервал</option>
-            {timeSlots.map((slot) => (<option key={slot} value={slot}>{slot}</option>))}
-          </select>
-          {errors.deliveryTime && (<span className="error-message">{errors.deliveryTime}</span>)}
-        </div>
+      <form onSubmit={handleSubmit}>
+        <InputField
+            label="Имя:"
+            id="name"
+            value={formData.name}
+            onChange={handleChange}
+            error={errors.name}
+            required
+        />
+        <InputField
+            label="Телефон:"
+            id="phone"
+            type="tel"
+            value={formData.phone}
+            onChange={handleChange}
+            error={errors.phone}
+            required
+        />
+
+        <InputField
+            label="Адрес:"
+            id="address"
+            value={formData.address}
+            onChange={handleChange}
+            error={errors.address}
+            required
+        />
+
+        <Textarea
+            label="Комментарий к заказу (по желанию):"
+            id="comment"
+            value={formData.comment}
+            onChange={handleChange}
+            rows="3"
+            placeholder="Оставить у двери."
+        />
+
+        <Select
+            label="Желаемое время доставки:"
+            id="deliveryTime"
+            value={formData.deliveryTime}
+            onChange={handleChange}
+            options={timeSlots}
+            placeholder="Выберите интервал"
+            error={errors.deliveryTime}
+            required
+        />
 
         <div className='map-section'>
           <YandexMap
-            address={address}
+            address={formData.address}
             onZoneCheck={setIsAddressInZone}
             center={[44.665, 37.79]}
             zoom={12}

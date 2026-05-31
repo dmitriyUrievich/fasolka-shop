@@ -2,13 +2,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import Pagination from './Pagination';
-import '../ProductList.css';
+
 import getPortion from '../utils/getPortion';
-const storageKey = 'ageConfirmedGlobal';
 import { createImageLoader } from '../utils/imageUtils';
-import YandexMap from './YandexMap'
 import Skeleton from 'react-loading-skeleton';
+const storageKey = 'ageConfirmedGlobal';
+
 import 'react-loading-skeleton/dist/skeleton.css'
+import '../ProductList.css';
 
 const ProductList = ({
   products,
@@ -23,6 +24,7 @@ const ProductList = ({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 24;
   const [ageConfirmed, setAgeConfirmed] = useState(false);
+
 
   const handleConfirmAge = () => {
     setAgeConfirmed(true);
@@ -178,16 +180,7 @@ const specialOfferCategoryId = useMemo(() => {
           />
         </div>
       </div>
-     <div className="map-section">
-        <h2 className="map-title">Наш Магазин на Карте</h2>
-        <YandexMap
-          center={[44.675898, 37.642492]}
-          zoom={12}
-          placemark={[44.675898, 37.642492]}
-          placemarkHint="Фасоль"
-          placemarkBalloon="Мы находимся по адресу: пер. Торпедный д4."
-        /> 
-      </div>
+
     </>
   );
 };

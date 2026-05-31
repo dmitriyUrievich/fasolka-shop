@@ -1,4 +1,34 @@
 // utils/orderUtils.js
+export const calculateOrderTotals = (cartItems) => {
+  let subtotal = 0;
+  let totalWithReserve = 0;
+
+  cartItems.forEach(item => {
+    // Преобразуем цену "123,45" в число 123.45
+    const price = typeof item.sellPricePerUnit === 'string'
+        ? parseFloat(item.sellPricePerUnit.replace(',', '.'))
+        : item.sellPricePerUnit;
+
+    const itemTotal = price * item.quantityInCart;
+    subtotal += itemTotal;
+
+    // Резерв 15% для весового товара
+    totalWithReserve += (item.unit === 'Kilogram') ? itemTotal * 1.15 : itemTotal;
+  });
+
+  // Логика доставки
+  let deliveryCost = 0;
+  if (subtotal > 0 && subtotal < 3000) {
+    deliveryCost = 200;
+  }
+
+  return {
+    subtotal,
+    totalWithReserve,
+    deliveryCost,
+    finalAmountForPayment: totalWithReserve + deliveryCost
+  };
+};
 
 export const generateDailyOrderId = () => {
   const now = new Date();

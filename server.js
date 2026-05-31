@@ -18,81 +18,103 @@ async function createServer() {
   const app = express();
   let vite;
 
+  // 1. ИНИЦИАЛИЗАЦИЯ VITE (в режиме разработки)
   if (!isProd) {
-    console.log('🚀 Запуск в режиме разработки (development)...');
     const { createServer: createViteServer } = await import('vite');
     vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'custom'
     });
+    // Мидлвары Vite должны быть в самом начале для HMR и обработки ресурсов
     app.use(vite.middlewares);
-  } else {
-    console.log('📦 Запуск в режиме продакшена (production)...');
-    app.use(express.static(path.resolve(__dirname, 'dist/client'), { index: false }));
   }
 
-  // Настройка CORS
+  // 2. ОБЩИЕ МИДЛВАРЫ
   const allowedOrigins = ['https://fasol-nvrsk.ru', 'http://localhost:5173', `http://localhost:${PORT}`];
-  const corsOptions = {
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    optionsSuccessStatus: 200
-  };
-  app.use(cors(corsOptions)); 
+  app.use(cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) callback(null, true);
+      else callback(new Error('Not allowed by CORS'));
+    }
+  }));
   app.use(express.json());
 
-  // Логика, которая должна работать ТОЛЬКО на реальном сервере
+  // 3. СТАТИЧЕСКИЕ ФАЙЛЫ (КАРТИНКИ И Т.Д.)
+  // Это критически важный блок. Мы указываем Express, где искать файлы.
+  const publicPath = isProd
+      ? path.resolve(__dirname, 'dist/client')
+      : path.resolve(__dirname, 'public');
+
+  app.use(express.static(publicPath, { index: false }));
+
+  app.get('/img/:filename', (req, res, next) => {
+    const { filename } = req.params;
+    const filePath = path.join(publicPath, 'img', filename);
+
+    // Проверяем, существует ли файл физически
+    if (fs.existsSync(filePath)) {
+      // Если файл есть, просто идем дальше (его отдаст express.static или res.sendFile)
+      return next();
+    } else {
+      // Если файла НЕТ, вместо 404 отдаем заглушку
+      const fallbackPath = path.join(publicPath, 'img', 'fallback.webp');
+      // Важно: возвращаем файл заглушки с кодом 200
+      return res.status(200).sendFile(fallbackPath);
+    }
+  });
+
+  // 4. ЛОГИКА СИНХРОНИЗАЦИИ (ТОЛЬКО ПРОД)
   if (isProd) {
     initializeBot(syncProductsFromApi);
     console.log('🤖 Telegram-бот запущен.');
-    
-    // ✅ ИЗМЕНЕНИЕ: Переносим синхронизацию сюда
-    console.log('🔄 Запускаем синхронизацию товаров...');
     syncProductsFromApi();
-    setInterval(syncProductsFromApi, 30 * 60 * 1000); // 30 минут
-
+    setInterval(syncProductsFromApi, 30 * 60 * 1000);
   } else {
-    console.log('🔧 Telegram-бот и фоновая синхронизация НЕ запущены в режиме разработки.');
+    console.log('🔧 Режим разработки: синхронизация через API Vite.');
   }
-
-  // API роуты
+  // 5. API РОУТЫ
   const apiRouter = express.Router();
   apiRouter.get('/products-data', async (req, res) => {
     try {
-        const data = await getLocalProducts();
-        res.status(200).json(data);
+      const data = await getLocalProducts();
+      res.status(200).json(data);
     } catch (error) {
-        console.error('Ошибка при отдаче данных о продуктах:', error);
-        res.status(500).json({ message: 'Ошибка получения данных о товарах' });
+      res.status(500).json({ message: 'Ошибка получения данных' });
     }
   });
-  apiRouter.use(paymentRouter); 
+  apiRouter.use(paymentRouter);
   app.use('/api', apiRouter);
 
-  // Основной роут для рендеринга React-приложения
+
+
+
+
+
+
+  // 6. ОСНОВНОЙ РОУТ ДЛЯ SSR (РЕАКТ-ПРИЛОЖЕНИЕ)
   app.get(/.*/, async (req, res, next) => {
     const url = req.originalUrl;
-    
-    // Пропускаем служебные запросы Vite и API
-    if (url.startsWith('/api') || url.includes('vite')) {
+
+    // Проверяем: это запрос за HTML или за файлом?
+    const isHtmlRequest = req.headers.accept && req.headers.accept.includes('text/html');
+    const isFileRequest = url.includes('.');
+
+    // Если это API, запрос к ресурсу Vite или запрос за файлом (картинка, js, css)
+    // мы выходим из этого роута и передаем управление дальше (в static или 404)
+    if (url.startsWith('/api') || url.startsWith('/@') || (!isHtmlRequest && isFileRequest)) {
       return next();
     }
-    
+
     try {
       let template, render;
 
       if (!isProd) {
-        // Логика для разработки
+        // Читаем шаблон напрямую и трансформируем его через Vite
         template = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
         template = await vite.transformIndexHtml(url, template);
         render = (await vite.ssrLoadModule('/entry-server.jsx')).render;
       } else {
-        // Логика для продакшена
+        // В продакшене используем собранные файлы
         template = fs.readFileSync(path.resolve(__dirname, 'dist/client/index.html'), 'utf-8');
         render = (await import('./dist/server/entry-server.js')).render;
       }
@@ -100,24 +122,25 @@ async function createServer() {
       const initialData = await getLocalProducts();
       const { appHtml } = render(initialData);
 
+      // Вставляем отрендеренный HTML и данные в шаблон
       const html = template
-        .replace(`<!--ssr-outlet-->`, appHtml)
-        .replace(
-          '</head>',
-          `<script>window.__INITIAL_DATA__ = ${JSON.stringify(initialData)}</script></head>`
-        );
-      
+          .replace(`<!--ssr-outlet-->`, appHtml)
+          .replace(
+              '</head>',
+              `<script>window.__INITIAL_DATA__ = ${JSON.stringify(initialData)}</script></head>`
+          );
+
       res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
 
     } catch (e) {
-      if(vite) vite.ssrFixStacktrace(e);
-      console.error('Критическая ошибка во время рендеринга:', e);
+      if (vite) vite.ssrFixStacktrace(e);
+      console.error('Ошибка SSR:', e.stack);
       res.status(500).end(e.message);
     }
   });
 
   app.listen(PORT, () => {
-    console.log(`✅ Сервер запущен на порту ${PORT}`);
+    console.log(`✅ Сервер готов: http://localhost:${PORT}`);
   });
 }
 

@@ -1,11 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import './index.css'
+import './index.css';
+
+const initialData = window.__INITIAL_DATA__;
+const rootElement = document.getElementById('root');
 
 ReactDOM.hydrateRoot(
-  document.getElementById('root'),
-  <React.StrictMode>
-      <App initialData={window.__INITIAL_DATA__} />
-  </React.StrictMode>
+    rootElement,
+    <React.StrictMode>
+        <App initialData={initialData} />
+    </React.StrictMode>
 );

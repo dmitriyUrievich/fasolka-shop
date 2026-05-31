@@ -10,7 +10,6 @@ body.modal-open {
   overflow: hidden;
   scrollbar-gutter: stable;
 }
-
 .app-header {
   background-color: var(--farm-green); /* Задаем зеленый фон */
   color: white; /* Задаем белый цвет для текста и иконок внутри */

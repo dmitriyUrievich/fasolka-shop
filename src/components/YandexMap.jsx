@@ -1,7 +1,7 @@
 // src/components/YandexMap.js
 
 import React, { useEffect, useRef, useState } from 'react';
-import { kml } from '@tmcw/togeojson'; // Убедитесь, что эта библиотека установлена: npm install @tmcw/togeojson
+import { kml } from '@tmcw/togeojson';
 
 const MAP_SCRIPT_ID = 'yandex-maps-script';
 const API_KEY = '4abf5f7f-8f77-4fe3-a958-ff7b22c0ff1e';

@@ -1,13 +1,9 @@
 // src/utils/imageUtils.js
-
 const imageFormats = ['webp', 'jpg', 'jpeg'];
-
 const FALLBACK_IMAGE_URL = '/img/fallback.webp';
-
 const imageCache = {};
 
 export function getFallbackImageUrl(name) {
-  // Можно игнорировать `name`, так как у нас одно дефолтное фото
   return FALLBACK_IMAGE_URL;
 }
 
@@ -34,16 +30,11 @@ export function createImageLoader(id, name = '') {
   function handleImageError() {
     if (state.formatIndex < imageFormats.length - 1) {
       state.formatIndex += 1;
-      return true; // Есть ещё форматы — пробуем
+      return true; // Есть форматы — пробуем
     } else {
       state.fallback = true;
-      return false; // Больше нет форматов — переходим на fallback
+      return false; // нет форматов — переходим на fallback
     }
-  }
-
-  function reset() {
-    state.formatIndex = 0;
-    state.fallback = false;
   }
 
   function isFallback() {
@@ -53,11 +44,6 @@ export function createImageLoader(id, name = '') {
   return {
     getCurrentUrl,
     handleImageError,
-    reset,
     isFallback,
   };
-}
-
-export function clearImageCache() {
-  Object.keys(imageCache).forEach(key => delete imageCache[key]);
 }

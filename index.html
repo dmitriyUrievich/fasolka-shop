@@ -32,9 +32,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#8bc34a" />
 
+    <style>
+      /* Этот CSS будет вставлен в HEAD и сработает мгновенно */
+      #global-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: #fcfaf3; /* Ваш --farm-cream */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease, visibility 0.5s;
+      }
+      .loader-logo {
+        width: 150px;
+        animation: pulse 1.5s infinite ease-in-out;
+      }
+      @keyframes pulse {
+        0% { transform: scale(0.95); opacity: 0.8; }
+        50% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(0.95); opacity: 0.8; }
+      }
+      /* Скрываем лоадер, когда добавлен класс .loaded */
+      #global-loader.fade-out {
+        opacity: 0;
+        visibility: hidden;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+  <div id="global-loader">
+    <img src="/log-header.webp" alt="Загрузка..." class="loader-logo">
+    <p>Загружаем свежие продукты...</p>
+  </div>
+
+
+  <div id="root"><!--ssr-outlet--></div>
     <script type="module" src="/src/entry-client.jsx"></script>
   </body>
 </html>
