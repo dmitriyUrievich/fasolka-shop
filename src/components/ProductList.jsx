@@ -5,6 +5,7 @@ import Pagination from './Pagination';
 
 import getPortion from '../utils/getPortion';
 import { createImageLoader } from '../utils/imageUtils';
+
 import Skeleton from 'react-loading-skeleton';
 const storageKey = 'ageConfirmedGlobal';
 
@@ -25,7 +26,6 @@ const ProductList = ({
   const itemsPerPage = 24;
   const [ageConfirmed, setAgeConfirmed] = useState(false);
 
-
   const handleConfirmAge = () => {
     setAgeConfirmed(true);
     localStorage.setItem(storageKey, 'true');
@@ -45,90 +45,115 @@ const specialOfferCategoryId = useMemo(() => {
     return specialCategory ? specialCategory.id : null;
   }, [categories]);
 
- const blacklistedCategoryIds = useMemo(() => {
-    const blacklistNames = ['ОБОРУДОВАНИЕ', 'Без группы',];
-    const ids = new Set();
-    if (Array.isArray(categories)) {
-      categories.forEach(cat => {
-        if (blacklistNames.some(name => cat.name && (cat.name.includes(name) || cat.name === name))) {
-          ids.add(cat.id);
+    const blacklistedCategoryIds = useMemo(() => {
+        const blacklistNames = ['ОБОРУДОВАНИЕ', 'Без группы'];
+        const ids = new Set();
+        if (Array.isArray(categories)) {
+            categories.forEach(cat => {
+                const name = cat.name || cat.Name;
+                const id = cat.id || cat.Id;
+                if (name && blacklistNames.some(bn => name.includes(blacklistNames))) {
+                    ids.add(id);
+                }
+            });
         }
-      });
-    }
-    return ids;
-  }, [categories]);
+        return ids;
+    }, [categories]);
+    const filteredProducts = useMemo(() => {
+        if (!products || !Array.isArray(products)) return [];
 
-  const filteredProducts = useMemo(() => {
-    const initialFilter = products.filter((product) => {
-      if (!product) return false;
+        return products.filter((product) => {
+            if (!product) return false;
 
-      if (product.groupId && blacklistedCategoryIds.has(product.groupId)) {
-        return false;
-      }
-      
-      if (product.productType === 'Tobacco') return false;
+            // 1. УНИФИКАЦИЯ ПОЛЕЙ (берем или маленькую, или большую букву)
+            const pName = product.name || product.Name || "";
+            const pGroupId = product.groupId || product.GroupId;
+            const pType = product.productType || product.ProductType;
+            const pUnit = product.unit || product.Unit;
 
-      const matchesCategory = selectedCategoryId
-        ? product.groupId === selectedCategoryId
-        : true;
+            // ВАЖНО: Пробуем все варианты названия остатка
+            const rawRests = product.rests !== undefined ? product.rests : (product.Rests !== undefined ? product.Rests : product.Rest);
+            const pRests = parseFloat(rawRests || 0);
 
-      const matchesSearch = searchTerm
-        ? product.name.toLowerCase().includes(searchTerm.toLowerCase())
-        : true;
+            // 2. ФИЛЬТР: Черный список категорий
+            if (pGroupId && blacklistedCategoryIds.has(pGroupId)) return false;
 
-      const isAvailable = (() => {
-        if (product.unit !== 'Kilogram') {
-          return product.rests > 0;
+            // 3. ФИЛЬТР: Табак
+            if (pType === 'Tobacco') return false;
+
+            // 4. ФИЛЬТР: Поиск
+            if (searchTerm && !pName.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+
+            // 5. ФИЛЬТР: Категория
+            if (selectedCategoryId && pGroupId !== selectedCategoryId) return false;
+
+            // 6. ФИЛЬТР: Остатки (isAvailable)
+            // ВРЕМЕННО: Если товары не появились, замените всё внутри на "return true"
+            const isAvailable = (() => {
+                if (pUnit !== 'Kilogram') return pRests > 0;
+                const portion = getPortion(pName, pUnit);
+                const minRest = portion ? portion.weightInGrams / 1000 : 0.1;
+                return pRests >= minRest;
+            })();
+
+            return isAvailable;
+        });
+    }, [products, selectedCategoryId, searchTerm, blacklistedCategoryIds]);
+
+    //console.log('--------filteredProducts', filteredProducts);
+
+    const sortedProducts = useMemo(() => {
+        const list = [...filteredProducts];
+
+        const result = list.sort((a, b) => {
+            if (sortOption === 'price-asc') return parseFloat(a.sellPricePerUnit) - parseFloat(b.sellPricePerUnit);
+            if (sortOption === 'price-desc') return parseFloat(b.sellPricePerUnit) - parseFloat(a.sellPricePerUnit);
+            if (sortOption === 'quantity-asc') return a.rests - b.rests;
+            if (sortOption === 'quantity-desc') return b.rests - a.rests;
+
+            const scoreA = a.popularityScore || 0;
+            const scoreB = b.popularityScore || 0;
+            if (scoreB !== scoreA) return scoreB - scoreA;
+
+            return (a.name || "").localeCompare(b.name || "");
+        });
+
+        // --- БЛОК АНАЛИЗА ДАННЫХ В КОНСОЛИ ---
+        if (result.length > 0) {
+            console.group('📊 Проверка популярности товаров');
+            console.log('Всего товаров после фильтров:', result.length);
+
+            // Берем топ-20 для проверки
+            const debugTable = result.slice(0, 20).map((p, index) => ({
+                "№": index + 1,
+                "Название": p.name || p.Name,
+                "Продано (Score)": p.popularityScore || 0,
+                "Остаток": p.rests,
+                "Цена": p.sellPricePerUnit,
+                "ID": p.id
+            }));
+
+            console.table(debugTable);
+
+            // Лог товаров с продажами, которые могли не попасть в топ
+            const withSales = result.filter(p => (p.popularityScore || 0) > 0).length;
+            console.log(`Товаров с продажами > 0 на текущей странице/фильтре: ${withSales}`);
+            console.groupEnd();
         }
-        const portion = getPortion(product.name, product.unit);
-        if (portion) {
-          const minRest = portion.weightInGrams / 1000;
-          return product.rests >= minRest;
-        }
-        return product.rests >= 0.1;
-      })();
+        // -------------------------------------
 
-      return matchesCategory && matchesSearch && isAvailable;
-    });
+        return result;
+    }, [filteredProducts, sortOption]);
 
-    if (showOnlyFallback) {
-      return initialFilter.filter((product) => {
-        if (!product || !product.id) return false;
-        
-        const loader = createImageLoader(product.id, product.name);
-        
-        return loader.isFallback();
-      });
-    }
-
-    return initialFilter;
-
-  }, [products, selectedCategoryId, searchTerm, blacklistedCategoryIds, showOnlyFallback]);
-
-  const sortedProducts = useMemo(() => {
-    return [...filteredProducts].sort((a, b) => {
-      switch (sortOption) {
-        case 'price-asc':
-          return parseFloat(a.sellPricePerUnit) - parseFloat(b.sellPricePerUnit);
-        case 'price-desc':
-          return parseFloat(b.sellPricePerUnit) - parseFloat(a.sellPricePerUnit);
-        case 'quantity-asc':
-          return a.rests - b.rests;
-        case 'quantity-desc':
-          return b.rests - a.rests;
-        default:
-          return 0;
-      }
-    });
-  }, [filteredProducts, sortOption]);
-
+    console.log('--------sortedProducts', sortedProducts);
   useEffect(() => setCurrentPage(1), [searchTerm, sortOption, selectedCategoryId]);
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = sortedProducts.slice(indexOfFirstItem, indexOfLastItem);
-
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    const currentItems = useMemo(() => {
+        const lastIdx = currentPage * itemsPerPage;
+        return sortedProducts.slice(lastIdx - itemsPerPage, lastIdx);
+    }, [sortedProducts, currentPage, itemsPerPage]);
 
   if (loading) {
     return (

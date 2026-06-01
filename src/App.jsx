@@ -29,7 +29,6 @@ function App({ initialData }) {
   const isDesktopRaw = useMediaQuery('(min-width: 1024px)');
   const clearCart = useCartStore(state => state.clearCart);
 
-
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState('none');
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);

@@ -63,20 +63,29 @@ async function createServer() {
     }
   });
 
+
   // 4. ЛОГИКА СИНХРОНИЗАЦИИ (ТОЛЬКО ПРОД)
+// В server.js найдите место запуска синхронизации
   if (isProd) {
-    initializeBot(syncProductsFromApi);
-    console.log('🤖 Telegram-бот запущен.');
-    syncProductsFromApi();
+    //initializeBot(syncProductsFromApi);
     setInterval(syncProductsFromApi, 30 * 60 * 1000);
-  } else {
-    console.log('🔧 Режим разработки: синхронизация через API Vite.');
   }
+
+  // ЗАПУСКАЕМ И ЖДЕМ ПЕРВУЮ СИНХРОНИЗАЦИЮ ПЕРЕД ТЕМ КАК СЕРВЕР СТАНЕТ ДОСТУПЕН
+  console.log('⏳ Первая синхронизация данных...');
+  await syncProductsFromApi();
+  console.log('✅ Данные готовы.');
+
+  const testData = await getLocalProducts();
+  console.log('Первый товар после синхронизации (server.js):', JSON.stringify(testData.products?.[0], null, 2));
+
+
   // 5. API РОУТЫ
   const apiRouter = express.Router();
   apiRouter.get('/products-data', async (req, res) => {
     try {
       const data = await getLocalProducts();
+      console.log(`[API] Отправка данных клиенту. Товаров: ${data?.products?.length || 0}`);
       res.status(200).json(data);
     } catch (error) {
       res.status(500).json({ message: 'Ошибка получения данных' });
@@ -84,10 +93,6 @@ async function createServer() {
   });
   apiRouter.use(paymentRouter);
   app.use('/api', apiRouter);
-
-
-
-
 
 
 
