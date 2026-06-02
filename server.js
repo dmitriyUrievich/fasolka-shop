@@ -5,7 +5,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import paymentRouter from './src/services/YooKassa.js';
-import initializeBot from './src/services/api_Telegram.js';
+import cron from 'node-cron';
 import { syncProductsFromApi, getLocalProducts } from './src/services/syncService.js';
 
 dotenv.config();
@@ -18,7 +18,6 @@ async function createServer() {
   const app = express();
   let vite;
 
-  // 1. ИНИЦИАЛИЗАЦИЯ VITE (в режиме разработки)
   if (!isProd) {
     const { createServer: createViteServer } = await import('vite');
     vite = await createViteServer({
@@ -63,22 +62,26 @@ async function createServer() {
     }
   });
 
-
-  // 4. ЛОГИКА СИНХРОНИЗАЦИИ (ТОЛЬКО ПРОД)
-// В server.js найдите место запуска синхронизации
-  if (isProd) {
-    //initializeBot(syncProductsFromApi);
-    setInterval(syncProductsFromApi, 30 * 60 * 1000);
-  }
-
-  // ЗАПУСКАЕМ И ЖДЕМ ПЕРВУЮ СИНХРОНИЗАЦИЮ ПЕРЕД ТЕМ КАК СЕРВЕР СТАНЕТ ДОСТУПЕН
-  console.log('⏳ Первая синхронизация данных...');
-  await syncProductsFromApi();
+  console.log('⏳ Первая (полная) синхронизация данных...');
+  await syncProductsFromApi(true);
   console.log('✅ Данные готовы.');
+
+  // 2. БЫСТРАЯ СИНХРОНИЗАЦИЯ (Раз в 30 минут)
+  // Обновляет только остатки и цены
+  setInterval(() => {
+    console.log('[Schedule] Запуск быстрой синхронизации (остатки)...');
+    syncProductsFromApi(false);
+  }, 30 * 60 * 1000);
+
+  // 3. ПОЛНАЯ СИНХРОНИЗАЦИЯ (Раз в сутки, например в 03:00 ночи)
+  // Пересчитывает популярность по чекам
+  cron.schedule('0 3 * * *', async () => {
+    console.log('[Schedule] Ночь. Время для полного пересчета популярности...');
+    await syncProductsFromApi(true);
+  });
 
   const testData = await getLocalProducts();
   console.log('Первый товар после синхронизации (server.js):', JSON.stringify(testData.products?.[0], null, 2));
-
 
   // 5. API РОУТЫ
   const apiRouter = express.Router();
@@ -93,8 +96,6 @@ async function createServer() {
   });
   apiRouter.use(paymentRouter);
   app.use('/api', apiRouter);
-
-
 
   // 6. ОСНОВНОЙ РОУТ ДЛЯ SSR (РЕАКТ-ПРИЛОЖЕНИЕ)
   app.get(/.*/, async (req, res, next) => {

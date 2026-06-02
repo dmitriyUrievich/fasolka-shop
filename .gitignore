@@ -9,6 +9,7 @@ srс/products.json
 pendingOrders.json
 assemblyOrders.json
 orders.json
+products.json
 # Build output
 /dist
 /out

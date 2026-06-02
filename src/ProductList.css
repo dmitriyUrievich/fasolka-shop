@@ -55,6 +55,64 @@
 text-align: center;
 color: var(--farm-green);
 }
+.product-list-header-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 0 5px;
+}
+
+.filter-badge {
+    display: inline-flex;
+    align-items: center;
+    background-color: #f0f2f5;
+    border: 1px solid #e0e4e8;
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 14px;
+    color: #1a1a1a;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+}
+
+.filter-badge:hover {
+    border-color: #d1d5db;
+    background-color: #e5e7eb;
+}
+
+.filter-text {
+    margin-right: 8px;
+}
+
+.filter-reset-btn {
+    background: #d1d5db;
+    border: none;
+    color: #4b5563;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+    transition: all 0.2s ease;
+}
+
+.filter-reset-btn:hover {
+    background: #ff4d4d;
+    color: white;
+    transform: rotate(90deg);
+}
+
+/* Оформление для сильного акцента на поиске */
+.filter-badge strong {
+    color: #000;
+    margin-left: 4px;
+}
 
 @keyframes spin {
   0% { transform: rotate(0deg); }
@@ -97,7 +155,46 @@ color: var(--farm-green);
     margin-top: 10px;
   }
 
-  
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.promo-nav-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #ff4d4d, #f9cb28);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.promo-nav-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3);
+}
+
+.promo-nav-button:active {
+    transform: scale(0.95);
+}
+
+/* Скрываем текст на очень маленьких экранах, оставляя иконку */
+@media (max-width: 480px) {
+    .promo-text {
+        display: none;
+    }
+    .promo-nav-button {
+        padding: 8px;
+    }
+}
 /* На экранах < 340px — гарантируем 1 колонку */
 @media (max-width: 339px) {
     .product-grid {

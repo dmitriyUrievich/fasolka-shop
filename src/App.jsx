@@ -31,7 +31,7 @@ function App({ initialData }) {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState('none');
-  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
@@ -78,6 +78,18 @@ function App({ initialData }) {
     setIsOrderFormOpen(true);
   };
 
+  const handleCategoryToggle = (id) => {
+    if (id === null) {
+      setSelectedCategoryIds([]); // Сброс всех
+      return;
+    }
+    setSelectedCategoryIds(prev =>
+        prev.includes(id)
+            ? prev.filter(item => item !== id) // Если уже есть — удаляем
+            : [...prev, id]                   // Если нет — добавляем
+    );
+  };
+
   // Финальная отправка заказа
   const handleSubmitOrder = async (customerData) => {
     const cartItems = useCartStore.getState().items;
@@ -115,6 +127,11 @@ function App({ initialData }) {
           onSortChange={setSortOption}
           onMenuToggle={() => setIsCategoryMenuOpen(prev => !prev)}
           onCartToggle={() => setIsCartOpen(prev => !prev)}
+          categories={catalogGroups}
+          onCategorySelect={(id) => {
+            handleCategoryToggle(id); // ИСПОЛЬЗУЕМ ТУТ TOGGLE
+            setSearchTerm('');
+          }}
       />
       {/* Модальное меню категорий */}
       <CategoryDrawer
@@ -122,10 +139,10 @@ function App({ initialData }) {
           onClose={() => setIsCategoryMenuOpen(false)}
           products={products}
           categories={catalogGroups}
-          activeCategoryId={selectedCategoryId}
+          activeCategoryIds={selectedCategoryIds}
           onCategorySelect={(id) => {
-            setSelectedCategoryId(id);
-            if ( hydrated && !isDesktop) setIsCategoryMenuOpen(false);
+            handleCategoryToggle(id);
+            if (hydrated && !isDesktop) setIsCategoryMenuOpen(false);
           }}
       />
 
@@ -133,34 +150,53 @@ function App({ initialData }) {
         <div className="products-and-cart-container">
           <main className="app-main">
             <div className="main-content-wrapper">
+
               <ProductList
-                products={products}
-                categories={catalogGroups}
-                catalogGroups={catalogGroups}
-                loading={loading}
-                searchTerm={searchTerm}
-                sortOption={sortOption}
-                selectedCategoryId={selectedCategoryId}
-                //showOnlyFallback={showOnlyFallback}
-                listHeader={
-                  (selectedCategoryId || searchTerm) && !loading ? (
-                    <div className="product-list-header">
-                      {selectedCategoryId ? (
-                        <>
-                          Категория:{" "}
-                          <strong>
-                            {catalogGroups.find((g) => g.id === selectedCategoryId)?.name || "Неизвестно"}
-                          </strong>
-                        </>
-                      ) : (
-                        <>
-                          Поиск: <strong>"{searchTerm}"</strong>
-                        </>
-                      )}
-                    </div>
-                  ) : null
-                }
+                  products={products}
+                  categories={catalogGroups}
+                  catalogGroups={catalogGroups}
+                  loading={loading}
+                  searchTerm={searchTerm}
+                  sortOption={sortOption}
+                  selectedCategoryIds={selectedCategoryIds}
+                  listHeader={
+                    (selectedCategoryIds.length > 0 || searchTerm) && !loading ? (
+                        <div className="product-list-header-container">
+                          {/* Рисуем отдельный бэйдж для КАЖДОЙ выбранной категории */}
+                          {selectedCategoryIds.map(catId => {
+                            const category = catalogGroups.find(g => g.id === catId);
+                            if (!category) return null;
+                            return (
+                                <div className="filter-badge" key={catId}>
+                                  <span className="filter-text">{category.name}</span>
+                                  <button
+                                      className="filter-reset-btn"
+                                      onClick={() => handleCategoryToggle(catId)}
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                            );
+                          })}
+
+                          {searchTerm && (
+                              <div className="filter-badge">
+                                <span className="filter-text">Поиск: "{searchTerm}"</span>
+                                <button className="filter-reset-btn" onClick={() => setSearchTerm('')}>×</button>
+                              </div>
+                          )}
+
+                          {/* Кнопка "Сбросить всё", если выбрано больше 1 категории */}
+                          {selectedCategoryIds.length > 1 && (
+                              <button className="clear-all-filters" onClick={() => setSelectedCategoryIds([])}>
+                                Очистить всё
+                              </button>
+                          )}
+                        </div>
+                    ) : null
+                  }
               />
+
             </div>
 
             <div className="map-section">

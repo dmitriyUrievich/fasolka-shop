@@ -150,10 +150,9 @@ const fetchAllPagesBackend = async (url, name, params = {}) => {
     }
 };
 
-
-export const syncProductsFromApi = async () => {
+export const syncProductsFromApi = async (isFullSync = false) => {
     try {
-        console.log('\n[Sync] === ЗАПУСК СИНХРОНИЗАЦИИ ===');
+        console.log(`\n[Sync] === ЗАПУСК ${isFullSync ? 'ПОЛНОЙ' : 'БЫСТРОЙ'} СИНХРОНИЗАЦИИ ===`);
 
         // 1. Получаем магазин
         const shopsRes = await fetch(`${KONTUR_API_BASE_URL}/shops`, { headers: getApiHeaders() });
@@ -162,65 +161,77 @@ export const syncProductsFromApi = async () => {
         if (!shops.length) throw new Error('Магазин не найден');
         const shopId = shops[0].Id || shops[0].id;
 
-        // 2. Скачиваем данные последовательно
+        // 2. Базовые данные (товары, остатки, каталог) скачиваем ВСЕГДА
         const products = await fetchAllPagesBackend(`${KONTUR_API_BASE_URL}/shops/${shopId}/products`, 'Товары');
         const rests = await fetchAllPagesBackend(`${KONTUR_API_BASE_URL}/shops/${shopId}/product-rests`, 'Остатки');
         const catalog = await fetchAllPagesBackend(`${KONTUR_API_BASE_URL}/shops/${shopId}/product-groups`, 'Каталог');
-        console.log('=======prod-rest-matha-faka-----',rests.length)
 
-        const now = new Date();
-        const dateTo = now.toISOString().split('T')[0];
-        const dateFrom = new Date();
-        dateFrom.setDate(now.getDate() - 30);
+        let popularityMap = {};
+        let stats = {};
 
-        console.log(`[Sync] Запрос чеков за период: ${dateFrom.toISOString().split('T')[0]} - ${dateTo}`);
+        if (isFullSync) {
+            // --- ПОЛНАЯ СИНХРОНИЗАЦИЯ (Раз в день) ---
+            const now = new Date();
+            const dateTo = now.toISOString().split('T')[0];
+            const dateFrom = new Date();
+            dateFrom.setDate(now.getDate() - 14);
 
-        const cheques = await fetchAllPagesBackend(
-            `${KONTUR_API_BASE_URL}/shops/${shopId}/cheques`,
-            'Чеки',
-            { dateFrom: dateFrom.toISOString().split('T')[0], dateTo }
-        );
+            console.log(`[Sync] Запрос чеков для пересчета популярности...`);
+            const cheques = await fetchAllPagesBackend(
+                `${KONTUR_API_BASE_URL}/shops/${shopId}/cheques`,
+                'Чеки',
+                { dateFrom: dateFrom.toISOString().split('T')[0], dateTo }
+            );
 
-        // 3. Считаем аналитику (внутри этой функции теперь лог чека)
-        const { popularityMap, stats } = calculateAnalytics(cheques, products);
-
-        // 4. Мержим
+            const analytics = calculateAnalytics(cheques, products);
+            popularityMap = analytics.popularityMap;
+            stats = analytics.stats;
+        } else {
+            // --- БЫСТРАЯ СИНХРОНИЗАЦИЯ (Раз в 30 мин) ---
+            console.log(`[Sync] Пропускаем чеки, сохраняем текущий рейтинг популярности...`);
+            const currentLocalData = await getLocalProducts();
+            if (currentLocalData.products) {
+                currentLocalData.products.forEach(p => {
+                    const id = String(p.id || '').toLowerCase();
+                    popularityMap[id] = p.popularityScore || 0;
+                });
+            }
+            stats = currentLocalData.analytics || {};
+        }
+        // 3. Мержим остатки (как и раньше)
         const restsMap = new Map();
-
         rests.forEach(r => {
-            // В Контуре GUID остатка может быть в productId или ProductId
-            const pId = String(r.ProductId || r.productId || "").toLowerCase().trim();
-            // Само значение остатка может быть в Rest или rest
-            const val = r.Rest !== undefined ? r.Rest : r.rest;
-            if (pId) restsMap.set(pId, parseFloat(val || 0));
+            const pId = String(getVal(r, 'productId') || '').toLowerCase();
+            if (pId) restsMap.set(pId, getVal(r, 'rest') || 0);
         });
-
-        let scored = 0;
+        // 4. Собираем финальный массив
         const mergedProducts = products.map(p => {
             const guid = String(getVal(p, 'id') || '').toLowerCase();
-            const score = popularityMap[guid] || 0;
-            if (score > 0) scored++;
-            let obj = {
+            return {
                 ...p,
                 id: getVal(p, 'id'),
                 rests: restsMap.get(guid) || 0,
-                popularityScore: score
-            }
-            return obj
+                popularityScore: popularityMap[guid] || 0 // Либо новый из чеков, либо старый из файла
+            };
         });
-
         // 5. Сохраняем
-        const dataToStore = { products: mergedProducts, catalog, analytics: stats, lastSync: new Date().toISOString() };
+        const dataToStore = {
+            products: mergedProducts,
+            catalog,
+            analytics: stats,
+            lastSync: new Date().toISOString()
+        };
         await fs.mkdir(path.dirname(PRODUCTS_DB_PATH), { recursive: true });
         await fs.writeFile(PRODUCTS_DB_PATH, JSON.stringify(dataToStore, null, 2));
 
-        console.log(`[Sync] ФИНАЛ. Всего товаров: ${mergedProducts.length}`);
+        console.log(`[Sync] ФИНАЛ. Обновлено товаров: ${mergedProducts.length}. Режим: ${isFullSync ? 'Полный' : 'Быстрый'}`);
 
     } catch (error) {
         console.error('[Sync Error]:', error);
     }
-
 };
+
+
 
 export const getLocalProducts = async () => {
     try {

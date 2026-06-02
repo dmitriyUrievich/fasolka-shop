@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {useHydration} from "../hooks/useHydration.js";
 import {useCartStore} from "../store.js";
 
@@ -8,19 +8,29 @@ const Header = ({
                     sortOption,
                     onSortChange,
                     onCartToggle,
-                    onMenuToggle
+                    onMenuToggle,
+                    categories,
+                    onCategorySelect
                 }) => {
 
     const totalCartItems = useCartStore(state => state.items.reduce((sum, item) => sum + item.quantityInCart, 0));
     const hydrated = useHydration()
 
+    const promoCategoryId = useMemo(() => {
+        if (!Array.isArray(categories)) return null;
+        const promo = categories.find(cat => {
+            const name = (cat.name || cat.Name || "").trim().toUpperCase();
+            return name === 'АКЦИЯ МЕСЯЦА' || name === 'АКЦИИ';
+        });
+
+        return promo ? (promo.id || promo.Id) : null;
+    }, [categories]);
+
     return (
         <header className="app-header">
             <div className="header-content">
-
                 <button
                     className="category-icon-button"
-                    // ИСПРАВЛЕНО: используем onMenuToggle, который пришел из App
                     onClick={onMenuToggle}
                     aria-label="Меню"
                 >
@@ -29,14 +39,25 @@ const Header = ({
                     </svg>
                 </button>
 
-                <h1 className="app-title">
-                    <img src="/log-header.webp" className="logo-header" alt="Логотип Фасоль" />
-                </h1>
+                <div className="logo-section">
+                    <h1 className="app-title">
+                        <img src="/log-header.webp" className="logo-header" alt="Логотип Фасоль" />
+                    </h1>
+
+                    {promoCategoryId && (
+                        <button
+                            className="promo-nav-button"
+                            onClick={() => onCategorySelect(promoCategoryId)}
+                        >
+                            <span className="promo-text">Акции</span>
+                            <span className="promo-icon">🔥</span>
+                        </button>
+                    )}
+                </div>
 
                 {/* Мобильная корзина */}
                 <button suppressHydrationWarning
                         className="cart-icon-button mobile-cart"
-                    // ИСПРАВЛЕНО: используем onCartToggle
                         onClick={onCartToggle}
                         aria-label="Корзина"
                 >
@@ -53,7 +74,6 @@ const Header = ({
                             placeholder="Найти продукт..."
                             className="search-input"
                             value={searchTerm}
-                            // ИСПРАВЛЕНО: используем onSearchChange
                             onChange={(e) => onSearchChange(e.target.value)}
                         />
                         <svg className="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,11 +82,9 @@ const Header = ({
                     </div>
 
                     <div className="sort-container">
-                        <label htmlFor="product-sort"></label>
                         <select
                             className="sort-select"
                             value={sortOption}
-                            // ИСПРАВЛЕНО: используем onSortChange
                             onChange={(e) => onSortChange(e.target.value)}
                         >
                             <option value="none">Без сортировки</option>
@@ -75,16 +93,10 @@ const Header = ({
                             <option value="quantity-asc">Остатки ↑</option>
                             <option value="quantity-desc">Остатки ↓</option>
                         </select>
-                        <div className="select-arrow">
-                            <svg className="select-arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                            </svg>
-                        </div>
                     </div>
 
                     <button suppressHydrationWarning
                             className="cart-icon-button desktop-cart"
-                        // ИСПРАВЛЕНО: используем onCartToggle
                             onClick={onCartToggle}
                             aria-label="Корзина"
                     >

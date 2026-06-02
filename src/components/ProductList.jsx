@@ -2,10 +2,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import Pagination from './Pagination';
-
-import getPortion from '../utils/getPortion';
-import { createImageLoader } from '../utils/imageUtils';
-
 import Skeleton from 'react-loading-skeleton';
 const storageKey = 'ageConfirmedGlobal';
 
@@ -18,10 +14,9 @@ const ProductList = ({
   loading,
   searchTerm,
   sortOption,
-  selectedCategoryId,
+  selectedCategoryIds,
   listHeader,
-  showOnlyFallback,
-}) => {
+  }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 24;
   const [ageConfirmed, setAgeConfirmed] = useState(false);
@@ -59,48 +54,33 @@ const specialOfferCategoryId = useMemo(() => {
         }
         return ids;
     }, [categories]);
+
+
     const filteredProducts = useMemo(() => {
         if (!products || !Array.isArray(products)) return [];
 
         return products.filter((product) => {
             if (!product) return false;
 
-            // 1. УНИФИКАЦИЯ ПОЛЕЙ (берем или маленькую, или большую букву)
-            const pName = product.name || product.Name || "";
             const pGroupId = product.groupId || product.GroupId;
-            const pType = product.productType || product.ProductType;
-            const pUnit = product.unit || product.Unit;
+            const pName = product.name || product.Name || "";
 
-            // ВАЖНО: Пробуем все варианты названия остатка
-            const rawRests = product.rests !== undefined ? product.rests : (product.Rests !== undefined ? product.Rests : product.Rest);
-            const pRests = parseFloat(rawRests || 0);
+            if (pName.toUpperCase().includes("ПАКЕТ-МАЙКА FASOL")) return false;
 
-            // 2. ФИЛЬТР: Черный список категорий
-            if (pGroupId && blacklistedCategoryIds.has(pGroupId)) return false;
-
-            // 3. ФИЛЬТР: Табак
-            if (pType === 'Tobacco') return false;
-
-            // 4. ФИЛЬТР: Поиск
             if (searchTerm && !pName.toLowerCase().includes(searchTerm.toLowerCase())) return false;
 
-            // 5. ФИЛЬТР: Категория
-            if (selectedCategoryId && pGroupId !== selectedCategoryId) return false;
+            const matchesCategory = selectedCategoryIds.length > 0
+                ? selectedCategoryIds.includes(pGroupId)
+                : true;
 
-            // 6. ФИЛЬТР: Остатки (isAvailable)
-            // ВРЕМЕННО: Если товары не появились, замените всё внутри на "return true"
-            const isAvailable = (() => {
-                if (pUnit !== 'Kilogram') return pRests > 0;
-                const portion = getPortion(pName, pUnit);
-                const minRest = portion ? portion.weightInGrams / 1000 : 0.1;
-                return pRests >= minRest;
-            })();
+            if (!matchesCategory) return false;
+            const r = parseFloat(product.rests || 0);
+            const isAvailable = product.unit !== 'Kilogram' ? r > 0 : r >= 0.1;
 
             return isAvailable;
         });
-    }, [products, selectedCategoryId, searchTerm, blacklistedCategoryIds]);
-
-    //console.log('--------filteredProducts', filteredProducts);
+        // ИЗМЕНЕНО: добавлена зависимость selectedCategoryIds
+    }, [products, selectedCategoryIds, searchTerm, blacklistedCategoryIds]);
 
     const sortedProducts = useMemo(() => {
         const list = [...filteredProducts];
@@ -118,35 +98,10 @@ const specialOfferCategoryId = useMemo(() => {
             return (a.name || "").localeCompare(b.name || "");
         });
 
-        // --- БЛОК АНАЛИЗА ДАННЫХ В КОНСОЛИ ---
-        if (result.length > 0) {
-            console.group('📊 Проверка популярности товаров');
-            console.log('Всего товаров после фильтров:', result.length);
-
-            // Берем топ-20 для проверки
-            const debugTable = result.slice(0, 20).map((p, index) => ({
-                "№": index + 1,
-                "Название": p.name || p.Name,
-                "Продано (Score)": p.popularityScore || 0,
-                "Остаток": p.rests,
-                "Цена": p.sellPricePerUnit,
-                "ID": p.id
-            }));
-
-            console.table(debugTable);
-
-            // Лог товаров с продажами, которые могли не попасть в топ
-            const withSales = result.filter(p => (p.popularityScore || 0) > 0).length;
-            console.log(`Товаров с продажами > 0 на текущей странице/фильтре: ${withSales}`);
-            console.groupEnd();
-        }
-        // -------------------------------------
-
         return result;
     }, [filteredProducts, sortOption]);
 
-    console.log('--------sortedProducts', sortedProducts);
-  useEffect(() => setCurrentPage(1), [searchTerm, sortOption, selectedCategoryId]);
+  useEffect(() => setCurrentPage(1), [searchTerm, sortOption, selectedCategoryIds]);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -154,6 +109,41 @@ const specialOfferCategoryId = useMemo(() => {
         const lastIdx = currentPage * itemsPerPage;
         return sortedProducts.slice(lastIdx - itemsPerPage, lastIdx);
     }, [sortedProducts, currentPage, itemsPerPage]);
+
+
+    // useEffect(() => {
+    //     if (currentItems.length > 0 && !loading) {
+    //         console.group(`📄 Анализ страницы №${currentPage}`);
+    //         console.log(`Показано товаров: ${currentItems.length} (из ${sortedProducts.length})`);
+    //
+    //         const tableData = currentItems.map((product, index) => {
+    //             // Вычисляем реальное место товара в общем списке
+    //             const globalRank = (currentPage - 1) * itemsPerPage + index + 1;
+    //
+    //             return {
+    //                 "Место": globalRank,
+    //                 "Название": product.name || product.Name,
+    //                 "Популярность (Score)": product.popularityScore || 0,
+    //                 "Остаток": product.rests,
+    //                 "ID": product.id
+    //             };
+    //         });
+    //
+    //         console.table(tableData);
+    //
+    //         // Дополнительная проверка на ошибки сортировки
+    //         const scores = currentItems.map(p => p.popularityScore || 0);
+    //         const isSorted = scores.every((val, i) => i === 0 || val <= scores[i - 1]);
+    //
+    //         if (!isSorted) {
+    //             console.warn("⚠️ Внимание: Порядок популярности на этой странице нарушен!");
+    //         } else {
+    //             console.log("✅ Сортировка по популярности верна (идет на убывание).");
+    //         }
+    //
+    //         console.groupEnd();
+    //     }
+    // }, [currentPage, currentItems, loading, sortedProducts.length, itemsPerPage]);
 
   if (loading) {
     return (
