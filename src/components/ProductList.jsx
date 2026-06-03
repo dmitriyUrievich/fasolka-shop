@@ -55,7 +55,6 @@ const specialOfferCategoryId = useMemo(() => {
         return ids;
     }, [categories]);
 
-
     const filteredProducts = useMemo(() => {
         if (!products || !Array.isArray(products)) return [];
 
@@ -111,39 +110,39 @@ const specialOfferCategoryId = useMemo(() => {
     }, [sortedProducts, currentPage, itemsPerPage]);
 
 
-    // useEffect(() => {
-    //     if (currentItems.length > 0 && !loading) {
-    //         console.group(`📄 Анализ страницы №${currentPage}`);
-    //         console.log(`Показано товаров: ${currentItems.length} (из ${sortedProducts.length})`);
-    //
-    //         const tableData = currentItems.map((product, index) => {
-    //             // Вычисляем реальное место товара в общем списке
-    //             const globalRank = (currentPage - 1) * itemsPerPage + index + 1;
-    //
-    //             return {
-    //                 "Место": globalRank,
-    //                 "Название": product.name || product.Name,
-    //                 "Популярность (Score)": product.popularityScore || 0,
-    //                 "Остаток": product.rests,
-    //                 "ID": product.id
-    //             };
-    //         });
-    //
-    //         console.table(tableData);
-    //
-    //         // Дополнительная проверка на ошибки сортировки
-    //         const scores = currentItems.map(p => p.popularityScore || 0);
-    //         const isSorted = scores.every((val, i) => i === 0 || val <= scores[i - 1]);
-    //
-    //         if (!isSorted) {
-    //             console.warn("⚠️ Внимание: Порядок популярности на этой странице нарушен!");
-    //         } else {
-    //             console.log("✅ Сортировка по популярности верна (идет на убывание).");
-    //         }
-    //
-    //         console.groupEnd();
-    //     }
-    // }, [currentPage, currentItems, loading, sortedProducts.length, itemsPerPage]);
+    useEffect(() => {
+        if (currentItems.length > 0 && !loading) {
+            console.group(`📄 Анализ страницы №${currentPage}`);
+            console.log(`Показано товаров: ${currentItems.length} (из ${sortedProducts.length})`);
+
+            const tableData = currentItems.map((product, index) => {
+                // Вычисляем реальное место товара в общем списке
+                const globalRank = (currentPage - 1) * itemsPerPage + index + 1;
+
+                return {
+                    "Место": globalRank,
+                    "Название": product.name || product.Name,
+                    "Популярность (Score)": product.popularityScore || 0,
+                    "Остаток": product.rests,
+                    "ID": product.id
+                };
+            });
+
+            console.table(tableData);
+
+            // Дополнительная проверка на ошибки сортировки
+            const scores = currentItems.map(p => p.popularityScore || 0);
+            const isSorted = scores.every((val, i) => i === 0 || val <= scores[i - 1]);
+
+            if (!isSorted) {
+                console.warn("⚠️ Внимание: Порядок популярности на этой странице нарушен!");
+            } else {
+                console.log("✅ Сортировка по популярности верна (идет на убывание).");
+            }
+
+            console.groupEnd();
+        }
+    }, [currentPage, currentItems, loading, sortedProducts.length, itemsPerPage]);
 
   if (loading) {
     return (

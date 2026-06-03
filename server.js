@@ -7,6 +7,7 @@ import express from 'express';
 import paymentRouter from './src/services/YooKassa.js';
 import cron from 'node-cron';
 import { syncProductsFromApi, getLocalProducts } from './src/services/syncService.js';
+import adminRouter from './src/services/adminRouter.js';
 
 dotenv.config();
 
@@ -24,11 +25,10 @@ async function createServer() {
       server: { middlewareMode: true },
       appType: 'custom'
     });
-    // Мидлвары Vite должны быть в самом начале для HMR и обработки ресурсов
     app.use(vite.middlewares);
   }
 
-  // 2. ОБЩИЕ МИДЛВАРЫ
+  // 1. МИДЛВАРЫ
   const allowedOrigins = ['https://fasol-nvrsk.ru', 'http://localhost:5173', `http://localhost:${PORT}`];
   app.use(cors({
     origin: (origin, callback) => {
@@ -38,89 +38,59 @@ async function createServer() {
   }));
   app.use(express.json());
 
-  // 3. СТАТИЧЕСКИЕ ФАЙЛЫ (КАРТИНКИ И Т.Д.)
-  // Это критически важный блок. Мы указываем Express, где искать файлы.
-  const publicPath = isProd
-      ? path.resolve(__dirname, 'dist/client')
-      : path.resolve(__dirname, 'public');
-
+  // 2. СТАТИКА
+  const publicPath = isProd ? path.resolve(__dirname, 'dist/client') : path.resolve(__dirname, 'public');
   app.use(express.static(publicPath, { index: false }));
 
+  // Обработка картинок с fallback
   app.get('/img/:filename', (req, res, next) => {
-    const { filename } = req.params;
-    const filePath = path.join(publicPath, 'img', filename);
-
-    // Проверяем, существует ли файл физически
-    if (fs.existsSync(filePath)) {
-      // Если файл есть, просто идем дальше (его отдаст express.static или res.sendFile)
-      return next();
-    } else {
-      // Если файла НЕТ, вместо 404 отдаем заглушку
-      const fallbackPath = path.join(publicPath, 'img', 'fallback.webp');
-      // Важно: возвращаем файл заглушки с кодом 200
-      return res.status(200).sendFile(fallbackPath);
-    }
+    const filePath = path.join(publicPath, 'img', req.params.filename);
+    if (fs.existsSync(filePath)) return next();
+    res.status(200).sendFile(path.join(publicPath, 'img', 'fallback.webp'));
   });
 
-  console.log('⏳ Первая (полная) синхронизация данных...');
-  await syncProductsFromApi(true);
-  console.log('✅ Данные готовы.');
+  // Быстрая синхронизация остатков (30 мин)
+  setInterval(() => syncProductsFromApi(false), 30 * 60 * 1000);
 
-  // 2. БЫСТРАЯ СИНХРОНИЗАЦИЯ (Раз в 30 минут)
-  // Обновляет только остатки и цены
-  setInterval(() => {
-    console.log('[Schedule] Запуск быстрой синхронизации (остатки)...');
-    syncProductsFromApi(false);
-  }, 30 * 60 * 1000);
+  // Полный пересчет популярности (ночью в 03:00)
+  cron.schedule('0 3 * * *', () => syncProductsFromApi(true));
 
-  // 3. ПОЛНАЯ СИНХРОНИЗАЦИЯ (Раз в сутки, например в 03:00 ночи)
-  // Пересчитывает популярность по чекам
-  cron.schedule('0 3 * * *', async () => {
-    console.log('[Schedule] Ночь. Время для полного пересчета популярности...');
-    await syncProductsFromApi(true);
-  });
-
-  const testData = await getLocalProducts();
-  console.log('Первый товар после синхронизации (server.js):', JSON.stringify(testData.products?.[0], null, 2));
-
-  // 5. API РОУТЫ
+  // 4. API РОУТЫ
   const apiRouter = express.Router();
+
+  // внешний админ-роутер (там логин, заказы, веса и статусы)
+  apiRouter.use(adminRouter);
+
+  // Роут для фронтенда (получение товаров)
   apiRouter.get('/products-data', async (req, res) => {
     try {
       const data = await getLocalProducts();
-      console.log(`[API] Отправка данных клиенту. Товаров: ${data?.products?.length || 0}`);
       res.status(200).json(data);
     } catch (error) {
       res.status(500).json({ message: 'Ошибка получения данных' });
     }
   });
+
   apiRouter.use(paymentRouter);
   app.use('/api', apiRouter);
 
-  // 6. ОСНОВНОЙ РОУТ ДЛЯ SSR (РЕАКТ-ПРИЛОЖЕНИЕ)
+  // 5. SSR LOGIC (catch-all)
   app.get(/.*/, async (req, res, next) => {
     const url = req.originalUrl;
-
-    // Проверяем: это запрос за HTML или за файлом?
-    const isHtmlRequest = req.headers.accept && req.headers.accept.includes('text/html');
+    const isHtmlRequest = req.headers.accept?.includes('text/html');
     const isFileRequest = url.includes('.');
 
-    // Если это API, запрос к ресурсу Vite или запрос за файлом (картинка, js, css)
-    // мы выходим из этого роута и передаем управление дальше (в static или 404)
     if (url.startsWith('/api') || url.startsWith('/@') || (!isHtmlRequest && isFileRequest)) {
       return next();
     }
 
     try {
       let template, render;
-
       if (!isProd) {
-        // Читаем шаблон напрямую и трансформируем его через Vite
         template = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
         template = await vite.transformIndexHtml(url, template);
         render = (await vite.ssrLoadModule('/entry-server.jsx')).render;
       } else {
-        // В продакшене используем собранные файлы
         template = fs.readFileSync(path.resolve(__dirname, 'dist/client/index.html'), 'utf-8');
         render = (await import('./dist/server/entry-server.js')).render;
       }
@@ -128,19 +98,13 @@ async function createServer() {
       const initialData = await getLocalProducts();
       const { appHtml } = render(url, initialData);
 
-      // Вставляем отрендеренный HTML и данные в шаблон
       const html = template
           .replace(`<!--ssr-outlet-->`, appHtml)
-          .replace(
-              '</head>',
-              `<script>window.__INITIAL_DATA__ = ${JSON.stringify(initialData)}</script></head>`
-          );
+          .replace('</head>', `<script>window.__INITIAL_DATA__ = ${JSON.stringify(initialData)}</script></head>`);
 
       res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
-
     } catch (e) {
       if (vite) vite.ssrFixStacktrace(e);
-      console.error('Ошибка SSR:', e.stack);
       res.status(500).end(e.message);
     }
   });

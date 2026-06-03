@@ -4,31 +4,23 @@
   25% { transform: rotate(-5deg); }
   75% { transform: rotate(5deg); }
 }
+#global-loader {
+  transition: opacity 0.5s ease, visibility 0.5s;
+}
+
+#global-loader.fade-out {
+  opacity: 0;
+  visibility: hidden;
+}
 
 /* Запрет прокрутки при открытом модальном окне */
 body.modal-open {
   overflow: hidden;
   scrollbar-gutter: stable;
 }
-.app-header {
-  background-color: var(--farm-green); /* Задаем зеленый фон */
-  color: white; /* Задаем белый цвет для текста и иконок внутри */
-  padding: 10px 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  position: sticky; /* Делаем хедер "липким" при прокрутке */
-  top: 0;
-  z-index: 1000;
-  width: 100%;
-}
+
 
 /* === Основной контейнер приложения === */
-.app-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  background-color: var(--farm-cream);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
 
 
 /* === Основное содержимое хедера === */
@@ -460,14 +452,6 @@ body.modal-open {
 }
 
 /* === Футер === */
-.app-footer {
-  background-color: var(--farm-green);
-  color: white;
-  padding: 10px;
-  margin-top: auto;
-  box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.2);
-  text-align: center;
-}
 
 .footer-content {
   max-width: 1200px;
@@ -543,7 +527,7 @@ body.modal-open {
   text-align: center;
 }
 
-/* App.css */
+/* MainPage.css */
 
 /* ... (существующие стили для футера) ... */
 
