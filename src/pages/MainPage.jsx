@@ -18,28 +18,9 @@ import { prepareOrderData, createPayment } from '../services/orderService';
 import YandexMap from "../components/YandexMap.jsx";
 import {useHydration} from "../hooks/useHydration.js";
 
-const CartBasket = React.lazy(() =>
-    import('../components/CartBasket').catch(() => {
-        if (typeof window !== 'undefined') {
-            window.location.reload();
-        }
-    })
-);
-const Modal = React.lazy(() =>
-    import('../components/Modal.jsx').catch(() => {
-        if (typeof window !== 'undefined') {
-            window.location.reload();
-        }
-    })
-);
-
-const OrderForm = React.lazy(() =>
-    import('../components/OrderForm.jsx').catch(() => {
-        if (typeof window !== 'undefined') {
-            window.location.reload();
-        }
-    })
-);
+const CartBasket = React.lazy(() => import('../components/CartBasket'));
+const Modal = React.lazy(() => import('../components/Modal.jsx'));
+const OrderForm = React.lazy(() => import('../components/OrderForm.jsx'));
 
 function MainPage({ initialData }) {
     const hydrated = useHydration()
@@ -84,13 +65,13 @@ function MainPage({ initialData }) {
 
     const handleCategoryToggle = (id) => {
         if (id === null) {
-            setSelectedCategoryIds([]); // Сброс всех
+            setSelectedCategoryIds([]);
             return;
         }
         setSelectedCategoryIds(prev =>
             prev.includes(id)
-                ? prev.filter(item => item !== id) // Если уже есть — удаляем
-                : [...prev, id]                   // Если нет — добавляем
+                ? prev.filter(item => item !== id)
+                : [...prev, id]
         );
     };
 
@@ -133,7 +114,7 @@ function MainPage({ initialData }) {
                 onCartToggle={() => setIsCartOpen(prev => !prev)}
                 categories={catalogGroups}
                 onCategorySelect={(id) => {
-                    handleCategoryToggle(id); // ИСПОЛЬЗУЕМ ТУТ TOGGLE
+                    handleCategoryToggle(id);
                     setSearchTerm('');
                 }}
             />
@@ -166,7 +147,6 @@ function MainPage({ initialData }) {
                                 listHeader={
                                     (selectedCategoryIds.length > 0 || searchTerm) && !loading ? (
                                         <div className="product-list-header-container">
-                                            {/* Рисуем отдельный бэйдж для КАЖДОЙ выбранной категории */}
                                             {selectedCategoryIds.map(catId => {
                                                 const category = catalogGroups.find(g => g.id === catId);
                                                 if (!category) return null;
@@ -190,7 +170,6 @@ function MainPage({ initialData }) {
                                                 </div>
                                             )}
 
-                                            {/* Кнопка "Сбросить всё", если выбрано больше 1 категории */}
                                             {selectedCategoryIds.length > 1 && (
                                                 <button className="clear-all-filters" onClick={() => setSelectedCategoryIds([])}>
                                                     Очистить всё
@@ -205,13 +184,15 @@ function MainPage({ initialData }) {
 
                         <div className="map-section">
                             <h2 className="map-title">Наш Магазин на Карте</h2>
-                            <YandexMap
-                                center={[44.675898, 37.642492]}
-                                zoom={12}
-                                placemark={[44.675898, 37.642492]}
-                                placemarkHint="Фасоль"
-                                placemarkBalloon="Мы находимся по адресу: пер. Торпедный д4."
-                            />
+                            {hydrated && (
+                                <YandexMap
+                                    center={[44.675898, 37.642492]}
+                                    zoom={12}
+                                    placemark={[44.675898, 37.642492]}
+                                    placemarkHint="Фасоль"
+                                    placemarkBalloon="Мы находимся по адресу: пер. Торпедный д1."
+                                />
+                            )}
                         </div>
 
                     </main>
