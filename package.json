@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node server.js",
-    "build": "vite build --outDir dist/client && vite build --outDir dist/server --ssr entry-server.jsx",
+    "build": "cross-env NODE_ENV=production vite build --outDir dist/client && cross-env NODE_ENV=production vite build --outDir dist/server --ssr entry-server.jsx",
     "serve": "cross-env NODE_ENV=production node server.js",
     "lint": "next lint"
   },
