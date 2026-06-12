@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Swal from 'sweetalert2';
 import { useHydration } from '../hooks/useHydration';
 import adminService from '../services/adminService';
 import '../AdminPage.css';
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const AdminPage = () => {
     const hydrated = useHydration();
     const navigate = useNavigate();
+
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
     const [orders, setOrders] = useState({ assembly: {}, completed: {} });
@@ -15,14 +16,14 @@ const AdminPage = () => {
 
     const handleLogout = () => {
         localStorage.removeItem('admin_token');
-        navigate('/'); // Мгновенный переход через React Router
+        navigate('/');
     };
 
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
             const data = await adminService.getOrders();
-            setOrders(data);
+            setOrders(data || { assembly: {}, completed: {} });
         } catch (e) {
             if (e.response?.status === 401 || e.response?.status === 403) {
                 setIsAuthenticated(false);
@@ -33,6 +34,17 @@ const AdminPage = () => {
         }
     }, []);
 
+    // 1. СОРТИРОВКА ПО ВРЕМЕНИ (Сначала новые)
+    const sortedAssembly = useMemo(() => {
+        return Object.values(orders.assembly || {})
+            .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    }, [orders.assembly]);
+
+    const sortedCompleted = useMemo(() => {
+        return Object.values(orders.completed || {})
+            .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    }, [orders.completed]);
+
     useEffect(() => {
         if (hydrated) {
             const token = localStorage.getItem('admin_token');
@@ -40,7 +52,6 @@ const AdminPage = () => {
                 setIsAuthenticated(true);
                 loadData();
             }
-            // Удаляем глобальный лоадер если он есть
             document.getElementById('global-loader')?.remove();
         }
     }, [hydrated, loadData]);
@@ -53,6 +64,30 @@ const AdminPage = () => {
             loadData();
         } catch (e) {
             Swal.fire('Ошибка', 'Неверный пароль', 'error');
+        }
+    };
+
+    // 2. ОТМЕНА ЗАКАЗА
+    const handleCancelOrder = async (orderId, isPaid = false) => {
+        const result = await Swal.fire({
+            title: 'Отменить заказ?',
+            text: isPaid ? "Внимание! Заказ уже оплачен. Деньги нужно будет возвращать в кабинете ЮKassa вручную!" : "Заказ будет удален из текущего списка.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Да, отменить',
+            confirmButtonColor: '#ff4757',
+            cancelButtonText: 'Нет'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                // Используем смену статуса на 'canceled' или удаление
+                await adminService.updateStatus(orderId, 'canceled');
+                Swal.fire('Отменено', 'Статус заказа изменен', 'success');
+                loadData();
+            } catch (e) {
+                Swal.fire('Ошибка', 'Не удалось отменить заказ', 'error');
+            }
         }
     };
 
@@ -89,8 +124,11 @@ const AdminPage = () => {
             setLoading(true);
             try {
                 await adminService.captureOrder(orderId);
-                Swal.fire('Успех', 'Оплата подтверждена', 'success');
-                loadData();
+                // Делаем небольшую паузу, чтобы сервер успел перезаписать JSON файлы
+                setTimeout(() => {
+                    loadData();
+                    Swal.fire('Успех', 'Оплата списана', 'success');
+                }, 1000);
             } catch (e) {
                 Swal.fire('Ошибка', e.response?.data?.message || e.message, 'error');
             }
@@ -128,9 +166,6 @@ const AdminPage = () => {
         );
     }
 
-    const hasAssembly = Object.keys(orders.assembly || {}).length > 0;
-    const hasCompleted = Object.keys(orders.completed || {}).length > 0;
-
     return (
         <div className="admin-layout">
             <header className="admin-nav">
@@ -158,15 +193,15 @@ const AdminPage = () => {
                         <span className="section-icon">⚖️</span>
                         <h2>Ожидают сборки (Весовые)</h2>
                     </div>
-                    {!hasAssembly ? (
+                    {sortedAssembly.length === 0 ? (
                         <p className="empty-msg">Нет заказов на сборку</p>
                     ) : (
                         <div className="admin-grid">
-                            {Object.values(orders.assembly).map(order => (
+                            {sortedAssembly.map(order => (
                                 <div key={order.id} className="admin-order-card assembly-card">
                                     <div className="card-header">
                                         <span className="order-id">№{order.id}</span>
-                                        <span className="order-time">{order.deliveryTime}</span>
+                                        <span className="order-time">{order.date ? new Date(order.date).toLocaleTimeString() : ''}</span>
                                     </div>
                                     <div className="card-body">
                                         <p className="customer-name">{order.customer_name}</p>
@@ -185,9 +220,12 @@ const AdminPage = () => {
                                             ))}
                                         </ul>
                                     </div>
-                                    <button className="capture-btn" onClick={() => handleCapture(order.id)} disabled={loading}>
-                                        ✅ Списать и подтвердить
-                                    </button>
+                                    <div className="card-footer-flex">
+                                        <button className="btn-cancel-small" onClick={() => handleCancelOrder(order.id, false)}>Отменить</button>
+                                        <button className="capture-btn" onClick={() => handleCapture(order.id)} disabled={loading}>
+                                            ✅ Списать
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -200,11 +238,11 @@ const AdminPage = () => {
                         <span className="section-icon">📦</span>
                         <h2>Оплаченные заказы</h2>
                     </div>
-                    {!hasCompleted ? (
+                    {sortedCompleted.length === 0 ? (
                         <p className="empty-msg">Оплаченных заказов пока нет</p>
                     ) : (
                         <div className="admin-grid">
-                            {Object.values(orders.completed).map(order => (
+                            {sortedCompleted.map(order => (
                                 <div key={order.id} className={`admin-order-card status-${order.status}`}>
                                     <div className="card-header">
                                         <span className="order-id">№{order.id}</span>
@@ -216,12 +254,22 @@ const AdminPage = () => {
                                             <option value="new">🆕 Новый</option>
                                             <option value="in_progress">👨‍🍳 В работе</option>
                                             <option value="completed">✅ Завершён</option>
+                                            <option value="canceled">❌ Отменён</option>
                                         </select>
                                     </div>
                                     <div className="card-body">
-                                        <p className="customer-name">{order.customer_name}</p>
+                                        <p className="customer-name">{order.customer_name} ({order.phone})</p>
                                         <p className="order-address">📍 {order.address}</p>
-                                        <p className="order-total">Сумма: <strong>{order.total} ₽</strong></p>
+
+                                        <div className="order-price-details">
+                                            <p>Товары: <strong>{order.itemsTotal || (order.total - (order.deliveryCost || 0))} ₽</strong></p>
+                                            {order.deliveryCost > 0 && <p>Доставка: <strong>{order.deliveryCost} ₽</strong></p>}
+                                            <p className="final-total">Итого списано: <span>{order.total} ₽</span></p>
+                                        </div>
+
+                                        <button className="btn-cancel-small link-style" onClick={() => handleCancelOrder(order.id, true)}>
+                                            Отменить / Возврат
+                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -233,4 +281,4 @@ const AdminPage = () => {
     );
 };
 
-export default AdminPage;
+export default React.memo(AdminPage);
