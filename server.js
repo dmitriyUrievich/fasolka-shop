@@ -49,6 +49,15 @@ async function createServer() {
     res.status(200).sendFile(path.join(publicPath, 'img', 'fallback.webp'));
   });
 
+  try {
+    console.log('⏳ Запуск первоначальной синхронизации данных...');
+    // Вызываем с true, чтобы сразу посчитать популярность
+    await syncProductsFromApi(true);
+    console.log('✅ Данные успешно загружены и готовы к работе.');
+  } catch (err) {
+    console.error('❌ Ошибка при стартовой синхронизации:', err);
+  }
+
   // Быстрая синхронизация остатков (30 мин)
   setInterval(() => syncProductsFromApi(false), 30 * 60 * 1000);
 
