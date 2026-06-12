@@ -1,5 +1,7 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
+import '../YandexMap.css'
+import '../MainPage.css';
 
 import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
@@ -13,14 +15,25 @@ import { useCartStore } from '../store';
 import { calculateOrderTotals } from '../utils/orderUtils';
 import { prepareOrderData, createPayment } from '../services/orderService';
 
-import '../MainPage.css';
 import YandexMap from "../components/YandexMap.jsx";
-import '../YandexMap.css'
 import {useHydration} from "../hooks/useHydration.js";
 
-const CartBasket = React.lazy(() => import('../components/CartBasket.jsx'));
-const Modal = React.lazy(() => import('../components/Modal.jsx'));
-const OrderForm = React.lazy(() => import('../components/OrderForm.jsx'));
+const CartBasket = React.lazy(() =>
+    import('../components/CartBasket').catch(() => {
+        window.location.reload();
+    })
+);
+const Modal = React.lazy(() =>
+    import('../components/Modal.jsx').catch(() => {
+        window.location.reload();
+    })
+);
+
+const OrderForm = React.lazy(() =>
+    import('../components/OrderForm.jsx').catch(() => {
+        window.location.reload();
+    })
+);
 
 function MainPage({ initialData }) {
     const hydrated = useHydration()

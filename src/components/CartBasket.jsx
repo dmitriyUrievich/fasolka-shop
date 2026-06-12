@@ -1,4 +1,4 @@
-// src/components/CartBasket.js
+// src/components/CartBasket.jsx
 import React, { useMemo } from 'react';
 import '../CartBasket.css';
 import CartBasketItem from './CartBasketItem';
