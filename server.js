@@ -118,8 +118,11 @@ async function createServer() {
     }
   });
 
-  app.listen(PORT, () => {
-    console.log(`✅ Сервер готов: http://localhost:${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Сервер открыл порт ${PORT}`);
+    syncProductsFromApi(true).then(() => {
+      console.log('✅ Популярность и товары обновлены');
+    });
   });
 }
 
