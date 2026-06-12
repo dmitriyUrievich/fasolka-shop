@@ -10,7 +10,6 @@ import "./index.css"
 function App({ initialData }) {
     const hydrated = useHydration();
 
-    // Единая логика удаления лоадера для всего приложения
     useEffect(() => {
         if (hydrated) {
             const loader = document.getElementById('global-loader');
@@ -31,4 +30,4 @@ function App({ initialData }) {
   );
 }
 
-export default App;
+export default App

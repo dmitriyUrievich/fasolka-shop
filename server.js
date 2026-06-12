@@ -49,15 +49,6 @@ async function createServer() {
     res.status(200).sendFile(path.join(publicPath, 'img', 'fallback.webp'));
   });
 
-  try {
-    console.log('⏳ Запуск первоначальной синхронизации данных...');
-    // Вызываем с true, чтобы сразу посчитать популярность
-    await syncProductsFromApi(true);
-    console.log('✅ Данные успешно загружены и готовы к работе.');
-  } catch (err) {
-    console.error('❌ Ошибка при стартовой синхронизации:', err);
-  }
-
   // Быстрая синхронизация остатков (30 мин)
   setInterval(() => syncProductsFromApi(false), 30 * 60 * 1000);
 
@@ -83,13 +74,10 @@ async function createServer() {
   apiRouter.use(paymentRouter);
   app.use('/api', apiRouter);
 
-  // 5. SSR LOGIC (catch-all)
   app.get(/.*/, async (req, res, next) => {
     const url = req.originalUrl;
     const isHtmlRequest = req.headers.accept?.includes('text/html');
-    const isFileRequest = url.includes('.');
-
-    if (url.startsWith('/api') || url.startsWith('/@') || (!isHtmlRequest && isFileRequest)) {
+    if (url.startsWith('/api') || url.startsWith('/@') || url.includes('.')) {
       return next();
     }
 
@@ -100,21 +88,26 @@ async function createServer() {
         template = await vite.transformIndexHtml(url, template);
         render = (await vite.ssrLoadModule('/entry-server.jsx')).render;
       } else {
+        // Используем более надежный путь для продакшена
         template = fs.readFileSync(path.resolve(__dirname, 'dist/client/index.html'), 'utf-8');
-        render = (await import('./dist/server/entry-server.js')).render;
+        const ssrModule = await import(path.resolve(__dirname, 'dist/server/entry-server.js'));
+        render = ssrModule.render;
       }
 
-      const initialData = await getLocalProducts();
-      const { appHtml } = render(url, initialData);
+      const initialData = await getLocalProducts().catch(() => ({ products: [], catalog: [] }));
+
+      const { appHtml } = await render(url, initialData);
 
       const html = template
           .replace(`<!--ssr-outlet-->`, appHtml)
           .replace('</head>', `<script>window.__INITIAL_DATA__ = ${JSON.stringify(initialData)}</script></head>`);
 
-      res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
+      res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
     } catch (e) {
       if (vite) vite.ssrFixStacktrace(e);
-      res.status(500).end(e.message);
+      console.error('SSR Error:', e.message);
+      // Если всё сломалось, отправляем хотя бы пустой шаблон (клиентский React подхватит)
+      res.status(200).sendFile(path.resolve(publicPath, 'index.html'));
     }
   });
 
