@@ -20,18 +20,24 @@ import {useHydration} from "../hooks/useHydration.js";
 
 const CartBasket = React.lazy(() =>
     import('../components/CartBasket').catch(() => {
-        window.location.reload();
+        if (typeof window !== 'undefined') {
+            window.location.reload();
+        }
     })
 );
 const Modal = React.lazy(() =>
     import('../components/Modal.jsx').catch(() => {
-        window.location.reload();
+        if (typeof window !== 'undefined') {
+            window.location.reload();
+        }
     })
 );
 
 const OrderForm = React.lazy(() =>
     import('../components/OrderForm.jsx').catch(() => {
-        window.location.reload();
+        if (typeof window !== 'undefined') {
+            window.location.reload();
+        }
     })
 );
 
