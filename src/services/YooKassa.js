@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { YooCheckout } from '@a2seven/yoo-checkout';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
-import { sendOrderForAssemblyNotification, sendPaidOrderNotification } from './api_Telegram.js';
+//import { sendOrderForAssemblyNotification, sendPaidOrderNotification } from './api_Telegram.js';
 import fs from 'fs';
 import path from 'path';
 import { updateLocalStock } from './syncService.js';
@@ -139,7 +139,7 @@ router.post('/payment/notifications', async (req, res) => {
         console.log(`[Webhook] Заказ удален из файла ожидания (pendingOrders.json).`);
         
         console.log(`[Webhook] Вызываю функцию отправки уведомления в Telegram для заказа №${orderData.id}...`);
-        await sendOrderForAssemblyNotification(orderData);
+        //await sendOrderForAssemblyNotification(orderData);
         console.log(`[Webhook] Уведомление для заказа №${orderData.id} успешно отправлено.`);
 
       } else {
@@ -242,8 +242,8 @@ router.post('/payment/capture', async (req, res) => {
     await updateLocalStock(finalCart);
 
     // Готовим финальные данные для уведомления в Telegram
-    const finalOrderData = { ...orderData, cart: finalCart, total: finalTotalWithDelivery };
-    await sendPaidOrderNotification(finalOrderData);
+    //const finalOrderData = { ...orderData, cart: finalCart, total: finalTotalWithDelivery };
+    //await sendPaidOrderNotification(finalOrderData);
 
     // Очищаем заказ из файла "на сборке"
     delete assemblyOrders[orderId];
