@@ -1,6 +1,6 @@
 import CategorySidebar from './CategorySidebar';
 
-const CategoryDrawer = ({ isOpen, onClose, products, categories, activeCategoryId, onCategorySelect }) => {
+const CategoryDrawer = ({ isOpen, onClose, products, categories, activeCategoryIds, onCategorySelect }) => {
     if (!isOpen) return null;
 
     return (
@@ -12,8 +12,9 @@ const CategoryDrawer = ({ isOpen, onClose, products, categories, activeCategoryI
             <CategorySidebar
                 products={products}
                 categories={categories}
-                activeCategoryId={activeCategoryId}
+                activeCategoryIds={activeCategoryIds}
                 onCategorySelect={onCategorySelect}
+
             />
         </div>
     );

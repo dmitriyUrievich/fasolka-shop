@@ -72,3 +72,29 @@ a:focus, button:focus, input:focus, select:focus, textarea:focus {
   font-size: 1.2em;
   font-weight: 500;
 }
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: var(--farm-cream);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.app-header {
+    background-color: var(--farm-green); /* Задаем зеленый фон */
+    color: white; /* Задаем белый цвет для текста и иконок внутри */
+    padding: 10px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    position: sticky; /* Делаем хедер "липким" при прокрутке */
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+}
+.app-footer {
+    background-color: var(--farm-green);
+    color: white;
+    padding: 10px;
+    margin-top: auto;
+    box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}

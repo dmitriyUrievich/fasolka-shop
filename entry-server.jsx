@@ -6,7 +6,6 @@ import App from './src/App.jsx';
 export function render(url, initialData) {
     const appHtml = ReactDOMServer.renderToString(
         <React.StrictMode>
-            {/* StaticRouter дает контекст роутинга на сервере */}
             <StaticRouter location={url}>
                 <App initialData={initialData} />
             </StaticRouter>

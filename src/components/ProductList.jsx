@@ -2,9 +2,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import Pagination from './Pagination';
-
-import getPortion from '../utils/getPortion';
-import { createImageLoader } from '../utils/imageUtils';
 import Skeleton from 'react-loading-skeleton';
 const storageKey = 'ageConfirmedGlobal';
 
@@ -17,14 +14,12 @@ const ProductList = ({
   loading,
   searchTerm,
   sortOption,
-  selectedCategoryId,
+  selectedCategoryIds,
   listHeader,
-  showOnlyFallback,
-}) => {
+  }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 24;
   const [ageConfirmed, setAgeConfirmed] = useState(false);
-
 
   const handleConfirmAge = () => {
     setAgeConfirmed(true);
@@ -45,90 +40,109 @@ const specialOfferCategoryId = useMemo(() => {
     return specialCategory ? specialCategory.id : null;
   }, [categories]);
 
- const blacklistedCategoryIds = useMemo(() => {
-    const blacklistNames = ['ОБОРУДОВАНИЕ', 'Без группы',];
-    const ids = new Set();
-    if (Array.isArray(categories)) {
-      categories.forEach(cat => {
-        if (blacklistNames.some(name => cat.name && (cat.name.includes(name) || cat.name === name))) {
-          ids.add(cat.id);
+    const blacklistedCategoryIds = useMemo(() => {
+        const blacklistNames = ['ОБОРУДОВАНИЕ', 'Без группы'];
+        const ids = new Set();
+        if (Array.isArray(categories)) {
+            categories.forEach(cat => {
+                const name = cat.name || cat.Name;
+                const id = cat.id || cat.Id;
+                if (name && blacklistNames.some(bn => name.includes(blacklistNames))) {
+                    ids.add(id);
+                }
+            });
         }
-      });
-    }
-    return ids;
-  }, [categories]);
+        return ids;
+    }, [categories]);
 
-  const filteredProducts = useMemo(() => {
-    const initialFilter = products.filter((product) => {
-      if (!product) return false;
+    const filteredProducts = useMemo(() => {
+        if (!products || !Array.isArray(products)) return [];
 
-      if (product.groupId && blacklistedCategoryIds.has(product.groupId)) {
-        return false;
-      }
-      
-      if (product.productType === 'Tobacco') return false;
+        return products.filter((product) => {
+            if (!product) return false;
 
-      const matchesCategory = selectedCategoryId
-        ? product.groupId === selectedCategoryId
-        : true;
+            const pGroupId = product.groupId || product.GroupId;
+            const pName = product.name || product.Name || "";
 
-      const matchesSearch = searchTerm
-        ? product.name.toLowerCase().includes(searchTerm.toLowerCase())
-        : true;
+            if (pName.toUpperCase().includes("ПАКЕТ-МАЙКА FASOL")) return false;
 
-      const isAvailable = (() => {
-        if (product.unit !== 'Kilogram') {
-          return product.rests > 0;
-        }
-        const portion = getPortion(product.name, product.unit);
-        if (portion) {
-          const minRest = portion.weightInGrams / 1000;
-          return product.rests >= minRest;
-        }
-        return product.rests >= 0.1;
-      })();
+            if (searchTerm && !pName.toLowerCase().includes(searchTerm.toLowerCase())) return false;
 
-      return matchesCategory && matchesSearch && isAvailable;
-    });
+            const matchesCategory = selectedCategoryIds.length > 0
+                ? selectedCategoryIds.includes(pGroupId)
+                : true;
 
-    if (showOnlyFallback) {
-      return initialFilter.filter((product) => {
-        if (!product || !product.id) return false;
-        
-        const loader = createImageLoader(product.id, product.name);
-        
-        return loader.isFallback();
-      });
-    }
+            if (!matchesCategory) return false;
+            const r = parseFloat(product.rests || 0);
+            const isAvailable = product.unit !== 'Kilogram' ? r > 0 : r >= 0.1;
 
-    return initialFilter;
+            return isAvailable;
+        });
+        // ИЗМЕНЕНО: добавлена зависимость selectedCategoryIds
+    }, [products, selectedCategoryIds, searchTerm, blacklistedCategoryIds]);
 
-  }, [products, selectedCategoryId, searchTerm, blacklistedCategoryIds, showOnlyFallback]);
+    const sortedProducts = useMemo(() => {
+        const list = [...filteredProducts];
 
-  const sortedProducts = useMemo(() => {
-    return [...filteredProducts].sort((a, b) => {
-      switch (sortOption) {
-        case 'price-asc':
-          return parseFloat(a.sellPricePerUnit) - parseFloat(b.sellPricePerUnit);
-        case 'price-desc':
-          return parseFloat(b.sellPricePerUnit) - parseFloat(a.sellPricePerUnit);
-        case 'quantity-asc':
-          return a.rests - b.rests;
-        case 'quantity-desc':
-          return b.rests - a.rests;
-        default:
-          return 0;
-      }
-    });
-  }, [filteredProducts, sortOption]);
+        const result = list.sort((a, b) => {
+            if (sortOption === 'price-asc') return parseFloat(a.sellPricePerUnit) - parseFloat(b.sellPricePerUnit);
+            if (sortOption === 'price-desc') return parseFloat(b.sellPricePerUnit) - parseFloat(a.sellPricePerUnit);
+            if (sortOption === 'quantity-asc') return a.rests - b.rests;
+            if (sortOption === 'quantity-desc') return b.rests - a.rests;
 
-  useEffect(() => setCurrentPage(1), [searchTerm, sortOption, selectedCategoryId]);
+            const scoreA = a.popularityScore || 0;
+            const scoreB = b.popularityScore || 0;
+            if (scoreB !== scoreA) return scoreB - scoreA;
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = sortedProducts.slice(indexOfFirstItem, indexOfLastItem);
+            return (a.name || "").localeCompare(b.name || "");
+        });
+
+        return result;
+    }, [filteredProducts, sortOption]);
+
+  useEffect(() => setCurrentPage(1), [searchTerm, sortOption, selectedCategoryIds]);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    const currentItems = useMemo(() => {
+        const lastIdx = currentPage * itemsPerPage;
+        return sortedProducts.slice(lastIdx - itemsPerPage, lastIdx);
+    }, [sortedProducts, currentPage, itemsPerPage]);
+
+
+    useEffect(() => {
+        if (currentItems.length > 0 && !loading) {
+            console.group(`📄 Анализ страницы №${currentPage}`);
+            console.log(`Показано товаров: ${currentItems.length} (из ${sortedProducts.length})`);
+
+            const tableData = currentItems.map((product, index) => {
+                // Вычисляем реальное место товара в общем списке
+                const globalRank = (currentPage - 1) * itemsPerPage + index + 1;
+
+                return {
+                    "Место": globalRank,
+                    "Название": product.name || product.Name,
+                    "Популярность (Score)": product.popularityScore || 0,
+                    "Остаток": product.rests,
+                    "ID": product.id
+                };
+            });
+
+            console.table(tableData);
+
+            // Дополнительная проверка на ошибки сортировки
+            const scores = currentItems.map(p => p.popularityScore || 0);
+            const isSorted = scores.every((val, i) => i === 0 || val <= scores[i - 1]);
+
+            if (!isSorted) {
+                console.warn("⚠️ Внимание: Порядок популярности на этой странице нарушен!");
+            } else {
+                console.log("✅ Сортировка по популярности верна (идет на убывание).");
+            }
+
+            console.groupEnd();
+        }
+    }, [currentPage, currentItems, loading, sortedProducts.length, itemsPerPage]);
 
   if (loading) {
     return (

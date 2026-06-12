@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import Swal from 'sweetalert2';
+import { fetchProductsWithRests, getCatalog } from '../services/konturMarketApi';
 
 export const useProducts = (initialData) => {
     const [products, setProducts] = useState(initialData?.products || []);
@@ -7,21 +7,23 @@ export const useProducts = (initialData) => {
     const [loading, setLoading] = useState(!initialData);
 
     useEffect(() => {
-        if (initialData) return;
         const loadData = async () => {
-            try {
-                const response = await fetch('/api/products-data');
-                const data = await response.json();
-                setProducts(data.products || []);
-                setCatalogGroups(data.catalog || []);
-            } catch (err) {
-                Swal.fire({ title: 'Ошибка', text: 'Не удалось загрузить каталог.', icon: 'error' });
-            } finally {
-                setLoading(false);
+            if (products.length === 0) {
+                setLoading(true);
+                try {
+                    const fetchedProducts = await fetchProductsWithRests();
+                    const fetchedCatalog = await getCatalog();
+
+                    setProducts(fetchedProducts);
+                    setCatalogGroups(fetchedCatalog);
+                } catch (err) {
+                    console.error('Ошибка загрузки данных в хуке:', err);
+                } finally {
+                    setLoading(false);
+                }
             }
         };
         loadData();
-    }, [initialData]);
-
+    }, [products.length]); // Следим за длиной массива
     return { products, catalogGroups, loading };
 };

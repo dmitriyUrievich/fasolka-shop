@@ -3,26 +3,23 @@ import React, { useState, useEffect } from 'react';
 import '../CategorySidebar.css';
 import getIcon from '../utils/IconMap'
 
-const CategorySidebar = ({ categories, products, activeCategoryId, onCategorySelect }) => {
+const CategorySidebar = ({ categories, products, activeCategoryIds = [], onCategorySelect }) => {
   const [expandedCategories, setExpandedCategories] = useState(new Set());
 
   const categoryList = Array.isArray(categories) ? categories : [];
   const validProducts = Array.isArray(products) ? products : [];
 
-  // Фильтрация товаров в наличии
   const productsInStock = validProducts.filter(p => (p.rests || 0) > 0);
   const productGroupIds = new Set(productsInStock.filter(p => p.groupId).map(p => p.groupId));
 
-  // Фильтрация категорий
   const isBlacklisted = (name) =>
-    ['ОБОРУДОВАНИЕ', 'Вода 19л', 'ПИКНИК', 'ХОЛОДНЫЙ ЧАЙ', 'Без группы', 'Пасха','Сигареты']
-      .some(word => name.includes(word) || word === name);
+      ['ОБОРУДОВАНИЕ', 'Вода 19л', 'ПИКНИК', 'ХОЛОДНЫЙ ЧАЙ', 'Без группы', 'Пасха','Сигареты']
+          .some(word => name.includes(word) || word === name);
 
   const filteredCategories = categoryList
-    .filter(cat => cat.name && !isBlacklisted(cat.name))
-    .filter(cat => productGroupIds.has(cat.id));
+      .filter(cat => cat.name && !isBlacklisted(cat.name))
+      .filter(cat => productGroupIds.has(cat.id));
 
-  // Подсчёт товаров
   const productCountByGroupId = new Map();
   let totalCount = 0;
 
@@ -36,7 +33,6 @@ const CategorySidebar = ({ categories, products, activeCategoryId, onCategorySel
 
   const getProductCount = (id) => productCountByGroupId.get(id) || 0;
 
-  // Построение дерева
   const categoryMap = new Map();
   const rootCategories = [];
 
@@ -54,18 +50,20 @@ const CategorySidebar = ({ categories, products, activeCategoryId, onCategorySel
 
   const topLevel = rootCategories.sort((a, b) => a.name.localeCompare(b.name));
 
-  // Авто-раскрытие при активной подкатегории
+  // 2. ИСПРАВЛЕНО: Логика авто-раскрытия для массива ID
   useEffect(() => {
-    const activeParentId = activeCategoryId
-      ? categoryList.find(cat => cat.id === activeCategoryId)?.parentId
-      : null;
-
-    if (activeParentId) {
-      setExpandedCategories(prev => new Set(prev).add(activeParentId));
+    if (activeCategoryIds.length > 0) {
+      const newExpanded = new Set(expandedCategories);
+      activeCategoryIds.forEach(id => {
+        const cat = categoryList.find(c => c.id === id);
+        if (cat?.parentId) {
+          newExpanded.add(cat.parentId);
+        }
+      });
+      setExpandedCategories(newExpanded);
     }
-  }, [activeCategoryId, categoryList]);
+  }, [activeCategoryIds, categoryList]);
 
-  // Обработчики кликов
   const handleParentClick = (parentId) => {
     onCategorySelect(parentId);
     setExpandedCategories(prev => {
@@ -77,66 +75,69 @@ const CategorySidebar = ({ categories, products, activeCategoryId, onCategorySel
       }
       return next;
     });
-
   };
 
   const handleChildClick = (childId) => {
     onCategorySelect(childId);
   };
 
-  const isActive = (id) => id === activeCategoryId;
+  // 3. ИСПРАВЛЕНО: Проверяем наличие ID в массиве activeCategoryIds
+  const isActive = (id) => activeCategoryIds.includes(id);
 
   return (
-    <div className="category-sidebar">
-      <div className="category-item all-categories" onClick={() => {
-        onCategorySelect(null);
-        setExpandedCategories(new Set());
-      }}>
-        <div className="category-item-content">
-          <span className="icon">🛒</span>
-          <span className="category-text">Все товары</span>
+      <div className="category-sidebar">
+        <div className="category-item all-categories" onClick={() => {
+          onCategorySelect(null);
+          setExpandedCategories(new Set());
+        }}>
+          <div className="category-item-content">
+            <span className="icon">🛒</span>
+            <span className="category-text">Все товары</span>
+          </div>
+          <span className="count">({totalCount})</span>
         </div>
-        <span className="count">({totalCount})</span>
-      </div>
 
-      <div className="category-sidebar__scrollable">
-        {topLevel.map(parent => (
-          <React.Fragment key={parent.id}>
-            <div
-              className={`category-item ${isActive(parent.id) ? 'active' : ''}`}
-              onClick={() => handleParentClick(parent.id)}
-            >
-              <div className="category-item-content">
-                <span className="icon">{getIcon(parent.name)}</span>
-                <span className="category-text">{parent.name}</span>
-              </div>
-              <span className="count">({getProductCount(parent.id)})</span>
-            </div>
+        <div className="category-sidebar__scrollable">
+          {topLevel.map(parent => (
+              <React.Fragment key={parent.id}>
+                <div
+                    className={`category-item ${isActive(parent.id) ? 'active' : ''}`}
+                    onClick={() => handleParentClick(parent.id)}
+                >
+                  {/* Чекбокс индикатор */}
+                  <div className="checkbox-indicator">{isActive(parent.id) ? '✓' : ''}</div>
+                  <div className="category-item-content">
+                    <span className="icon">{getIcon(parent.name)}</span>
+                    <span className="category-text">{parent.name}</span>
+                  </div>
+                  <span className="count">({getProductCount(parent.id)})</span>
+                </div>
 
-            {parent.children.length > 0 && expandedCategories.has(parent.id) && (
-              <ul className="sub-category-list">
-                {parent.children.map(child => (
-                  <li
-                    key={child.id}
-                    className={`sub-category-item ${isActive(child.id) ? 'active' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleChildClick(child.id);
-                    }}
-                  >
-                    <div className="category-item-content">
-                      <span className="icon">{getIcon(child.name)}</span>
-                      <span className="category-text">{child.name}</span>
-                    </div>
-                    <span className="count">({getProductCount(child.id)})</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </React.Fragment>
-        ))}
+                {parent.children.length > 0 && expandedCategories.has(parent.id) && (
+                    <ul className="sub-category-list">
+                      {parent.children.map(child => (
+                          <li
+                              key={child.id}
+                              className={`sub-category-item ${isActive(child.id) ? 'active' : ''}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleChildClick(child.id);
+                              }}
+                          >
+                            <div className="checkbox-indicator small">{isActive(child.id) ? '✓' : ''}</div>
+                            <div className="category-item-content">
+                              <span className="icon">{getIcon(child.name)}</span>
+                              <span className="category-text">{child.name}</span>
+                            </div>
+                            <span className="count">({getProductCount(child.id)})</span>
+                          </li>
+                      ))}
+                    </ul>
+                )}
+              </React.Fragment>
+          ))}
+        </div>
       </div>
-    </div>
   );
 };
 

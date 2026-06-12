@@ -1,14 +1,14 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-import './index.css';
+// src/entry-client.jsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
+import App from './App'
 
-const initialData = window.__INITIAL_DATA__;
-const rootElement = document.getElementById('root');
+const initialData = window.__INITIAL_DATA__
 
 ReactDOM.hydrateRoot(
-    rootElement,
-    <React.StrictMode>
+    document.getElementById('root'),
+    <BrowserRouter>
         <App initialData={initialData} />
-    </React.StrictMode>
-);
+    </BrowserRouter>
+)

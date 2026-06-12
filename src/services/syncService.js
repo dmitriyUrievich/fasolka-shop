@@ -1,145 +1,258 @@
-// Файл: services/syncService.js
 import fs from 'fs/promises';
 import path from 'path';
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
+
 dotenv.config();
 
 const PRODUCTS_DB_PATH = path.join(process.cwd(), 'src', 'products.json');
 const KONTUR_API_BASE_URL = 'https://api.kontur.ru/market/v1';
+
 const getApiHeaders = () => ({
-    'X-Kontur-Apikey': process.env.KONTUR_API_KEY,
+    'x-kontur-apikey': process.env.KONTUR_API_KEY,
     'Content-Type': 'application/json',
 });
 
-const getShops = async () => {
-    const response = await fetch(`${KONTUR_API_BASE_URL}/shops`, { headers: getApiHeaders() });
-    if (!response.ok) throw new Error(`Ошибка получения магазинов: ${response.statusText}`);
-    const data = await response.json();
-    return data.items || [];
+const getVal = (obj, key) => {
+    if (!obj) return undefined;
+    const realKey = Object.keys(obj).find(k => k.toLowerCase() === key.toLowerCase());
+    return realKey ? obj[realKey] : undefined;
 };
 
-const getProducts = async (shopId) => {
-    const response = await fetch(`${KONTUR_API_BASE_URL}/shops/${shopId}/products`, { headers: getApiHeaders() });
-    if (!response.ok) throw new Error(`Ошибка получения товаров: ${response.statusText}`);
-    const data = await response.json();
-    return data.items || [];
+const calculateAnalytics = (cheques, rawProducts) => {
+    const popularityMap = {};
+    let totalRevenue = 0;
+    let totalItemsSold = 0;
+
+    if (!cheques || cheques.length === 0) {
+        console.warn('[Analytics] Массив чеков ПУСТОЙ.');
+        return { popularityMap, stats: { totalRevenue: 0, totalCheques: 0 } };
+    }
+
+    // --- ВОТ ЭТОТ ВЫВОД НАМ НУЖЕН ---
+    //console.log('==========================================');
+    //console.log('[DEBUG] ПОЛНАЯ СТРУКТУРА ПЕРВОГО ЧЕКА:');
+    //console.log(JSON.stringify(cheques[0], null, 2));
+    //console.log('==========================================');
+
+    // Карта для сопоставления
+    const productById = new Map();
+    const productByCode = new Map();
+
+    rawProducts.forEach(p => {
+        const id = String(getVal(p, 'id') || '').toLowerCase();
+        const code = String(getVal(p, 'code') || '');
+        if (id) productById.set(id, id);
+        if (code) productByCode.set(code, id);
+    });
+
+    cheques.forEach(cheque => {
+        const isRefund = String(getVal(cheque, 'isRefund')).toLowerCase() === 'true';
+        const coeff = isRefund ? -1 : 1;
+
+        const price = parseFloat(getVal(cheque, 'totalPrice') || 0);
+        totalRevenue += (price * coeff);
+
+        const lines = getVal(cheque, 'lines') || [];
+        lines.forEach(line => {
+            const lId = String(getVal(line, 'productId') || '').toLowerCase();
+            const lCode = String(getVal(line, 'productCode') || '');
+
+            const finalId = productById.get(lId) || productByCode.get(lCode);
+
+            if (finalId) {
+                const count = parseFloat(getVal(line, 'count') || 0);
+                popularityMap[finalId] = (popularityMap[finalId] || 0) + (count * coeff);
+                if (!isRefund) totalItemsSold += count;
+            }
+        });
+    });
+
+    return {
+        popularityMap,
+        stats: {
+            totalRevenue: Math.round(totalRevenue),
+            totalCheques: cheques.length,
+            totalItemsSold: Math.round(totalItemsSold)
+        }
+    };
 };
 
-const getProductRests = async (shopId) => {
-    const response = await fetch(`${KONTUR_API_BASE_URL}/shops/${shopId}/product-rests`, { headers: getApiHeaders() });
-    if (!response.ok) throw new Error(`Ошибка получения остатков: ${response.statusText}`);
-    const data = await response.json();
-    return data.results || data.items || [];
-};
+/**
+ * УНИВЕРСАЛЬНЫЙ ЗАГРУЗЧИК С ПАГИНАЦИЕЙ
+ */
+const fetchAllPagesBackend = async (url, name, params = {}) => {
+    let allItems = [];
+    let offset = 0;
+    const limit = 1000;
+    const seenIds = new Set();
 
-const getCatalog = async (shopId) => {
-    const response = await fetch(`${KONTUR_API_BASE_URL}/shops/${shopId}/product-groups`, { headers: getApiHeaders() });
-    if (!response.ok) throw new Error(`Ошибка получения каталога: ${response.statusText}`);
-    const data = await response.json();
-    return data.items || [];
-};
-
-export const syncProductsFromApi = async () => {
     try {
-        console.log('Начало синхронизации с Контур.Маркет...');
+        while (true) {
+            const queryParams = new URLSearchParams({ ...params, limit, offset }).toString();
+            const fullUrl = `${url}?${queryParams}`;
+            console.log(`[Fetch] ${name} request: ${fullUrl}`);
 
-        // 1. Получаем ID магазина
-        const shops = await getShops();
-        if (!shops || shops.length === 0 || !shops[0]?.id) {
-            throw new Error('API не вернул ни одной торговой точки или ее ID.');
-        }
-        const shopId = shops[0].id;
-        console.log(`Работаем с магазином ID: ${shopId}`);
+            const response = await fetch(fullUrl, { headers: getApiHeaders(), timeout: 30000 });
 
-        // 2. Параллельно запрашиваем товары, остатки и каталог
-        const [products, rests, catalog] = await Promise.all([
-            getProducts(shopId),
-            getProductRests(shopId),
-            getCatalog(shopId),
-        ]);
-        console.log(`Получено: ${products.length} товаров, ${rests.length} остатков, ${catalog.length} категорий.`);
+            // Детальное логирование ответа
+            console.log(`[Fetch] ${name} status: ${response.status} ${response.statusText}`);
 
-        // 3. Создаем карту остатков для быстрого доступа
-        const restsMap = new Map();
-        if (Array.isArray(rests)) {
-            rests.forEach(rest => {
-                if (rest && rest.productId !== undefined && rest.rest !== undefined) {
-                    restsMap.set(rest.productId, rest.rest);
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`[Fetch] ${name} error body: ${errorText}`);
+                break;
+            }
+
+            const data = await response.json();
+            console.log(`[Fetch] ${name} response keys:`, Object.keys(data));
+
+            // Для остатков специально проверяем наличие Items
+            const items = data.Items || data.items || data.results || [];
+            console.log(`[Fetch] ${name} items count in response: ${items.length}`);
+
+            if (!Array.isArray(items) || items.length === 0) {
+                console.log(`[Fetch] ${name} нет элементов, завершаем пагинацию`);
+                break;
+            }
+
+            // Дедубликация по ID (для остатков используем ProductId)
+            const newItems = items.filter(item => {
+                const id = item.ProductId || item.productId || item.Id || item.id;
+                if (!id) {
+                    console.warn(`[Fetch] ${name} элемент без ID:`, item);
+                    return false;
                 }
+                const idStr = String(id);
+                if (seenIds.has(idStr)) return false;
+                seenIds.add(idStr);
+                return true;
             });
+
+            if (newItems.length === 0) {
+                console.log(`[Fetch] ${name} все элементы уже были загружены (дубликаты), завершаем`);
+                break;
+            }
+
+            allItems.push(...newItems);
+            console.log(`   [Fetch] ${name}: +${newItems.length} (Всего: ${allItems.length})`);
+
+            // Условие выхода: если пришло меньше, чем limit, значит это последняя страница
+            if (items.length < limit) break;
+            offset += items.length;
         }
 
-        // 4. Объединяем товары с их остатками
-        const mergedProducts = products.map(product => ({
-            ...product,
-            rests: restsMap.get(product.id) || 0,
-        }));
-
-        // 5. Собираем все в один объект для сохранения
-        const dataToStore = {
-            products: mergedProducts,
-            catalog: catalog,
-            lastSync: new Date().toISOString()
-        };
-
-        // 6. Перезаписываем наш локальный файл
-        await fs.writeFile(PRODUCTS_DB_PATH, JSON.stringify(dataToStore, null, 2));
-
-        console.log(`Синхронизация завершена. Загружено ${mergedProducts.length} товаров.`);
-        return { success: true, message: `Загружено ${mergedProducts.length} товаров.` };
-
-    } catch (error) {
-        console.error('Критическая ошибка во время синхронизации:', error.message);
-        return { success: false, message: error.message };
+        console.log(`[Fetch] ${name} итого получено: ${allItems.length}`);
+        return allItems;
+    } catch (err) {
+        console.error(`   [Error] ${name}: ${err.message}`);
+        return allItems;
     }
 };
+
+export const syncProductsFromApi = async (isFullSync = false) => {
+    try {
+        console.log(`\n[Sync] === ЗАПУСК ${isFullSync ? 'ПОЛНОЙ' : 'БЫСТРОЙ'} СИНХРОНИЗАЦИИ ===`);
+
+        // 1. Получаем магазин
+        const shopsRes = await fetch(`${KONTUR_API_BASE_URL}/shops`, { headers: getApiHeaders() });
+        const shopsData = await shopsRes.json();
+        const shops = shopsData.Items || shopsData.items || [];
+        if (!shops.length) throw new Error('Магазин не найден');
+        const shopId = shops[0].Id || shops[0].id;
+
+        // 2. Базовые данные (товары, остатки, каталог) скачиваем ВСЕГДА
+        const products = await fetchAllPagesBackend(`${KONTUR_API_BASE_URL}/shops/${shopId}/products`, 'Товары');
+        const rests = await fetchAllPagesBackend(`${KONTUR_API_BASE_URL}/shops/${shopId}/product-rests`, 'Остатки');
+        const catalog = await fetchAllPagesBackend(`${KONTUR_API_BASE_URL}/shops/${shopId}/product-groups`, 'Каталог');
+
+        let popularityMap = {};
+        let stats = {};
+
+        if (isFullSync) {
+            // --- ПОЛНАЯ СИНХРОНИЗАЦИЯ (Раз в день) ---
+            const now = new Date();
+            const dateTo = now.toISOString().split('T')[0];
+            const dateFrom = new Date();
+            dateFrom.setDate(now.getDate() - 14);
+
+            console.log(`[Sync] Запрос чеков для пересчета популярности...`);
+            const cheques = await fetchAllPagesBackend(
+                `${KONTUR_API_BASE_URL}/shops/${shopId}/cheques`,
+                'Чеки',
+                { dateFrom: dateFrom.toISOString().split('T')[0], dateTo }
+            );
+
+            const analytics = calculateAnalytics(cheques, products);
+            popularityMap = analytics.popularityMap;
+            stats = analytics.stats;
+        } else {
+            // --- БЫСТРАЯ СИНХРОНИЗАЦИЯ (Раз в 30 мин) ---
+            console.log(`[Sync] Пропускаем чеки, сохраняем текущий рейтинг популярности...`);
+            const currentLocalData = await getLocalProducts();
+            if (currentLocalData.products) {
+                currentLocalData.products.forEach(p => {
+                    const id = String(p.id || '').toLowerCase();
+                    popularityMap[id] = p.popularityScore || 0;
+                });
+            }
+            stats = currentLocalData.analytics || {};
+        }
+        // 3. Мержим остатки (как и раньше)
+        const restsMap = new Map();
+        rests.forEach(r => {
+            const pId = String(getVal(r, 'productId') || '').toLowerCase();
+            if (pId) restsMap.set(pId, getVal(r, 'rest') || 0);
+        });
+        // 4. Собираем финальный массив
+        const mergedProducts = products.map(p => {
+            const guid = String(getVal(p, 'id') || '').toLowerCase();
+            return {
+                ...p,
+                id: getVal(p, 'id'),
+                rests: restsMap.get(guid) || 0,
+                popularityScore: popularityMap[guid] || 0 // Либо новый из чеков, либо старый из файла
+            };
+        });
+        // 5. Сохраняем
+        const dataToStore = {
+            products: mergedProducts,
+            catalog,
+            analytics: stats,
+            lastSync: new Date().toISOString()
+        };
+        await fs.mkdir(path.dirname(PRODUCTS_DB_PATH), { recursive: true });
+        await fs.writeFile(PRODUCTS_DB_PATH, JSON.stringify(dataToStore, null, 2));
+
+        console.log(`[Sync] ФИНАЛ. Обновлено товаров: ${mergedProducts.length}. Режим: ${isFullSync ? 'Полный' : 'Быстрый'}`);
+
+    } catch (error) {
+        console.error('[Sync Error]:', error);
+    }
+};
+
+
 
 export const getLocalProducts = async () => {
     try {
         const data = await fs.readFile(PRODUCTS_DB_PATH, 'utf-8');
         return JSON.parse(data);
-    } catch (error) {
-        if (error.code === 'ENOENT') {
-            return { products: [], catalog: [], lastSync: null };
-        }
-        console.error("Ошибка чтения локальной базы продуктов:", error);
-        throw error;
+    } catch (e) {
+        return { products: [], catalog: [], analytics: {} };
     }
 };
 
 export const updateLocalStock = async (cartItems) => {
-    console.log('[Stock] Начинаем списание остатков для заказа...');
     try {
         const data = await getLocalProducts();
-        
-        // Для быстрого поиска товаров используем Map
+        if (!data.products.length) return;
         const productsMap = new Map(data.products.map(p => [p.id, p]));
-
-        let updatedCount = 0;
-        cartItems.forEach(itemInCart => {
-            const productToUpdate = productsMap.get(itemInCart.id);
-            
-            if (productToUpdate) {
-                // Вычитаем заказанное количество, не даем остаткам уйти в минус
-                const newRest = Math.max(0, productToUpdate.rests - Number(itemInCart.quantity));
-                productToUpdate.rests = newRest;
-                productsMap.set(itemInCart.id, productToUpdate);
-                updatedCount++;
-            }
+        cartItems.forEach(item => {
+            const p = productsMap.get(item.id);
+            if (p) p.rests = Math.max(0, p.rests - Number(item.quantity));
         });
-
-        // Если были обновления, конвертируем Map обратно в массив и перезаписываем файл
-        if (updatedCount > 0) {
-            data.products = Array.from(productsMap.values());
-            await fs.writeFile(PRODUCTS_DB_PATH, JSON.stringify(data, null, 2));
-            console.log(`[Stock] Успешно списано ${updatedCount} позиций из локальной базы.`);
-        } else {
-            console.log('[Stock] Не найдено товаров для списания в локальной базе.');
-        }
-
+        await fs.writeFile(PRODUCTS_DB_PATH, JSON.stringify(data, null, 2));
     } catch (error) {
-        console.error('[Stock Error] Критическая ошибка: не удалось обновить остатки в файле products.json:', error);
+        console.error('[Stock Error]:', error);
     }
-    
-}
+};
