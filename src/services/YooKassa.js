@@ -7,39 +7,31 @@ import path from 'path';
 import { updateLocalStock } from './syncService.js';
 
 dotenv.config();
-
 const router = Router();
 
-const YOUKASSA_SECRET_KEY = process.env.YOUKASSA_KEY;
-const YOUKASSA_SHOP_ID = process.env.YOUKASSA_ID;
+const PENDING_ORDERS_PATH = path.join(process.cwd(), 'pendingOrders.json');
+const ASSEMBLY_ORDERS_PATH = path.join(process.cwd(), 'assemblyOrders.json');
+const COMPLETED_ORDERS_PATH = path.join(process.cwd(), 'orders.json');
 
-if (!YOUKASSA_SECRET_KEY || !YOUKASSA_SHOP_ID) {
-  throw new Error('Учетные данные YooKassa не заданы в .env файле.');
-}
-
-const pendingOrdersPath = path.resolve('pendingOrders.json');
-const assemblyOrdersPath = path.resolve('assemblyOrders.json');
-
-const readFile = (filePath) => {
-  if (!fs.existsSync(filePath)) return {};
-  try {
-    const data = fs.readFileSync(filePath, 'utf8');
-    return data ? JSON.parse(data) : {};
-  } catch (error) { console.error(`Ошибка чтения ${filePath}:`, error); return {}; }
+const readFile = (p) => {
+  try { return JSON.parse(fs.readFileSync(p, 'utf8') || '{}'); }
+  catch { return {}; }
 };
-const writeFile = (filePath, data) => fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+const writeFile = (p, d) => fs.writeFileSync(p, JSON.stringify(d, null, 2));
 
-const YooKassa = new YooCheckout({ shopId: YOUKASSA_SHOP_ID, secretKey: YOUKASSA_SECRET_KEY });
+const YooKassa = new YooCheckout({ shopId: process.env.YOUKASSA_ID, secretKey: process.env.YOUKASSA_KEY });
 
+// 1. СОЗДАНИЕ ПЛАТЕЖА
 router.post('/payment', async (req, res) => {
   try {
-    const { 
-      id: orderId, cart, subtotal, totalWithReserve, deliveryCost, ...customerData 
-    } = req.body;
+    const { id: orderId, cart, totalWithReserve, subtotal, deliveryCost, ...customerData } = req.body;
+
+    // ПРОВЕРКА НА ВЕСОВЫЕ ТОВАРЫ
+    const hasWeight = cart.some(item => item.unit === 'Kilogram');
 
     const receiptItems = cart.map(item => ({
       description: item.name.substring(0, 128),
-      quantity: item.quantity.toString(),
+      quantity: String(item.quantity),
       amount: { value: Number(item.price).toFixed(2), currency: 'RUB' },
       vat_code: '1',
       payment_mode: 'full_prepayment',
@@ -47,12 +39,12 @@ router.post('/payment', async (req, res) => {
       measure: item.unit === 'Kilogram' ? 'kilogram' : 'piece'
     }));
 
-      const reserveDifference = parseFloat((totalWithReserve - subtotal).toFixed(2));
-    if (reserveDifference > 0) {
-      receiptItems.push({
-        description: 'Резервирование средств за весовой товар',
+    if (hasWeight) {
+      const reserve = parseFloat((totalWithReserve - subtotal).toFixed(2));
+      if (reserve > 0) receiptItems.push({
+        description: 'Резерв за вес',
         quantity: '1',
-        amount: { value: reserveDifference.toFixed(2), currency: 'RUB' },
+        amount: { value: reserve.toFixed(2), currency: 'RUB' },
         vat_code: '1',
         payment_mode: 'full_prepayment',
         payment_subject: 'service',
@@ -60,185 +52,137 @@ router.post('/payment', async (req, res) => {
       });
     }
 
-    // Шаг 3: Добавляем доставку как отдельную позицию в чек, если она есть.
-    if (deliveryCost > 0) {
-      receiptItems.push({
-        description: 'Доставка',
-        quantity: '1',
-        amount: { value: deliveryCost.toFixed(2), currency: 'RUB' },
-        vat_code: '1',
-        payment_mode: 'full_prepayment',
-        payment_subject: 'service',
-        measure: 'piece'
-      });
-    }
+    if (deliveryCost > 0) receiptItems.push({
+      description: 'Доставка',
+      quantity: '1',
+      amount: { value: Number(deliveryCost).toFixed(2), currency: 'RUB' },
+      vat_code: '1',
+      payment_mode: 'full_prepayment',
+      payment_subject: 'service',
+      measure: 'piece'
+    });
 
-    const finalAmount = receiptItems.reduce((sum, item) => {
-        const itemTotal = Number(item.amount.value) * 100 * Number(item.quantity);
-        return (sum * 100 + itemTotal) / 100;
-    }, 0);
-
-    if (finalAmount <= 0) {
-      return res.status(400).json({ message: 'Некорректная итоговая сумма для оплаты.' });
-    }
+    const finalAmount = receiptItems.reduce((sum, item) => sum + (Math.round(Number(item.amount.value) * 100) * Number(item.quantity)), 0) / 100;
 
     const createPayload = {
-      amount: { value: finalAmount.toFixed(2), currency: 'RUB' }, 
+      amount: { value: finalAmount.toFixed(2), currency: 'RUB' },
+      // ГЛАВНОЕ: Списываем сразу (true), если веса НЕТ. Если вес ЕСТЬ — холдируем (false).
+      capture: !hasWeight,
       confirmation: { type: 'redirect', return_url: 'https://fasol-nvrsk.ru' },
-      description: `Заказ №${orderId} (резервирование средств)`,
-      metadata: { orderId },
-      receipt: {
-        customer: { phone: customerData.phone },
-        items: receiptItems
-      }
+      description: `Заказ №${orderId}`,
+      metadata: { orderId: String(orderId), hasWeight: String(hasWeight) },
+      receipt: { customer: { phone: customerData.phone }, items: receiptItems }
     };
-    
+
     const payment = await YooKassa.createPayment(createPayload, uuidv4());
-    
-    const pendingOrders = readFile(pendingOrdersPath);
-    pendingOrders[payment.id] = req.body;
-    writeFile(pendingOrdersPath, pendingOrders);
+    const pending = readFile(PENDING_ORDERS_PATH);
+    pending[payment.id] = { ...req.body, date: new Date().toISOString() };
+    writeFile(PENDING_ORDERS_PATH, pending);
 
     res.json({ payment });
-
   } catch (error) {
-    console.error('Ошибка при создании платежа:', error.data || error);
-    res.status(400).json({ error: error.data || { message: 'Неизвестная ошибка' } });
+    console.error('Payment Error:', error);
+    res.status(400).json({ error: error.message });
   }
 });
-// ------------------
+
+// 2. ОБРАБОТКА УВЕДОМЛЕНИЙ (WEBHOOK)
 router.post('/payment/notifications', async (req, res) => {
-  console.log('-----------------------------------------');
-  console.log(`[Webhook] ${new Date().toISOString()} - Получено новое уведомление!`);
-  console.log('Тело уведомления:', JSON.stringify(req.body, null, 2));
-
   try {
-    const notification = req.body;
+    const { event, object: obj } = req.body;
+    if (!obj) return res.status(200).send('OK');
 
-    if (notification.event === 'payment.waiting_for_capture' && notification.object?.status === 'waiting_for_capture') {
-      const paymentId = notification.object.id;
-      console.log(`[Webhook] Это успешное холдирование для платежа ID: ${paymentId}`);
+    const orderId = obj.metadata?.orderId;
+    const pending = readFile(PENDING_ORDERS_PATH);
+    const orderData = pending[obj.id];
 
-      const pendingOrders = readFile(pendingOrdersPath);
-      const orderData = pendingOrders[paymentId];
+    if (!orderData) return res.status(200).send('OK');
 
-      if (orderData) {
-        console.log(`[Webhook] Найден ожидающий заказ №${orderData.id}. Начинаю обработку.`);
-        const assemblyOrders = readFile(assemblyOrdersPath);
-        assemblyOrders[orderData.id] = { ...orderData, paymentId: paymentId };
-        writeFile(assemblyOrdersPath, assemblyOrders);
-        console.log(`[Webhook] Заказ №${orderData.id} перенесен в файл сборки (assemblyOrders.json).`);
-        delete pendingOrders[paymentId];
-        writeFile(pendingOrdersPath, pendingOrders);
-        console.log(`[Webhook] Заказ удален из файла ожидания (pendingOrders.json).`);
-        
-        console.log(`[Webhook] Вызываю функцию отправки уведомления в Telegram для заказа №${orderData.id}...`);
-        console.log(`[Webhook] Уведомление для заказа №${orderData.id} успешно отправлено.`);
-
-      } else {
-        console.warn(`[Webhook] ВНИМАНИЕ: Получено уведомление для платежа ${paymentId}, но соответствующий заказ не найден в pendingOrders.json. Возможно, он уже обработан.`);
-      }
-    } else {
-      console.log(`[Webhook] Получено уведомление, но это не 'payment.waiting_for_capture'. Событие: "${notification.event}", Статус: "${notification.object?.status}". Игнорируем.`);
+    // СЦЕНАРИЙ А: Весовой товар (Заморожено) -> В сборку
+    if (event === 'payment.waiting_for_capture') {
+      const assembly = readFile(ASSEMBLY_ORDERS_PATH);
+      assembly[orderId] = { ...orderData, paymentId: obj.id, status: 'new', date: new Date().toISOString() };
+      writeFile(ASSEMBLY_ORDERS_PATH, assembly);
+      delete pending[obj.id];
+      writeFile(PENDING_ORDERS_PATH, pending);
+      console.log(`[Webhook] Заказ №${orderId} (ВЕСОВОЙ) отправлен на сборку.`);
+    }
+    // СЦЕНАРИЙ Б: Обычный товар (Списано сразу) -> В оплаченные
+    else if (event === 'payment.succeeded') {
+      const completed = readFile(COMPLETED_ORDERS_PATH);
+      completed[orderId] = {
+        ...orderData,
+        status: 'new',
+        total: obj.amount.value,
+        date: new Date().toISOString()
+      };
+      writeFile(COMPLETED_ORDERS_PATH, completed);
+      delete pending[obj.id];
+      writeFile(PENDING_ORDERS_PATH, pending);
+      await updateLocalStock(orderData.cart);
+      console.log(`[Webhook] Заказ №${orderId} (ШТУЧНЫЙ) сразу оплачен.`);
     }
 
     res.status(200).send('OK');
-
   } catch (error) {
-    console.error('[Webhook] КРИТИЧЕСКАЯ ОШИБКА при обработке уведомления:', error);
     res.status(200).send('OK');
   }
-  console.log('-----------------------------------------\n');
 });
-const completedOrdersPath = path.resolve('orders.json'); // Путь к оплаченным заказам
 
+// 3. ПОДТВЕРЖДЕНИЕ СБОРКИ (CAPTURE)
 router.post('/payment/capture', async (req, res) => {
   try {
     const { orderId, finalCart } = req.body;
-    if (!orderId || !finalCart) {
-      return res.status(400).json({ message: 'Нет ID заказа или финальной корзины.' });
-    }
+    const assembly = readFile(ASSEMBLY_ORDERS_PATH);
+    const orderData = assembly[orderId];
+    if (!orderData) return res.status(404).send('Заказ не найден');
 
-    const assemblyOrders = readFile(assemblyOrdersPath);
-    const orderData = assemblyOrders[orderId];
-    if (!orderData) {
-      return res.status(404).json({ message: 'Заказ для списания не найден.' });
-    }
+    const itemsTotal = finalCart.reduce((sum, item) => (sum * 100 + (Number(item.price) * 100 * Number(item.quantity))) / 100, 0);
+    const finalTotal = itemsTotal + (orderData.deliveryCost || 0);
 
-    // 1. Считаем сумму товаров (без доставки)
-    const itemsTotal = finalCart.reduce((sum, item) => {
-      return (sum * 100 + (Number(item.price) * 100 * Number(item.quantity))) / 100;
-    }, 0);
-
-    const deliveryCost = orderData.deliveryCost || 0;
-    const finalTotalWithDelivery = itemsTotal + deliveryCost;
-
-    // 2. Формируем чек для ЮKassa
-    const finalReceipt = {
-      customer: { phone: orderData.phone },
-      items: finalCart.map(item => ({
-        description: item.name.substring(0, 128),
-        // Округляем количество до 3 знаков (важно для веса!)
-        quantity: Number(item.quantity).toFixed(3),
-        amount: {
-          value: Number(item.price).toFixed(2),
-          currency: 'RUB'
-        },
-        vat_code: '1',
-        payment_mode: 'full_prepayment',
-        payment_subject: 'commodity',
-        measure: item.unit === 'Kilogram' ? 'kilogram' : 'piece'
-      })),
+    const capturePayload = {
+      amount: { value: finalTotal.toFixed(2), currency: 'RUB' },
+      receipt: {
+        customer: { phone: orderData.phone },
+        items: [...finalCart.map(item => ({
+          description: item.name,
+          quantity: Number(item.quantity).toFixed(3),
+          amount: { value: Number(item.price).toFixed(2), currency: 'RUB' },
+          vat_code: '1', measure: item.unit === 'Kilogram' ? 'kilogram' : 'piece'
+        }))]
+      }
     };
 
-    if (deliveryCost > 0) {
-      finalReceipt.items.push({
-        description: `Доставка: ${orderData.address || ''}`.substring(0, 128),
-        quantity: '1.00',
-        amount: { value: deliveryCost.toFixed(2), currency: 'RUB' },
-        vat_code: '1',
-        payment_mode: 'full_prepayment',
-        payment_subject: 'service',
-        measure: 'piece'
+    if (orderData.deliveryCost > 0) {
+      capturePayload.receipt.items.push({
+        description: 'Доставка', quantity: '1.000',
+        amount: { value: Number(orderData.deliveryCost).toFixed(2), currency: 'RUB' },
+        vat_code: '1', measure: 'piece'
       });
     }
 
-    const capturePayload = {
-      amount: { value: Number(finalTotalWithDelivery).toFixed(2), currency: 'RUB' },
-      receipt: finalReceipt
-    };
-
-    console.log(`\n--- [Capture] Итоговая сумма товаров: ${itemsTotal.toFixed(2)} ₽ ---`);
-    console.log(`--- [Capture] К списанию (с доставкой): ${finalTotalWithDelivery.toFixed(2)} ₽ ---`);
-
-    // 3. Списание в ЮKassa
     await YooKassa.capturePayment(orderData.paymentId, capturePayload, uuidv4());
 
-    // 4. ВАЖНО: Сохраняем в список ОПЛАЧЕННЫХ заказов (orders.json)
-    const completedOrders = readFile(completedOrdersPath);
-    completedOrders[orderId] = {
+    // Переносим в оплаченные
+    const completed = readFile(COMPLETED_ORDERS_PATH);
+    completed[orderId] = {
       ...orderData,
       cart: finalCart,
-      total: finalTotalWithDelivery,
-      itemsTotal: itemsTotal, // Сохраняем сумму без доставки для аналитики
-      status: 'new',
-      date: new Date().toISOString() // Для сортировки по времени
+      total: finalTotal.toFixed(2),
+      itemsTotal,
+      status: 'completed',
+      date: new Date().toISOString()
     };
-    writeFile(completedOrdersPath, completedOrders);
+    writeFile(COMPLETED_ORDERS_PATH, completed);
 
-    // 5. Удаляем из папки сборки
-    delete assemblyOrders[orderId];
-    writeFile(assemblyOrdersPath, assemblyOrders);
-
-    // 6. Обновляем остатки в магазине
+    delete assembly[orderId];
+    writeFile(ASSEMBLY_ORDERS_PATH, assembly);
     await updateLocalStock(finalCart);
 
-    console.log(`[Capture] Заказ №${orderId} успешно обработан и сохранен.`);
-    res.status(200).json({ success: true, message: 'Оплата списана, заказ в списке оплаченных.' });
-
+    res.json({ success: true });
   } catch (error) {
-    console.error('[Capture Error]:', error.data || error);
-    res.status(500).json({ error: error.data || { message: 'Ошибка сервера при списании' } });
+    console.error('Capture Error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
