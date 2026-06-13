@@ -248,6 +248,7 @@ const AdminPage = () => {
                                         <div className="card-body">
                                             <p className="customer-info">👤 {order.customer_name} | {order.phone}</p>
                                             <p className="order-address">📍 {order.address}</p>
+                                            <p className="order-delivery-time">⏰ Привезти к: <strong>{order.deliveryTime}</strong></p>
                                             {order.comment && <div className="order-comment-box">💬 {order.comment}</div>}
                                             <OrderItems cart={order.cart} orderId={order.id} canAdjust={true} />
                                             <div className="card-footer-flex">
@@ -280,6 +281,7 @@ const AdminPage = () => {
                                         <div className="card-body">
                                             <p className="customer-info">👤 {order.customer_name} <br/> 📞 {order.phone}</p>
                                             <p className="order-address">📍 {order.address}</p>
+                                            <p className="order-delivery-time">⏰ Привезти к: <strong>{order.deliveryTime}</strong></p>
                                             {order.comment && <div className="order-comment-box">💬 {order.comment}</div>}
                                             <OrderItems cart={order.cart} />
                                             <div className="total-line">
