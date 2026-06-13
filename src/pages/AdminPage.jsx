@@ -9,61 +9,80 @@ const AdminPage = () => {
     const hydrated = useHydration();
     const navigate = useNavigate();
 
-    // Ссылки для звука и отслеживания новых заказов
+    // Ссылки для звука и отслеживания конкретных ID заказов
     const audioRef = useRef(null);
-    const prevOrdersCount = useRef({ assembly: null, active: null });
+    const knownOrderIds = useRef(new Set()); // Храним Set из ID всех виденных заказов
+    const isFirstLoad = useRef(true); // Флаг для пропуска уведомления при самом первом входе
 
     const [activeTab, setActiveTab] = useState('assembly');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
     const [orders, setOrders] = useState({ assembly: {}, completed: {} });
     const [loading, setLoading] = useState(false);
+    // Функция системного уведомления (работает в фоне)
+    const sendSystemNotification = useCallback((title, body) => {
+        if (!("Notification" in window)) return;
 
-    // Функция уведомления (Звук + Всплывашка)
-    const playNotification = useCallback(() => {
-        if (audioRef.current) {
-            audioRef.current.play().catch(() => {
-                console.log("Браузер заблокировал звук. Нужен клик по странице.");
+        if (Notification.permission === "granted") {
+            const notification = new Notification(title, {
+                body: body,
+                icon: '/log-header.webp', // путь к вашему логотипу
+                tag: 'new-order', // предотвращает дублирование окон
+                silent: false // разрешаем звук системы
             });
+
+            notification.onclick = () => {
+                window.focus(); // При клике на уведомление возвращаемся во вкладку
+                notification.close();
+            };
         }
+    }, []);
+
+    const playNotification = useCallback((count) => {
+        // 1. Играем звук (он сработает в фоне, если вкладка "прогрета" кликом)
+        if (audioRef.current) {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(e => console.warn("Звук заблокирован"));
+        }
+
+        // 2. Показываем баннер внутри сайта
         Swal.fire({
-            title: 'Новый заказ!',
-            text: 'Данные в панели обновлены',
-            icon: 'info',
+            title: `🔔 Новый заказ (${count})`,
+            text: 'Данные обновлены',
+            icon: 'success',
             toast: true,
             position: 'top-end',
             showConfirmButton: false,
-            timer: 4000,
+            timer: 6000,
             timerProgressBar: true,
             background: '#2ecc71',
             color: '#fff'
         });
-    }, []);
 
-    // Основная функция загрузки данных
+        // 3. Отправляем СИСТЕМНОЕ уведомление (увидите даже на другом сайте)
+        sendSystemNotification('🛒 ФАСОЛЬ: Новый заказ!', `Количество новых заказов: ${count}`);
+    }, [sendSystemNotification]);
+
     const loadData = useCallback(async (isSilent = false) => {
         if (!isSilent) setLoading(true);
         try {
             const data = await adminService.getOrders();
+            const currentAssemblyIds = Object.keys(data.assembly || {});
+            const currentNewPaidIds = Object.values(data.completed || {})
+                .filter(o => o.status === 'new')
+                .map(o => o.id);
 
-            // Считаем текущее кол-во заказов для сравнения
-            const currentAssemblyCount = Object.keys(data.assembly || {}).length;
-            const currentActiveCount = Object.values(data.completed || {}).filter(o => o.status === 'new').length;
+            const allCurrentIds = [...currentAssemblyIds, ...currentNewPaidIds];
+            const newIds = allCurrentIds.filter(id => !knownOrderIds.current.has(id));
 
-            // Если данных стало больше, чем было — сигнализируем
-            if (prevOrdersCount.current.assembly !== null) {
-                if (currentAssemblyCount > prevOrdersCount.current.assembly ||
-                    currentActiveCount > prevOrdersCount.current.active) {
-                    playNotification();
-                }
+            if (!isFirstLoad.current && newIds.length > 0) {
+                playNotification(newIds.length);
             }
 
-            // Обновляем счетчики в REF
-            prevOrdersCount.current = { assembly: currentAssemblyCount, active: currentActiveCount };
+            allCurrentIds.forEach(id => knownOrderIds.current.add(id));
+            isFirstLoad.current = false;
             setOrders(data || { assembly: {}, completed: {} });
-
         } catch (e) {
-            console.error('[Admin] Ошибка загрузки данных:', e);
             if (e.response?.status === 401 || e.response?.status === 403) {
                 setIsAuthenticated(false);
                 localStorage.removeItem('admin_token');
@@ -73,26 +92,48 @@ const AdminPage = () => {
         }
     }, [playNotification]);
 
-    // Инициализация при входе
     useEffect(() => {
         if (hydrated) {
+            // Запрашиваем разрешение на системные уведомления
+            if ("Notification" in window && Notification.permission === "default") {
+                Notification.requestPermission();
+            }
+
             audioRef.current = new Audio('/notification.mp3');
+            audioRef.current.load();
 
             const token = localStorage.getItem('admin_token');
             if (token) {
                 setIsAuthenticated(true);
                 loadData();
-
-                // Авто-обновление каждые 30 секунд
                 const interval = setInterval(() => loadData(true), 30000);
                 return () => clearInterval(interval);
             }
-            // Удаляем глобальный лоадер (если он есть в index.html)
             document.getElementById('global-loader')?.remove();
         }
     }, [hydrated, loadData]);
 
-    // --- ФОРМИРОВАНИЕ СПИСКОВ (СОРТИРОВКА) ---
+    // Обработчик входа
+    const handleLogin = async (e) => {
+        e.preventDefault();
+
+        if (audioRef.current) {
+            audioRef.current.play().then(() => {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }).catch(() => {});
+        }
+
+        try {
+            await adminService.login(password);
+            setIsAuthenticated(true);
+            loadData();
+        } catch (e) {
+            Swal.fire('Ошибка', 'Неверный пароль', 'error');
+        }
+    };
+
+    // Списки для рендера
     const assemblyList = useMemo(() => Object.values(orders.assembly || {})
         .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)), [orders.assembly]);
 
@@ -104,42 +145,28 @@ const AdminPage = () => {
         .filter(o => o.status === 'completed' || o.status === 'canceled')
         .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)), [orders.completed]);
 
-    // --- ОБРАБОТЧИКИ ДЕЙСТВИЙ ---
-
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        try {
-            await adminService.login(password);
-            setIsAuthenticated(true);
-            loadData();
-        } catch (e) {
-            Swal.fire('Ошибка', 'Неверный пароль администратора', 'error');
-        }
-    };
 
     const handleUpdateWeight = async (orderId, idx, name) => {
         const { value: grams } = await Swal.fire({
-            title: `⚖️ Вес: ${name}`,
+            title: `⚖️ ${name}`,
             input: 'number',
-            inputLabel: 'Введите точный вес в ГРАММАХ',
+            inputLabel: 'Вес в граммах',
             showCancelButton: true,
             confirmButtonColor: '#2ecc71'
         });
         if (grams) {
             await adminService.updateWeight(orderId, idx, grams / 1000);
             loadData(true);
-            Swal.fire({ title: 'Обновлено', icon: 'success', timer: 800, showConfirmButton: false });
         }
     };
 
     const handleCapture = async (orderId) => {
         const order = orders.assembly[orderId];
-        const itemsTotal = order.cart.reduce((s, i) => s + (i.price * i.quantity), 0);
-        const currentTotal = (itemsTotal + (order.deliveryCost || 0)).toFixed(2);
+        const total = (order.cart.reduce((s, i) => s + (i.price * i.quantity), 0) + (order.deliveryCost || 0)).toFixed(2);
 
         const res = await Swal.fire({
             title: 'Списать оплату?',
-            text: `Сумма: ${currentTotal} ₽. Заказ будет перемещен в раздел "В работе"`,
+            text: `Сумма: ${total} ₽`,
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Да, списать',
@@ -154,9 +181,8 @@ const AdminPage = () => {
                     loadData();
                     setActiveTab('active');
                 }, 1000);
-                Swal.fire('Успешно', 'Средства списаны', 'success');
             } catch (e) {
-                Swal.fire('Ошибка', 'Не удалось провести оплату в ЮKassa', 'error');
+                Swal.fire('Ошибка', 'Не удалось списать средства', 'error');
             }
             setLoading(false);
         }
@@ -165,7 +191,6 @@ const AdminPage = () => {
     const handleCancelOrder = async (orderId) => {
         const res = await Swal.fire({
             title: 'Удалить заказ?',
-            text: 'Заказ будет полностью удален из базы данных!',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Да, удалить',
@@ -174,27 +199,18 @@ const AdminPage = () => {
         if (res.isConfirmed) {
             await adminService.cancelOrder(orderId);
             loadData(true);
-            Swal.fire('Удалено', '', 'success');
         }
     };
 
-    const handleStatusChange = async (orderId, newStatus) => {
-        await adminService.updateStatus(orderId, newStatus);
-        loadData(true);
-    };
-
-    // Вспомогательный компонент списка товаров
     const OrderItems = ({ cart, orderId, canAdjust }) => (
         <ul className="items-list">
             {cart?.map((item, idx) => (
                 <li key={idx} className={item.unit === 'Kilogram' ? 'weighted-row' : ''}>
                     <span className="item-name">{item.name}</span>
                     <div className="item-details">
-                        <span className="item-qty">
-                            {item.unit === 'Kilogram' ? `${(item.quantity * 1000).toFixed(0)}г` : `${item.quantity}шт`}
-                        </span>
+                        <span className="item-qty">{item.unit === 'Kilogram' ? `${(item.quantity * 1000).toFixed(0)}г` : `${item.quantity}шт`}</span>
                         {canAdjust && item.unit === 'Kilogram' && (
-                            <button className="btn-weight" onClick={() => handleUpdateWeight(orderId, idx, item.name)} title="Изменить вес">⚖️</button>
+                            <button className="btn-weight" onClick={() => handleUpdateWeight(orderId, idx, item.name)}>⚖️</button>
                         )}
                     </div>
                 </li>
@@ -227,7 +243,7 @@ const AdminPage = () => {
                         <img src="/log-header.webp" alt="Logo" className="admin-nav-logo" />
                         <div className="admin-nav-text">
                             <span className="admin-nav-title">ФАСОЛЬ</span>
-                            <span className="admin-nav-badge">Панель управления</span>
+                            <span className="admin-nav-badge">Администратор</span>
                         </div>
                     </div>
 
@@ -244,14 +260,13 @@ const AdminPage = () => {
                     </nav>
 
                     <div className="admin-nav-actions">
-                        <button className="refresh-btn" onClick={() => loadData()} disabled={loading}>{loading ? '...' : '🔄'}</button>
+                        <button className="refresh-btn" onClick={() => loadData()}>🔄</button>
                         <button onClick={() => adminService.logout()} className="logout-btn">Выйти</button>
                     </div>
                 </div>
             </header>
 
             <main className="admin-container">
-                {/* 1. ВКЛАДКА СБОРКИ */}
                 {activeTab === 'assembly' && (
                     <section className="orders-section animate-fade">
                         <div className="section-header"><h2>⏳ Ожидают взвешивания</h2></div>
@@ -281,7 +296,6 @@ const AdminPage = () => {
                     </section>
                 )}
 
-                {/* 2. ВКЛАДКА В РАБОТЕ */}
                 {activeTab === 'active' && (
                     <section className="orders-section animate-fade">
                         <div className="section-header"><h2>👨‍🍳 В работе / Курьер</h2></div>
@@ -291,8 +305,8 @@ const AdminPage = () => {
                                     <div key={order.id} className={`admin-order-card status-${order.status}`}>
                                         <div className="card-header">
                                             <strong>№{order.id}</strong>
-                                            <select className="status-select" value={order.status} onChange={(e) => handleStatusChange(order.id, e.target.value)}>
-                                                <option value="new">🆕 Новый</option>
+                                            <select className="status-select" value={order.status} onChange={(e) => adminService.updateStatus(order.id, e.target.value).then(() => loadData(true))}>
+                                                <option value="new">🆕 Новый (Оплачен)</option>
                                                 <option value="in_progress">👨‍🍳 В работе</option>
                                                 <option value="completed">✅ Завершить</option>
                                             </select>
@@ -314,7 +328,6 @@ const AdminPage = () => {
                     </section>
                 )}
 
-                {/* 3. ВКЛАДКА ИСТОРИЯ */}
                 {activeTab === 'history' && (
                     <section className="orders-section animate-fade">
                         <div className="section-header"><h2>✅ История завершенных</h2></div>
@@ -328,7 +341,6 @@ const AdminPage = () => {
                                         </div>
                                         <div className="card-body">
                                             <p className="customer-info">{order.customer_name} | {order.date ? new Date(order.date).toLocaleDateString('ru-RU') : 'Нет даты'}</p>
-                                            <p className="order-address">📍 {order.address}</p>
                                             <OrderItems cart={order.cart} />
                                             <p className="total-line">Сумма: <strong>{order.total} ₽</strong></p>
                                             <button className="btn-delete-link" onClick={() => handleCancelOrder(order.id)}>Удалить из базы</button>
