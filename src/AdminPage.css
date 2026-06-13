@@ -287,7 +287,6 @@
     padding: 0 5px;
 }
 
-/* Комментарии */
 .order-comment-box {
     background: #fff9db;
     border-left: 4px solid #f1c40f;
@@ -299,7 +298,6 @@
     font-style: italic;
 }
 
-/* Карточка истории */
 .history-card {
     opacity: 0.85;
     filter: grayscale(0.2);
@@ -316,7 +314,6 @@
 .status-pill.completed { background: #e8f5e9; color: #2ecc71; }
 .status-pill.canceled { background: #ffebee; color: #ff4757; }
 
-/* Кнопка удаления */
 .btn-delete-link {
     background: none;
     border: none;
@@ -329,3 +326,68 @@
 }
 
 .btn-delete-link:hover { color: #ff4757; }
+.tab-count.history-count {
+    background: #b2bec3;
+}
+
+.tab-btn.active .tab-count.history-count {
+    background: #636e72;
+}
+
+/* Лого и Хедер */
+.admin-logo-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.admin-nav-logo {
+    height: 40px;
+    width: auto;
+}
+
+.admin-nav-title {
+    font-weight: 900;
+    font-size: 18px;
+    color: #2c3e50;
+    letter-spacing: 1px;
+}
+
+.admin-nav-badge {
+    font-size: 10px;
+    font-weight: bold;
+    color: #27ae60;
+    display: block;
+    margin-top: -4px;
+}
+
+/* Вкладки и счетчики */
+.tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ff4757;
+    color: white;
+    font-size: 10px;
+    height: 18px;
+    min-width: 18px;
+    border-radius: 10px;
+    margin-left: 5px;
+    padding: 0 4px;
+}
+
+.tab-count.gray {
+    background: #b2bec3;
+}
+
+/* Анимация прихода нового заказа (красное мигание вкладки - опционально) */
+@keyframes pulse-red {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); background: #ff7675; }
+    100% { transform: scale(1); }
+}
+
+.tab-count.new-alert {
+    animation: pulse-red 1s infinite;
+}
