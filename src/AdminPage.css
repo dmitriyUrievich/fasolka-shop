@@ -1,4 +1,4 @@
-/* 1. Глобальные переменные */
+/* --- 1. ПЕРЕМЕННЫЕ --- */
 :root {
     --primary-green: #2ecc71;
     --dark-green: #27ae60;
@@ -11,6 +11,7 @@
     --info-blue: #3498db;
 }
 
+/* --- 2. БАЗОВЫЙ МАКЕТ --- */
 .admin-layout {
     min-height: 100vh;
     background-color: var(--bg-gray);
@@ -18,11 +19,11 @@
     font-family: 'Inter', -apple-system, sans-serif;
 }
 
-/* 2. Навигация и Хедер */
+/* --- 3. ХЕДЕР (НАВИГАЦИЯ) --- */
 .admin-nav {
     background: white;
     padding: 0 20px;
-    height: 70px;
+    height: 80px;
     display: flex;
     align-items: center;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
@@ -38,6 +39,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 15px;
 }
 
 .admin-logo-group {
@@ -45,24 +47,14 @@
     align-items: center;
     gap: 12px;
     cursor: pointer;
+    flex-shrink: 0;
 }
 
-.admin-nav-logo {
-    height: 40px;
-    width: auto;
-}
+.admin-nav-logo { height: 45px; width: auto; }
 
-.admin-nav-text {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.1;
-}
+.admin-nav-text { display: flex; flex-direction: column; line-height: 1.1; }
 
-.admin-nav-title {
-    font-weight: 900;
-    font-size: 18px;
-    letter-spacing: 1px;
-}
+.admin-nav-title { font-weight: 900; font-size: 18px; letter-spacing: 0.5px; }
 
 .admin-nav-badge {
     font-size: 10px;
@@ -71,7 +63,45 @@
     text-transform: uppercase;
 }
 
-/* 3. Вкладки (Tabs) */
+/* Кнопки действий в хедере */
+.admin-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.refresh-btn {
+    background: white;
+    border: 1px solid var(--border-color);
+    padding: 10px 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.2s;
+}
+
+.refresh-btn:hover { background: #f8f9fa; border-color: var(--text-muted); }
+
+/* ВОТ СТИЛЬ ДЛЯ КНОПКИ ВЫХОДА */
+.logout-btn {
+    background: var(--danger-red);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 4px 10px rgba(255, 71, 87, 0.2);
+}
+
+.logout-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+/* --- 4. ВКЛАДКИ (TABS) --- */
 .admin-tabs {
     display: flex;
     background: #eaeff2;
@@ -83,13 +113,13 @@
 .tab-btn {
     border: none;
     background: transparent;
-    padding: 8px 16px;
+    padding: 10px 18px;
     border-radius: 10px;
     font-weight: 700;
     color: var(--text-muted);
     cursor: pointer;
     transition: 0.2s;
-    font-size: 14px;
+    font-size: 13px;
     display: flex;
     align-items: center;
 }
@@ -114,26 +144,20 @@
     padding: 0 6px;
 }
 
-.tab-count.gray {
-    background: #b2bec3;
-}
+.tab-count.gray { background: #b2bec3; }
 
-/* 4. Карточки заказов */
-.admin-container {
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 0 15px;
-}
+/* --- 5. КАРТОЧКИ --- */
+.admin-container { max-width: 1200px; margin: 30px auto; padding: 0 15px; }
 
 .admin-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 25px;
 }
 
 .admin-order-card {
     background: white;
-    border-radius: 16px;
+    border-radius: 18px;
     border: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
@@ -141,13 +165,16 @@
     transition: 0.3s;
 }
 
-.admin-order-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
-}
+.admin-order-card:hover { transform: translateY(-4px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+
+/* Цветные полоски статусов */
+.assembly-card { border-top: 5px solid var(--warning-yellow); }
+.status-new { border-top: 5px solid var(--info-blue); }
+.status-in_progress { border-top: 5px solid var(--warning-yellow); }
+.status-completed { border-top: 5px solid var(--primary-green); opacity: 0.9; }
 
 .card-header {
-    padding: 12px 15px;
+    padding: 15px 20px;
     background: #f8f9fa;
     border-bottom: 1px solid var(--border-color);
     display: flex;
@@ -155,55 +182,44 @@
     align-items: center;
 }
 
-.card-body {
-    padding: 20px;
-    flex-grow: 1;
-}
+.card-body { padding: 20px; flex-grow: 1; }
 
-/* Статусы границ карточек */
-.assembly-card { border-top: 4px solid var(--warning-yellow); }
-.status-new { border-top: 4px solid var(--info-blue); }
-.status-in_progress { border-top: 4px solid var(--warning-yellow); }
-.status-completed { border-top: 4px solid var(--primary-green); opacity: 0.85; }
+.customer-info { font-weight: 700; font-size: 16px; margin-bottom: 10px; color: var(--text-main); }
 
-/* 5. Элементы внутри карточки */
-.items-list {
-    list-style: none;
-    padding: 0;
-    margin: 15px 0;
-    border-top: 1px solid #f0f0f0;
-}
+/* Списки товаров */
+.items-list { list-style: none; padding: 0; margin: 15px 0; border-top: 1px solid #f0f0f0; }
 
 .items-list li {
     display: flex;
     justify-content: space-between;
-    padding: 10px 0;
+    padding: 12px 0;
     border-bottom: 1px dashed #eee;
     font-size: 14px;
 }
 
-.weighted-row {
-    background: #fffdf0;
-    margin: 0 -5px;
-    padding: 10px 5px !important;
+.weighted-row { background: #fffdf0; padding: 12px 5px !important; margin: 0 -5px; }
+
+/* Чекбоксы и индикаторы */
+.checkbox-indicator {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--primary-green);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-green);
+    font-weight: 900;
+    background: white;
 }
 
-.order-comment-box {
-    background: #fff9db;
-    border-left: 4px solid var(--warning-yellow);
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    font-size: 13.5px;
-    color: #856404;
-}
-
-/* 6. Кнопки */
+/* --- 6. КНОПКИ КАРТОЧКИ --- */
 .card-footer-flex {
     display: flex;
     gap: 10px;
-    padding: 15px;
+    padding: 15px 20px;
     background: #fafafa;
+    border-top: 1px solid #f0f0f0;
 }
 
 .btn-cancel {
@@ -226,65 +242,153 @@
     border-radius: 12px;
     font-weight: 700;
     cursor: pointer;
-}
-
-.btn-delete-link {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 12px;
-    text-decoration: underline;
-    cursor: pointer;
-    margin-top: 15px;
+    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.2);
 }
 
 .btn-weight {
-    background: var(--bg-gray);
+    background: #f1f2f6;
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 5px 10px;
+    padding: 6px 12px;
     cursor: pointer;
+    font-size: 16px;
 }
 
-/* 7. Логин */
+/* Прочее */
+.order-delivery-time {
+    font-size: 14px; color: #2c3e50; margin: 10px 0;
+    background: #e8f4fd; padding: 6px 12px; border-radius: 8px; display: inline-block;
+}
+
+.order-comment-box {
+    background: #fff9db; border-left: 4px solid var(--warning-yellow);
+    padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; color: #856404;
+}
+
+.status-pill {
+    font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 800;
+}
+.status-pill.completed { background: #e8f5e9; color: #2ecc71; }
+.status-pill.canceled { background: #ffebee; color: #ff4757; }
+
 .admin-login-container {
     height: 100vh;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
+    /* Яркий фирменный градиент на весь экран */
     background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
 }
 
 .login-box {
     background: white;
-    padding: 40px;
-    border-radius: 24px;
-    text-align: center;
+    padding: 40px 30px;
+    border-radius: 28px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
     width: 100%;
-    max-width: 380px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    max-width: 400px;
+    text-align: center;
+    box-sizing: border-box;
 }
 
-.animate-fade {
-    animation: fadeIn 0.4s ease;
+.login-logo {
+    height: 70px;
+    width: auto;
+    margin-bottom: 20px;
 }
 
-.order-delivery-time {
-    font-size: 14px;
-    color: #2c3e50;
-    margin: 8px 0;
-    background: #e8f4fd; /* Легкий голубой фон */
-    padding: 6px 10px;
-    border-radius: 8px;
-    display: inline-block;
+.login-box h2 {
+    color: var(--text-main);
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 30px;
+    letter-spacing: 1px;
 }
 
-.order-delivery-time strong {
-    color: #2980b9;
+.login-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.login-form input {
+    width: 100%;
+    padding: 16px;
+    margin-bottom: 20px;
+    border: 2px solid #f0f3f7;
+    border-radius: 14px;
+    font-size: 16px;
+    background-color: #f8fafc;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    outline: none;
+}
+
+.login-form input:focus {
+    border-color: var(--primary-green);
+    background-color: white;
+    box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.1);
+}
+
+.login-form button {
+    width: 100%;
+    padding: 16px;
+    background-color: var(--primary-green);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
     font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+.login-form button:hover {
+    background-color: var(--dark-green);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(39, 174, 96, 0.4);
+}
+
+.login-form button:active {
+    transform: translateY(0);
+}
+
+/* Анимация появления */
+.animate-fade {
+    animation: loginAppear 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes loginAppear {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 480px) {
+    .login-box {
+        padding: 30px 20px;
+        width: 90%;
+    }
+
+    .login-box h2 {
+        font-size: 18px;
+    }
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 800px) {
+    .admin-nav-content { flex-direction: column; height: auto; padding: 20px; gap: 20px; }
+    .admin-tabs { width: 100%; overflow-x: auto; justify-content: center; }
+    .admin-grid { grid-template-columns: 1fr; }
 }

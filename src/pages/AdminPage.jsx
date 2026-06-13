@@ -8,9 +8,10 @@ import '../AdminPage.css';
 const AdminPage = () => {
     const hydrated = useHydration();
     const navigate = useNavigate();
+
     // Ссылки для звука и отслеживания новых заказов
     const audioRef = useRef(null);
-    const prevOrdersCount = useRef({ assembly: 0, active: 0 });
+    const prevOrdersCount = useRef({ assembly: null, active: null });
 
     const [activeTab, setActiveTab] = useState('assembly');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -18,37 +19,38 @@ const AdminPage = () => {
     const [orders, setOrders] = useState({ assembly: {}, completed: {} });
     const [loading, setLoading] = useState(false);
 
-    // Функция для запуска уведомления (звук + текст)
+    // Функция уведомления (Звук + Всплывашка)
     const playNotification = useCallback(() => {
         if (audioRef.current) {
             audioRef.current.play().catch(() => {
-                console.log("Автовоспроизведение звука заблокировано браузером. Требуется клик.");
+                console.log("Браузер заблокировал звук. Нужен клик по странице.");
             });
         }
         Swal.fire({
             title: 'Новый заказ!',
-            text: 'В панель управления поступили новые данные',
+            text: 'Данные в панели обновлены',
             icon: 'info',
             toast: true,
             position: 'top-end',
             showConfirmButton: false,
-            timer: 5000,
+            timer: 4000,
             timerProgressBar: true,
             background: '#2ecc71',
             color: '#fff'
         });
     }, []);
 
+    // Основная функция загрузки данных
     const loadData = useCallback(async (isSilent = false) => {
         if (!isSilent) setLoading(true);
         try {
             const data = await adminService.getOrders();
 
-            // Проверка на новые заказы для уведомления
+            // Считаем текущее кол-во заказов для сравнения
             const currentAssemblyCount = Object.keys(data.assembly || {}).length;
             const currentActiveCount = Object.values(data.completed || {}).filter(o => o.status === 'new').length;
 
-            // Если это не первая загрузка и заказов стало больше - сигналим
+            // Если данных стало больше, чем было — сигнализируем
             if (prevOrdersCount.current.assembly !== null) {
                 if (currentAssemblyCount > prevOrdersCount.current.assembly ||
                     currentActiveCount > prevOrdersCount.current.active) {
@@ -56,14 +58,12 @@ const AdminPage = () => {
                 }
             }
 
-            // Сохраняем текущее кол-во для следующего сравнения
-            prevOrdersCount.current = {
-                assembly: currentAssemblyCount,
-                active: currentActiveCount
-            };
-
+            // Обновляем счетчики в REF
+            prevOrdersCount.current = { assembly: currentAssemblyCount, active: currentActiveCount };
             setOrders(data || { assembly: {}, completed: {} });
+
         } catch (e) {
+            console.error('[Admin] Ошибка загрузки данных:', e);
             if (e.response?.status === 401 || e.response?.status === 403) {
                 setIsAuthenticated(false);
                 localStorage.removeItem('admin_token');
@@ -73,10 +73,9 @@ const AdminPage = () => {
         }
     }, [playNotification]);
 
-    // Инициализация при загрузке
+    // Инициализация при входе
     useEffect(() => {
         if (hydrated) {
-            // Инициализируем аудио объект
             audioRef.current = new Audio('/notification.mp3');
 
             const token = localStorage.getItem('admin_token');
@@ -84,18 +83,16 @@ const AdminPage = () => {
                 setIsAuthenticated(true);
                 loadData();
 
-                // Настройка автообновления каждые 30 секунд
-                const interval = setInterval(() => {
-                    loadData(true);
-                }, 30000);
-
+                // Авто-обновление каждые 30 секунд
+                const interval = setInterval(() => loadData(true), 30000);
                 return () => clearInterval(interval);
             }
+            // Удаляем глобальный лоадер (если он есть в index.html)
             document.getElementById('global-loader')?.remove();
         }
     }, [hydrated, loadData]);
 
-    // Списки заказов
+    // --- ФОРМИРОВАНИЕ СПИСКОВ (СОРТИРОВКА) ---
     const assemblyList = useMemo(() => Object.values(orders.assembly || {})
         .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)), [orders.assembly]);
 
@@ -107,6 +104,8 @@ const AdminPage = () => {
         .filter(o => o.status === 'completed' || o.status === 'canceled')
         .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)), [orders.completed]);
 
+    // --- ОБРАБОТЧИКИ ДЕЙСТВИЙ ---
+
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
@@ -114,13 +113,13 @@ const AdminPage = () => {
             setIsAuthenticated(true);
             loadData();
         } catch (e) {
-            Swal.fire('Ошибка', 'Неверный пароль', 'error');
+            Swal.fire('Ошибка', 'Неверный пароль администратора', 'error');
         }
     };
 
     const handleUpdateWeight = async (orderId, idx, name) => {
         const { value: grams } = await Swal.fire({
-            title: `⚖️ ${name}`,
+            title: `⚖️ Вес: ${name}`,
             input: 'number',
             inputLabel: 'Введите точный вес в ГРАММАХ',
             showCancelButton: true,
@@ -129,19 +128,21 @@ const AdminPage = () => {
         if (grams) {
             await adminService.updateWeight(orderId, idx, grams / 1000);
             loadData(true);
+            Swal.fire({ title: 'Обновлено', icon: 'success', timer: 800, showConfirmButton: false });
         }
     };
 
     const handleCapture = async (orderId) => {
         const order = orders.assembly[orderId];
-        const currentTotal = (order.cart.reduce((s, i) => s + (i.price * i.quantity), 0) + (order.deliveryCost || 0)).toFixed(2);
+        const itemsTotal = order.cart.reduce((s, i) => s + (i.price * i.quantity), 0);
+        const currentTotal = (itemsTotal + (order.deliveryCost || 0)).toFixed(2);
 
         const res = await Swal.fire({
             title: 'Списать оплату?',
-            text: `Сумма к списанию: ${currentTotal} ₽`,
+            text: `Сумма: ${currentTotal} ₽. Заказ будет перемещен в раздел "В работе"`,
             icon: 'question',
             showCancelButton: true,
-            confirmButtonText: 'Списать',
+            confirmButtonText: 'Да, списать',
             confirmButtonColor: '#2ecc71'
         });
 
@@ -152,38 +153,37 @@ const AdminPage = () => {
                 setTimeout(() => {
                     loadData();
                     setActiveTab('active');
-                }, 1500);
-                Swal.fire('Успех', 'Оплата списана. Заказ в работе.', 'success');
+                }, 1000);
+                Swal.fire('Успешно', 'Средства списаны', 'success');
             } catch (e) {
-                Swal.fire('Ошибка', 'Не удалось списать средства', 'error');
+                Swal.fire('Ошибка', 'Не удалось провести оплату в ЮKassa', 'error');
             }
             setLoading(false);
         }
     };
 
-    if (!hydrated) return null;
+    const handleCancelOrder = async (orderId) => {
+        const res = await Swal.fire({
+            title: 'Удалить заказ?',
+            text: 'Заказ будет полностью удален из базы данных!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Да, удалить',
+            confirmButtonColor: '#ff4757'
+        });
+        if (res.isConfirmed) {
+            await adminService.cancelOrder(orderId);
+            loadData(true);
+            Swal.fire('Удалено', '', 'success');
+        }
+    };
 
-    if (!isAuthenticated) {
-        return (
-            <div className="admin-login-container">
-                <div className="login-box">
-                    <img src="/log-header.webp" alt="Logo" className="login-logo" />
-                    <h2>ФАСОЛЬ АДМИН</h2>
-                    <form onSubmit={handleLogin} className="login-form">
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
-                            placeholder="Пароль администратора"
-                            autoFocus
-                        />
-                        <button type="submit">Войти</button>
-                    </form>
-                </div>
-            </div>
-        );
-    }
+    const handleStatusChange = async (orderId, newStatus) => {
+        await adminService.updateStatus(orderId, newStatus);
+        loadData(true);
+    };
 
+    // Вспомогательный компонент списка товаров
     const OrderItems = ({ cart, orderId, canAdjust }) => (
         <ul className="items-list">
             {cart?.map((item, idx) => (
@@ -194,13 +194,30 @@ const AdminPage = () => {
                             {item.unit === 'Kilogram' ? `${(item.quantity * 1000).toFixed(0)}г` : `${item.quantity}шт`}
                         </span>
                         {canAdjust && item.unit === 'Kilogram' && (
-                            <button className="btn-weight" onClick={() => handleUpdateWeight(orderId, idx, item.name)}>⚖️</button>
+                            <button className="btn-weight" onClick={() => handleUpdateWeight(orderId, idx, item.name)} title="Изменить вес">⚖️</button>
                         )}
                     </div>
                 </li>
             ))}
         </ul>
     );
+
+    if (!hydrated) return null;
+
+    if (!isAuthenticated) {
+        return (
+            <div className="admin-login-container">
+                <div className="login-box animate-fade">
+                    <img src="/log-header.webp" alt="Logo" className="login-logo" />
+                    <h2>ФАСОЛЬ АДМИН</h2>
+                    <form onSubmit={handleLogin} className="login-form">
+                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Пароль" autoFocus />
+                        <button type="submit">Войти</button>
+                    </form>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="admin-layout">
@@ -227,32 +244,33 @@ const AdminPage = () => {
                     </nav>
 
                     <div className="admin-nav-actions">
-                        <button className="refresh-btn" onClick={() => loadData()}>🔄</button>
+                        <button className="refresh-btn" onClick={() => loadData()} disabled={loading}>{loading ? '...' : '🔄'}</button>
                         <button onClick={() => adminService.logout()} className="logout-btn">Выйти</button>
                     </div>
                 </div>
             </header>
 
             <main className="admin-container">
+                {/* 1. ВКЛАДКА СБОРКИ */}
                 {activeTab === 'assembly' && (
                     <section className="orders-section animate-fade">
                         <div className="section-header"><h2>⏳ Ожидают взвешивания</h2></div>
-                        {assemblyList.length === 0 ? <p className="empty-msg">Весовых заказов нет</p> : (
+                        {assemblyList.length === 0 ? <p className="empty-msg">Новых весовых заказов нет</p> : (
                             <div className="admin-grid">
                                 {assemblyList.map(order => (
-                                    <div key={order.id} className="admin-order-card assembly-card">
+                                    <div key={order.id} className="admin-order-card assembly-card highlight">
                                         <div className="card-header">
-                                            <span className="order-id">№{order.id}</span>
-                                            <span className="order-time">{new Date(order.date).toLocaleTimeString()}</span>
+                                            <strong>Заказ №{order.id}</strong>
+                                            <span>{order.date ? new Date(order.date).toLocaleTimeString() : ''}</span>
                                         </div>
                                         <div className="card-body">
                                             <p className="customer-info">👤 {order.customer_name} | {order.phone}</p>
                                             <p className="order-address">📍 {order.address}</p>
-                                            <p className="order-delivery-time">⏰ Привезти к: <strong>{order.deliveryTime}</strong></p>
+                                            <div className="order-delivery-time">⏰ Привезти к: <strong>{order.deliveryTime || 'Как можно скорее'}</strong></div>
                                             {order.comment && <div className="order-comment-box">💬 {order.comment}</div>}
                                             <OrderItems cart={order.cart} orderId={order.id} canAdjust={true} />
                                             <div className="card-footer-flex">
-                                                <button className="btn-cancel" onClick={() => adminService.cancelOrder(order.id).then(() => loadData(true))}>Отмена</button>
+                                                <button className="btn-cancel" onClick={() => handleCancelOrder(order.id)}>Отмена</button>
                                                 <button className="capture-btn" onClick={() => handleCapture(order.id)} disabled={loading}>✅ Списать</button>
                                             </div>
                                         </div>
@@ -263,6 +281,7 @@ const AdminPage = () => {
                     </section>
                 )}
 
+                {/* 2. ВКЛАДКА В РАБОТЕ */}
                 {activeTab === 'active' && (
                     <section className="orders-section animate-fade">
                         <div className="section-header"><h2>👨‍🍳 В работе / Курьер</h2></div>
@@ -272,7 +291,7 @@ const AdminPage = () => {
                                     <div key={order.id} className={`admin-order-card status-${order.status}`}>
                                         <div className="card-header">
                                             <strong>№{order.id}</strong>
-                                            <select className="status-select" value={order.status} onChange={(e) => adminService.updateStatus(order.id, e.target.value).then(() => loadData(true))}>
+                                            <select className="status-select" value={order.status} onChange={(e) => handleStatusChange(order.id, e.target.value)}>
                                                 <option value="new">🆕 Новый</option>
                                                 <option value="in_progress">👨‍🍳 В работе</option>
                                                 <option value="completed">✅ Завершить</option>
@@ -281,7 +300,7 @@ const AdminPage = () => {
                                         <div className="card-body">
                                             <p className="customer-info">👤 {order.customer_name} <br/> 📞 {order.phone}</p>
                                             <p className="order-address">📍 {order.address}</p>
-                                            <p className="order-delivery-time">⏰ Привезти к: <strong>{order.deliveryTime}</strong></p>
+                                            <div className="order-delivery-time">⏰ Привезти к: <strong>{order.deliveryTime || 'Ближайшее'}</strong></div>
                                             {order.comment && <div className="order-comment-box">💬 {order.comment}</div>}
                                             <OrderItems cart={order.cart} />
                                             <div className="total-line">
@@ -295,6 +314,7 @@ const AdminPage = () => {
                     </section>
                 )}
 
+                {/* 3. ВКЛАДКА ИСТОРИЯ */}
                 {activeTab === 'history' && (
                     <section className="orders-section animate-fade">
                         <div className="section-header"><h2>✅ История завершенных</h2></div>
@@ -308,10 +328,10 @@ const AdminPage = () => {
                                         </div>
                                         <div className="card-body">
                                             <p className="customer-info">{order.customer_name} | {order.date ? new Date(order.date).toLocaleDateString('ru-RU') : 'Нет даты'}</p>
-                                            {order.comment && <div className="order-comment-box">💬 {order.comment}</div>}
+                                            <p className="order-address">📍 {order.address}</p>
                                             <OrderItems cart={order.cart} />
                                             <p className="total-line">Сумма: <strong>{order.total} ₽</strong></p>
-                                            <button className="btn-delete-link" onClick={() => adminService.cancelOrder(order.id).then(() => loadData(true))}>Удалить из базы</button>
+                                            <button className="btn-delete-link" onClick={() => handleCancelOrder(order.id)}>Удалить из базы</button>
                                         </div>
                                     </div>
                                 ))}
