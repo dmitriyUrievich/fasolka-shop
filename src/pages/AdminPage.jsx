@@ -210,7 +210,7 @@ const AdminPage = () => {
                         <img src="/log-header.webp" alt="Logo" className="admin-nav-logo" />
                         <div className="admin-nav-text">
                             <span className="admin-nav-title">ФАСОЛЬ</span>
-                            <span className="admin-nav-badge">АДМИН</span>
+                            <span className="admin-nav-badge">Панель управления</span>
                         </div>
                     </div>
 
@@ -227,9 +227,7 @@ const AdminPage = () => {
                     </nav>
 
                     <div className="admin-nav-actions">
-                        <button className="refresh-btn" onClick={() => loadData()} disabled={loading}>
-                            {loading ? '...' : '🔄'}
-                        </button>
+                        <button className="refresh-btn" onClick={() => loadData()}>🔄</button>
                         <button onClick={() => adminService.logout()} className="logout-btn">Выйти</button>
                     </div>
                 </div>
@@ -239,16 +237,16 @@ const AdminPage = () => {
                 {activeTab === 'assembly' && (
                     <section className="orders-section animate-fade">
                         <div className="section-header"><h2>⏳ Ожидают взвешивания</h2></div>
-                        {assemblyList.length === 0 ? <p className="empty-msg">Новых весовых заказов нет</p> : (
+                        {assemblyList.length === 0 ? <p className="empty-msg">Весовых заказов нет</p> : (
                             <div className="admin-grid">
                                 {assemblyList.map(order => (
-                                    <div key={order.id} className="admin-order-card assembly-card highlight">
+                                    <div key={order.id} className="admin-order-card assembly-card">
                                         <div className="card-header">
-                                            <strong>Заказ №{order.id}</strong>
-                                            <span>{new Date(order.date).toLocaleTimeString()}</span>
+                                            <span className="order-id">№{order.id}</span>
+                                            <span className="order-time">{new Date(order.date).toLocaleTimeString()}</span>
                                         </div>
                                         <div className="card-body">
-                                            <p className="customer-info">👤 {order.customer_name} <br/> 📞 {order.phone}</p>
+                                            <p className="customer-info">👤 {order.customer_name} | {order.phone}</p>
                                             <p className="order-address">📍 {order.address}</p>
                                             {order.comment && <div className="order-comment-box">💬 {order.comment}</div>}
                                             <OrderItems cart={order.cart} orderId={order.id} canAdjust={true} />
@@ -307,7 +305,7 @@ const AdminPage = () => {
                                             <span className={`status-pill ${order.status}`}>{order.status === 'completed' ? 'Выполнен' : 'Отменен'}</span>
                                         </div>
                                         <div className="card-body">
-                                            <p className="customer-info">{order.customer_name} | {new Date(order.date).toLocaleDateString()}</p>
+                                            <p className="customer-info">{order.customer_name} | {order.date ? new Date(order.date).toLocaleDateString('ru-RU') : 'Нет даты'}</p>
                                             {order.comment && <div className="order-comment-box">💬 {order.comment}</div>}
                                             <OrderItems cart={order.cart} />
                                             <p className="total-line">Сумма: <strong>{order.total} ₽</strong></p>

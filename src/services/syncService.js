@@ -29,12 +29,6 @@ const calculateAnalytics = (cheques, rawProducts) => {
         return { popularityMap, stats: { totalRevenue: 0, totalCheques: 0 } };
     }
 
-    // --- ВОТ ЭТОТ ВЫВОД НАМ НУЖЕН ---
-    //console.log('==========================================');
-    //console.log('[DEBUG] ПОЛНАЯ СТРУКТУРА ПЕРВОГО ЧЕКА:');
-    //console.log(JSON.stringify(cheques[0], null, 2));
-    //console.log('==========================================');
-
     // Карта для сопоставления
     const productById = new Map();
     const productByCode = new Map();
@@ -78,9 +72,6 @@ const calculateAnalytics = (cheques, rawProducts) => {
     };
 };
 
-/**
- * УНИВЕРСАЛЬНЫЙ ЗАГРУЗЧИК С ПАГИНАЦИЕЙ
- */
 const fetchAllPagesBackend = async (url, name, params = {}) => {
     let allItems = [];
     let offset = 0;
@@ -207,11 +198,17 @@ export const syncProductsFromApi = async (isFullSync = false) => {
         // 4. Собираем финальный массив
         const mergedProducts = products.map(p => {
             const guid = String(getVal(p, 'id') || '').toLowerCase();
+            const pType = getVal(p, 'productType');
+
+            // Если это техкарта (пицца), принудительно ставим большой остаток,
+            // чтобы фильтры её не скрыли, т.к. она готовится под заказ.
+            const currentRest = pType === 'TechCard' ? 999 : (restsMap.get(guid) || 0);
+
             return {
                 ...p,
                 id: getVal(p, 'id'),
-                rests: restsMap.get(guid) || 0,
-                popularityScore: popularityMap[guid] || 0 // Либо новый из чеков, либо старый из файла
+                rests: currentRest,
+                popularityScore: popularityMap[guid] || 0
             };
         });
         // 5. Сохраняем
@@ -221,6 +218,23 @@ export const syncProductsFromApi = async (isFullSync = false) => {
             analytics: stats,
             lastSync: new Date().toISOString()
         };
+
+        const techCards = mergedProducts.filter(p =>
+            (p.productType || p.ProductType) === 'TechCard'
+        );
+
+        if (techCards.length > 0) {
+            console.log('\n=== СПИСОК СОСТАВНЫХ ТОВАРОВ (ПИЦЦЫ/БЛЮДА) ===');
+            console.table(techCards.map(p => ({
+                "Название": p.name || p.Name,
+                "Код": p.code || p.Code,
+                "Вариантов (Packs)": p.packs?.length || 0,
+                "ID": p.id
+            })));
+        } else {
+            console.log('\n[Sync] Составных товаров (TechCard) не найдено.');
+        }
+
         await fs.mkdir(path.dirname(PRODUCTS_DB_PATH), { recursive: true });
         await fs.writeFile(PRODUCTS_DB_PATH, JSON.stringify(dataToStore, null, 2));
 
@@ -230,8 +244,6 @@ export const syncProductsFromApi = async (isFullSync = false) => {
         console.error('[Sync Error]:', error);
     }
 };
-
-
 
 export const getLocalProducts = async () => {
     try {

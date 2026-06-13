@@ -16,7 +16,7 @@ const ProductCard = React.memo(({ product, ageConfirmed, onConfirmAge, isDiscoun
 
 
   const { imageSrc, isFallbackState, onImageError } = useProductImage(id, rawName);
-
+  const isTechCard = product.productType === 'TechCard';
   const name = useMemo(() => Utils.capitalize(rawName), [rawName]);
   const isWeighted = unit === 'Kilogram';
   const portion = useMemo(() => (isWeighted ? getPortion(rawName, unit) : null), [rawName, unit, isWeighted]);
@@ -33,8 +33,11 @@ const ProductCard = React.memo(({ product, ageConfirmed, onConfirmAge, isDiscoun
 
   const { decrement, nextStepAvailable } = useMemo(() => {
     const inc = isWeighted && portion ? portion.weightInGrams / 1000 : isWeighted ? 0.1 : 1;
-    return { decrement: inc, nextStepAvailable: quantity + inc <= (isWeighted ? rests : Math.floor(rests)) };
-  }, [isWeighted, portion, rests, quantity]);
+    // Если это техкарта, то следующий шаг всегда доступен, иначе проверяем по остаткам
+    const isAvailableByRest = isTechCard ? true : quantity + inc <= (isWeighted ? rests : Math.floor(rests));
+
+    return { decrement: inc, nextStepAvailable: isAvailableByRest };
+  }, [isWeighted, portion, rests, quantity, isTechCard]);
 
   const srcSet = useMemo(() => Utils.generateSrcSet(imageSrc, isFallbackState), [imageSrc, isFallbackState]);
 
@@ -44,7 +47,20 @@ const ProductCard = React.memo(({ product, ageConfirmed, onConfirmAge, isDiscoun
   return (
       <div className="product-card">
         <div className="product-card__image-wrapper">
-          {isDiscount && <div className="product-card__special-offer"><span>Акция</span></div>}
+          {/* Плашка Акция (слева) */}
+          {isDiscount && (
+              <div className="product-card__badge product-card__badge--discount">
+                <span>Акция</span>
+              </div>
+          )}
+
+          {/* Плашка Под заказ (справа) */}
+          {(product.productType === 'TechCard' || product.rests >= 999) && (
+              <div className="product-card__badge product-card__badge--fresh">
+                <span>Под заказ</span>
+              </div>
+          )}
+
           <img
               src={imageSrc}
               srcSet={srcSet}
@@ -68,7 +84,7 @@ const ProductCard = React.memo(({ product, ageConfirmed, onConfirmAge, isDiscoun
 
           {isAgeRestricted && !ageConfirmed ? (
               <button className="product-card__button" onClick={onConfirmAge}>Подтвердить возраст</button>
-          ) : productType === 'LightAlcohol' ? (
+          ) : disableBuy || productType === 'LightAlcohol' ? (
               <button className="product-card__button" disabled>Только в магазине</button>
           ) : (
               <>
@@ -81,10 +97,11 @@ const ProductCard = React.memo(({ product, ageConfirmed, onConfirmAge, isDiscoun
                 ) : (
                     <button
                         className="product-card__button"
-                        disabled={rests === 0 || disableBuy}
+                        // Кнопка активна, если это техкарта ИЛИ остаток > 0
+                        disabled={(!isTechCard && rests <= 0) || disableBuy}
                         onClick={handleAddToCart}
                     >
-                      {rests > 0 && !disableBuy ? 'Добавить в корзину' : 'Нет в наличии'}
+                      {(isTechCard || rests > 0) && !disableBuy ? 'Добавить в корзину' : 'Нет в наличии'}
                     </button>
                 )}
               </>

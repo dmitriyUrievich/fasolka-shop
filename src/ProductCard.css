@@ -8,25 +8,16 @@
   position: relative;
   flex-direction: column;
   border: 1px solid rgba(var(--farm-dark-green-rgb), 0.1);
-  width: 100%; 
+  width: 100%;
   max-width: var(--card-max-width, 360px);
-  min-height: 320px;            
+  min-height: 320px;
   box-sizing: border-box;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   animation: fadeInUp 0.5s ease forwards;
   animation-delay: calc(var(--card-delay, 0) * 0.1s);
 }
 
-.product-card__name{
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  font-weight: 600;
-  min-height: 4.8em; /* Примерно 3 строки текста (1.2em * 3) */
-  color: #333;
-  line-height: 1.2em;
-}
+
 .product-card__image-wrapper {
     width: 100%;
     aspect-ratio: 4 / 3;
@@ -35,10 +26,39 @@
     justify-content: center;
     background-color: #f8f8f8;
     overflow: hidden;
+    position: relative;
+    border-radius: 12px;
   }
+.product-card__badge--discount {
+  left: 10px;
+  background: linear-gradient(135deg, #ff4757, #ff6b81);
+}
+
+.product-card__badge--fresh {
+  right: 10px;
+  background: linear-gradient(135deg, #3498db, #2980b9); /* Можно сменить на оранжевый: #f39c12 */
+}
+.product-card__badge span {
+  display: block;
+  line-height: 1;
+}
+.product-card__badge {
+  position: absolute;
+  top: 10px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  color: white;
+}
   .product-card__image {
     width: 100%;
-    height: 100%;  
+    height: 100%;
+    z-index: 1;
+    display: block;
     object-fit: contain;
     transition: opacity 0.3s ease;
   }
@@ -59,7 +79,6 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-
 
 /* шум/затемнение поверх картинки */
 .product-card__age-overlay {
@@ -128,50 +147,32 @@
   box-sizing: border-box;
   min-height: 0;
 }
- .product-card__button {
-  margin-top: auto;        
-  flex-shrink: 0;          
-  padding: 10px 14px;
+
+/* === Кнопка (заглушка) === */
+.product-card__button {
+  margin-top: auto;
+  width: 100%;
+  padding: 12px;
   border: none;
-  border-radius: 15px;
+  border-radius: 12px;
   background: linear-gradient(to right, var(--farm-green), #689F38);
   color: #fff;
-  font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 16px;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  min-height: 44px;
-  box-sizing: border-box;
-} 
-
-.product-card__button:disabled { 
-  background: #BDBDBD; 
-  cursor: not-allowed; 
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(46, 204, 113, 0.2);
 }
+
+.product-card__button:disabled {
+  background-color: #b8d6a0;
+  cursor: not-allowed;
+}
+
 .product-card__button:hover:not(:disabled) {
-   transform: translateY(-2px); 
+   transform: translateY(-2px);
 }
 
-.product-card__confirm-button:hover {
-  background: #dd2222;
-}
-
-.product-card__overlay-text {
- position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.45); /* более прозрачный фон только под текстом */
-  color: #fff;
-  padding: 6px 10px;
-  border-radius: 6px;
-  text-align: center;
-  font-size: 0.95rem;
-  font-weight: 600;
-  line-height: 1.3;
-  max-width: 80%;
-  white-space: normal; /* разрешаем перенос строки */
-}
 .quantity-control {
   display: flex;
   align-items: center;
@@ -238,18 +239,15 @@
   line-height: 1.2;
 }
 
-.product-card__image-wrapper {
-  position: relative; /* Обязательно для позиционирования дочерних элементов */
-}
 .product-card__special-offer {
   position: absolute;
   top: 0;
   right: 0;
   width: 80px;  /* Размер "окна", через которое мы смотрим на плашку */
   height: 80px;
-  overflow: hidden; 
-  z-index: 15; 
-  pointer-events: none; 
+  overflow: hidden;
+  z-index: 15;
+  pointer-events: none;
 }
 
 .product-card__special-offer span {
@@ -257,7 +255,7 @@
   display: block;
   width: 100px;
   padding: 5px 0;
-  background-color: #e53935; 
+  background-color: #e53935;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
   color: #fff;
   font-size: 13px;
@@ -281,23 +279,27 @@
     margin: 0 12px 10px;
   }
 
-  /* === Кнопка (заглушка) === */
-  .product-card__button {
-    margin: 0 12px 12px;
-    padding: 10px;
-    background-color: #8bc34a;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.95em;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  .product-card__button:disabled {
-    background-color: #b8d6a0;
-    cursor: not-allowed;
-  }
 
+
+.product-card__fresh-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px; /* Акция слева, Свежее справа */
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* Если есть и Акция и Свежее одновременно, смещаем чуть ниже */
+.product-card__special-offer + .product-card__fresh-badge {
+  top: 40px;
+}
  @keyframes fadeInUp {
     from {
       opacity: 0;
@@ -316,7 +318,7 @@
 
 
 @media (max-width: 480px) {
-  
+
   .product-card__name {
     font-size: 0.95em;
     -webkit-line-clamp: 3;

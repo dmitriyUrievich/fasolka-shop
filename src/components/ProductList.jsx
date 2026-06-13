@@ -58,47 +58,87 @@ const specialOfferCategoryId = useMemo(() => {
     const filteredProducts = useMemo(() => {
         if (!products || !Array.isArray(products)) return [];
 
+        // 1. Находим ID категории выпечки один раз для всего фильтра
+        const bakeryCategory = categories.find(cat =>
+            (cat.name || cat.Name || "").toUpperCase().trim() === 'ВЫПЕЧКА'
+        );
+        const bakeryId = bakeryCategory?.id || bakeryCategory?.Id;
+
         return products.filter((product) => {
             if (!product) return false;
 
             const pGroupId = product.groupId || product.GroupId;
             const pName = product.name || product.Name || "";
+            const pType = product.productType || product.ProductType;
 
+            // Исключаем технические товары (пакеты)
             if (pName.toUpperCase().includes("ПАКЕТ-МАЙКА FASOL")) return false;
 
+            // Поиск по названию
             if (searchTerm && !pName.toLowerCase().includes(searchTerm.toLowerCase())) return false;
 
+            // Фильтр по выбранным категориям
             const matchesCategory = selectedCategoryIds.length > 0
                 ? selectedCategoryIds.includes(pGroupId)
                 : true;
-
             if (!matchesCategory) return false;
+
+            // Если это составное блюдо (TechCard) ИЛИ товар из категории ВЫПЕЧКА,
+            // мы считаем его всегда доступным (готовится под заказ)
+            if (pType === 'TechCard' || (bakeryId && pGroupId === bakeryId)) {
+                return true;
+            }
+
+            // Для всех остальных товаров проверяем реальный остаток
             const r = parseFloat(product.rests || 0);
             const isAvailable = product.unit !== 'Kilogram' ? r > 0 : r >= 0.1;
 
             return isAvailable;
         });
-        // ИЗМЕНЕНО: добавлена зависимость selectedCategoryIds
-    }, [products, selectedCategoryIds, searchTerm, blacklistedCategoryIds]);
+        // Добавляем categories в зависимости, чтобы фильтр обновился при загрузке каталога
+    }, [products, selectedCategoryIds, searchTerm, categories]);
 
     const sortedProducts = useMemo(() => {
         const list = [...filteredProducts];
 
-        const result = list.sort((a, b) => {
+        // 1. Находим ID категории выпечки (кейс-независимо)
+        const bakeryCategory = categories.find(cat =>
+            (cat.name || cat.Name || "").toUpperCase().trim() === 'ВЫПЕЧКА'
+        );
+        const bakeryId = bakeryCategory?.id || bakeryCategory?.Id;
+
+        return list.sort((a, b) => {
+            // --- ПРАВИЛО 0: Ручная сортировка (если пользователь сам выбрал цену) ---
             if (sortOption === 'price-asc') return parseFloat(a.sellPricePerUnit) - parseFloat(b.sellPricePerUnit);
             if (sortOption === 'price-desc') return parseFloat(b.sellPricePerUnit) - parseFloat(a.sellPricePerUnit);
-            if (sortOption === 'quantity-asc') return a.rests - b.rests;
-            if (sortOption === 'quantity-desc') return b.rests - a.rests;
 
-            const scoreA = a.popularityScore || 0;
-            const scoreB = b.popularityScore || 0;
-            if (scoreB !== scoreA) return scoreB - scoreA;
+            // --- ПРАВИЛО 1: Приоритет категории "Выпечка" ---
+            // Это условие работает только если НЕ выбрана конкретная категория (на главной)
+            if (selectedCategoryIds.length === 0 && bakeryId) {
+                const isBakeryA = (a.groupId || a.GroupId) === bakeryId;
+                const isBakeryB = (b.groupId || b.GroupId) === bakeryId;
 
+                if (isBakeryA && !isBakeryB) return -1; // Товар A (выпечка) выше
+                if (!isBakeryA && isBakeryB) return 1;  // Товар B (выпечка) выше
+            }
+
+            // --- ПРАВИЛО 2: Популярность (Default) ---
+            const scoreA = Number(a.popularityScore || 0);
+            const scoreB = Number(b.popularityScore || 0);
+
+            if (scoreB !== scoreA) {
+                return scoreB - scoreA; // У кого больше продаж, тот выше
+            }
+
+            // --- ПРАВИЛО 3: Наличие ---
+            const hasRestA = (a.rests || 0) > 0 ? 1 : 0;
+            const hasRestB = (b.rests || 0) > 0 ? 1 : 0;
+            if (hasRestB !== hasRestA) return hasRestB - hasRestA;
+
+            // --- ПРАВИЛО 4: По алфавиту ---
             return (a.name || "").localeCompare(b.name || "");
         });
-
-        return result;
-    }, [filteredProducts, sortOption]);
+    }, [filteredProducts, sortOption, categories, selectedCategoryIds]);
 
   useEffect(() => setCurrentPage(1), [searchTerm, sortOption, selectedCategoryIds]);
 
@@ -143,6 +183,12 @@ const specialOfferCategoryId = useMemo(() => {
             console.groupEnd();
         }
     }, [currentPage, currentItems, loading, sortedProducts.length, itemsPerPage]);
+
+    const bakeryCategories = categories.filter(cat =>
+        (cat.name || cat.Name || "").toUpperCase().trim() === 'ВЫПЕЧКА'
+    );
+    console.log('Найденные категории ВЫПЕЧКА:', bakeryCategories);
+
 
   if (loading) {
     return (
