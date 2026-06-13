@@ -100,5 +100,36 @@ router.post('/admin/update-status', authMiddleware, (req, res) => {
         res.status(404).json({ message: 'Заказ не найден' });
     }
 });
+router.post('/admin/cancel', authMiddleware, (req, res) => {
+    const { orderId } = req.body;
+    try {
+        const assembly = readFile(ASSEMBLY_ORDERS_PATH);
+        const completed = readFile(path.resolve('orders.json'));
+
+        let found = false;
+
+        // Если заказ в сборке — удаляем
+        if (assembly[orderId]) {
+            delete assembly[orderId];
+            writeFile(ASSEMBLY_ORDERS_PATH, assembly);
+            found = true;
+        }
+
+        // Если заказ в оплаченных — удаляем (или можно помечать статусом 'canceled')
+        if (completed[orderId]) {
+            delete completed[orderId];
+            writeFile(path.resolve('orders.json'), completed);
+            found = true;
+        }
+
+        if (found) {
+            res.json({ success: true, message: 'Заказ удален' });
+        } else {
+            res.status(404).json({ message: 'Заказ не найден' });
+        }
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
 
 export default router;

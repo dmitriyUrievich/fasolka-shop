@@ -40,7 +40,12 @@ const adminService = {
 
     updateStatus: async (orderId, newStatus) => {
         return (await axios.post(`${API_URL}/update-status`, { orderId, newStatus }, { headers: getAuthHeaders() })).data;
-    }
+    },
+
+    cancelOrder: async (orderId) => {
+        const res = await axios.post(`${API_URL}/cancel`, { orderId }, { headers: getAuthHeaders() });
+        return res.data;
+    },
 };
 
 export default adminService;

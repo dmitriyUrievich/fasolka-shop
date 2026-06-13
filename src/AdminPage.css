@@ -91,3 +91,59 @@
 .login-form button {
     width: 100%; padding: 12px; background: var(--primary-green); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;
 }
+
+.order-comment-box {
+    background: #fff9db; /* Светло-желтый фон для привлечения внимания */
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 15px;
+    border-left: 4px solid #f1c40f;
+    color: #856404;
+}
+
+.customer-main {
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.total-line {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+    font-size: 16px;
+    text-align: right;
+}
+
+.btn-delete-link {
+    background: none;
+    border: none;
+    color: #ff4757;
+    text-decoration: underline;
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 10px;
+    padding: 0;
+}
+
+.card-actions-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.btn-cancel {
+    flex: 1;
+    background: #fff;
+    color: #ff4757;
+    border: 1px solid #ff4757;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.capture-btn {
+    flex: 2;
+    margin: 0 !important; /* перебиваем старый стиль */
+}
