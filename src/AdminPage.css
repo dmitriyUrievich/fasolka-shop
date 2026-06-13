@@ -213,3 +213,119 @@
     padding-top: 10px;
     border-top: 1px solid #eee;
 }
+/* Хедер Админки */
+.admin-logo-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.admin-nav-logo {
+    height: 45px;
+    width: auto;
+}
+
+.admin-nav-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+}
+
+.admin-nav-title {
+    font-weight: 900;
+    font-size: 20px;
+    color: #2c3e50;
+    letter-spacing: 1px;
+}
+
+.admin-nav-badge {
+    font-size: 11px;
+    font-weight: bold;
+    color: #27ae60;
+    margin-top: 2px;
+}
+
+/* Вкладки */
+.admin-tabs {
+    display: flex;
+    background: #eaeff2;
+    padding: 4px;
+    border-radius: 12px;
+    gap: 4px;
+}
+
+.tab-btn {
+    border: none;
+    background: transparent;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 700;
+    color: #7f8c8d;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.tab-btn.active {
+    background: white;
+    color: #2ecc71;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ff4757;
+    color: white;
+    font-size: 10px;
+    height: 18px;
+    min-width: 18px;
+    border-radius: 10px;
+    margin-left: 6px;
+    padding: 0 5px;
+}
+
+/* Комментарии */
+.order-comment-box {
+    background: #fff9db;
+    border-left: 4px solid #f1c40f;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-size: 13.5px;
+    color: #856404;
+    font-style: italic;
+}
+
+/* Карточка истории */
+.history-card {
+    opacity: 0.85;
+    filter: grayscale(0.2);
+}
+
+.status-pill {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-pill.completed { background: #e8f5e9; color: #2ecc71; }
+.status-pill.canceled { background: #ffebee; color: #ff4757; }
+
+/* Кнопка удаления */
+.btn-delete-link {
+    background: none;
+    border: none;
+    color: #bdc3c7;
+    font-size: 11px;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: color 0.2s;
+}
+
+.btn-delete-link:hover { color: #ff4757; }

@@ -170,7 +170,7 @@ router.post('/payment/capture', async (req, res) => {
       cart: finalCart,
       total: finalTotal.toFixed(2),
       itemsTotal,
-      status: 'completed',
+      status: 'in_progress',
       date: new Date().toISOString()
     };
     writeFile(COMPLETED_ORDERS_PATH, completed);
