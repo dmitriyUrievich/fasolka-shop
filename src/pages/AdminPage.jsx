@@ -17,6 +17,7 @@ const AdminPage = () => {
     const [activeTab, setActiveTab] = useState('assembly');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
+    const [loginError, setLoginError] = useState('');
     const [orders, setOrders] = useState({ assembly: {}, completed: {} });
     const [loading, setLoading] = useState(false);
     // Функция системного уведомления (работает в фоне)
@@ -37,6 +38,7 @@ const AdminPage = () => {
             };
         }
     }, []);
+
 
     const playNotification = useCallback((count) => {
         // 1. Играем звук (он сработает в фоне, если вкладка "прогрета" кликом)
@@ -67,6 +69,7 @@ const AdminPage = () => {
         if (!isSilent) setLoading(true);
         try {
             const data = await adminService.getOrders();
+
             const currentAssemblyIds = Object.keys(data.assembly || {});
             const currentNewPaidIds = Object.values(data.completed || {})
                 .filter(o => o.status === 'new')
@@ -81,8 +84,12 @@ const AdminPage = () => {
 
             allCurrentIds.forEach(id => knownOrderIds.current.add(id));
             isFirstLoad.current = false;
+
             setOrders(data || { assembly: {}, completed: {} });
+            setLoginError(''); // Очищаем ошибку при успешном получении данных
         } catch (e) {
+            console.error('[Admin] Ошибка загрузки данных:', e);
+            // Если мы получили 401 при автоматическом обновлении (isSilent),
             if (e.response?.status === 401 || e.response?.status === 403) {
                 setIsAuthenticated(false);
                 localStorage.removeItem('admin_token');
@@ -116,6 +123,7 @@ const AdminPage = () => {
     // Обработчик входа
     const handleLogin = async (e) => {
         e.preventDefault();
+        setLoginError(''); // 1. Мгновенно сбрасываем текст ошибки
 
         if (audioRef.current) {
             audioRef.current.play().then(() => {
@@ -125,11 +133,26 @@ const AdminPage = () => {
         }
 
         try {
-            await adminService.login(password);
-            setIsAuthenticated(true);
-            loadData();
+            // Ждем успешного ответа от сервера
+            const response = await adminService.login(password);
+
+            if (response.token) {
+                // 2. Очищаем всё перед переходом
+                setLoginError('');
+                setPassword('');
+                setIsAuthenticated(true);
+
+                // 3. Небольшая задержка перед загрузкой данных,
+                // чтобы axios точно успел подхватить новый токен из localStorage
+                setTimeout(() => {
+                    loadData();
+                }, 100);
+            }
         } catch (e) {
-            Swal.fire('Ошибка', 'Неверный пароль', 'error');
+                const errorMessage = e.response?.status === 401
+                ? 'Неверный пароль администратора'
+                : 'Ошибка сервера или сети. Попробуйте позже';
+            setLoginError(errorMessage);
         }
     };
 
@@ -225,9 +248,23 @@ const AdminPage = () => {
             <div className="admin-login-container">
                 <div className="login-box animate-fade">
                     <img src="/log-header.webp" alt="Logo" className="login-logo" />
-                    <h2>ФАСОЛЬ АДМИН</h2>
+                    <h2>АДМИН</h2>
                     <form onSubmit={handleLogin} className="login-form">
-                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Пароль" autoFocus />
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={e => {
+                                setPassword(e.target.value);
+                                if(loginError) setLoginError(''); // Убираем ошибку, когда пользователь начал печатать снова
+                            }}
+                            placeholder="Пароль"
+                            autoFocus
+                            className={loginError ? 'input-error' : ''}
+                        />
+
+                        {/* ОТОБРАЖЕНИЕ ОШИБКИ ПОД ПОЛЕМ */}
+                        {loginError && <p className="login-error-msg">{loginError}</p>}
+
                         <button type="submit">Войти</button>
                     </form>
                 </div>
