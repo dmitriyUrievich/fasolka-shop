@@ -6,7 +6,6 @@ import { QuantityControl } from './QuantityControl.jsx';
 import * as Utils from '../utils/ProductCardUtils';
 import '../ProductCard.css';
 
-
 const ProductCard = React.memo(({ product, ageConfirmed, onConfirmAge, isDiscount, isPriority }) => {
   const { id, name: rawName, sellPricePerUnit, rests, productType, unit } = product || {};
 
@@ -22,8 +21,13 @@ const ProductCard = React.memo(({ product, ageConfirmed, onConfirmAge, isDiscoun
   const portion = useMemo(() => (isWeighted ? getPortion(rawName, unit) : null), [rawName, unit, isWeighted]);
 
   const { price, total } = useMemo(() => {
-    const p = parseFloat(sellPricePerUnit.replace(',', '.'));
-    return { price: p, total: quantity * p };
+    const priceString = String(sellPricePerUnit || '0');
+    const p = parseFloat(priceString.replace(',', '.'));
+
+    return {
+      price: isNaN(p) ? 0 : p,
+      total: isNaN(p) ? 0 : quantity * p
+    };
   }, [quantity, sellPricePerUnit]);
 
   const { isAgeRestricted, disableBuy } = useMemo(() => ({

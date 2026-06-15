@@ -76,38 +76,63 @@ async function createServer() {
 
   app.get(/.*/, async (req, res, next) => {
     const url = req.originalUrl;
-    const isHtmlRequest = req.headers.accept?.includes('text/html');
+
+    // Пропускаем API и статические файлы (картинки, стили и т.д.)
     if (url.startsWith('/api') || url.startsWith('/@') || url.includes('.')) {
       return next();
     }
 
     try {
       let template, render;
+
       if (!isProd) {
-        template = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
+        // ПУТЬ В DEV: index.html обычно в корне проекта
+        const templatePath = path.resolve(__dirname, 'index.html');
+        if (!fs.existsSync(templatePath)) {
+          throw new Error(`Template not found at ${templatePath}`);
+        }
+        template = fs.readFileSync(templatePath, 'utf-8');
         template = await vite.transformIndexHtml(url, template);
         render = (await vite.ssrLoadModule('/entry-server.jsx')).render;
       } else {
-        // Используем более надежный путь для продакшена
-        template = fs.readFileSync(path.resolve(__dirname, 'dist/client/index.html'), 'utf-8');
+        // ПУТЬ В PROD: dist/client/index.html
+        const templatePath = path.resolve(__dirname, 'dist/client/index.html');
+        template = fs.readFileSync(templatePath, 'utf-8');
         const ssrModule = await import(path.resolve(__dirname, 'dist/server/entry-server.js'));
         render = ssrModule.render;
       }
 
+      // Получаем данные для SSR
       const initialData = await getLocalProducts().catch(() => ({ products: [], catalog: [] }));
-
       const { appHtml } = await render(url, initialData);
 
+      // Безопасная замена (проверяем, что template существует)
+      if (!template) throw new Error('Template is empty');
+
       const html = template
-          .replace(`<!--ssr-outlet-->`, appHtml)
+          .replace(`<!--ssr-outlet-->`, appHtml ?? '') // ?? '' защищает от undefined в appHtml
           .replace('</head>', `<script>window.__INITIAL_DATA__ = ${JSON.stringify(initialData)}</script></head>`);
 
       res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
+
     } catch (e) {
       if (vite) vite.ssrFixStacktrace(e);
-      console.error('SSR Error:', e.message);
-      // Если всё сломалось, отправляем хотя бы пустой шаблон (клиентский React подхватит)
-      res.status(200).sendFile(path.resolve(publicPath, 'index.html'));
+      console.error('SSR Error:', e.stack); // Используйте e.stack для детальной отладки
+
+      // ФОЛБЕК: Если SSR сломался, пробуем отправить чистый index.html
+      try {
+        const fallbackPath = isProd
+            ? path.resolve(__dirname, 'dist/client/index.html')
+            : path.resolve(__dirname, 'index.html'); // В Dev берем из корня
+
+        if (fs.existsSync(fallbackPath)) {
+          res.status(200).sendFile(fallbackPath);
+        } else {
+          res.status(500).send('Critical Error: index.html not found');
+        }
+      } catch (fallbackError) {
+        res.status(500).send('Internal Server Error');
+      }
     }
   });
 
