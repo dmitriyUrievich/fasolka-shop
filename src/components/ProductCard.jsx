@@ -83,8 +83,9 @@ const ProductCard = React.memo(({ product, ageConfirmed, onConfirmAge, isDiscoun
 
         <div className="product-card__content">
           <p className="product-card__name">{name}</p>
+          <p className="product-card__name">{id}</p>
           <p className="product-card__price">{price} ₽</p>
-          <p className="product-card__quantity">{/* Логика restsMessage */}</p>
+          <p className="product-card__quantity"></p>
 
           {isAgeRestricted && !ageConfirmed ? (
               <button className="product-card__button" onClick={onConfirmAge}>Подтвердить возраст</button>

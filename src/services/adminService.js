@@ -19,7 +19,7 @@ const adminService = {
 
     logout: () => {
         localStorage.removeItem('admin_token');
-        window.location.href = '/admin';
+        window.location.href = '/';
     },
 
     getOrders: async () => {

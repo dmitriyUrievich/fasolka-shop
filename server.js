@@ -85,7 +85,7 @@ async function createServer() {
     try {
       let template, render;
 
-      if (!isProd) {
+        if (!isProd) {
         // ПУТЬ В DEV: index.html обычно в корне проекта
         const templatePath = path.resolve(__dirname, 'index.html');
         if (!fs.existsSync(templatePath)) {

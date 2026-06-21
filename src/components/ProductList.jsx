@@ -4,7 +4,7 @@ import ProductCard from './ProductCard';
 import Pagination from './Pagination';
 import Skeleton from 'react-loading-skeleton';
 const storageKey = 'ageConfirmedGlobal';
-
+import { isValidProductName, matchesSearchTerm } from '../utils/blackList.js'
 import 'react-loading-skeleton/dist/skeleton.css'
 import '../ProductList.css';
 
@@ -47,7 +47,7 @@ const specialOfferCategoryId = useMemo(() => {
             categories.forEach(cat => {
                 const name = cat.name || cat.Name;
                 const id = cat.id || cat.Id;
-                if (name && blacklistNames.some(bn => name.includes(blacklistNames))) {
+                if (name && blacklistNames.some(bn => name.includes(bn))) {
                     ids.add(id);
                 }
             });
@@ -58,7 +58,6 @@ const specialOfferCategoryId = useMemo(() => {
     const filteredProducts = useMemo(() => {
         if (!products || !Array.isArray(products)) return [];
 
-        // 1. Находим ID категории выпечки один раз для всего фильтра
         const bakeryCategory = categories.find(cat =>
             (cat.name || cat.Name || "").toUpperCase().trim() === 'ВЫПЕЧКА'
         );
@@ -71,11 +70,13 @@ const specialOfferCategoryId = useMemo(() => {
             const pName = product.name || product.Name || "";
             const pType = product.productType || product.ProductType;
 
-            // Исключаем технические товары (пакеты)
-            if (pName.toUpperCase().includes("ПАКЕТ-МАЙКА FASOL")) return false;
+            if (blacklistedCategoryIds.has(pGroupId)) return false;
 
-            // Поиск по названию
-            if (searchTerm && !pName.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+            // 1. ВЫЗЫВАЕМ НАШУ ОТДЕЛЬНУЮ ФУНКЦИЮ (убирает пакеты и прочий мусор)
+            if (!isValidProductName(pName)) return false;
+
+            // 2. Проверка поискового запроса пользователя
+            if (!matchesSearchTerm(pName, searchTerm)) return false;
 
             // Фильтр по выбранным категориям
             const matchesCategory = selectedCategoryIds.length > 0
@@ -83,19 +84,17 @@ const specialOfferCategoryId = useMemo(() => {
                 : true;
             if (!matchesCategory) return false;
 
-            // Если это составное блюдо (TechCard) ИЛИ товар из категории ВЫПЕЧКА,
-            // мы считаем его всегда доступным (готовится под заказ)
+            // Техкарты и выпечка
             if (pType === 'TechCard' || (bakeryId && pGroupId === bakeryId)) {
                 return true;
             }
 
-            // Для всех остальных товаров проверяем реальный остаток
+            // Остатки
             const r = parseFloat(product.rests || 0);
             const isAvailable = product.unit !== 'Kilogram' ? r > 0 : r >= 0.1;
 
             return isAvailable;
         });
-        // Добавляем categories в зависимости, чтобы фильтр обновился при загрузке каталога
     }, [products, selectedCategoryIds, searchTerm, categories]);
 
     const sortedProducts = useMemo(() => {
