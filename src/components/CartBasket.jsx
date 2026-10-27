@@ -34,7 +34,7 @@ const CartBasket = ({
 
 const deliveryInfo = useMemo(() => {
     if (subtotal < 1000) return { cost: null, text: 'от 1000 ₽', showFreeHint: false };
-    if (subtotal >= 3000) return { cost: 0, text: 'Бесплатно 🎁', showFreeHint: false };
+    if (subtotal >= 1500) return { cost: 0, text: 'Бесплатно 🎁', showFreeHint: false };
     return { cost: 200, text: '200 ₽', showFreeHint: true };
   }, [subtotal]);
 
@@ -88,7 +88,7 @@ const deliveryInfo = useMemo(() => {
                 {showFreeHint && (
           <p className="cart-delivery-hint">
             💡 Добавьте ещё на{' '}
-            <strong>{(3000 - subtotal).toLocaleString('ru-RU')} ₽</strong>,{' '}
+            <strong>{(1500 - subtotal).toLocaleString('ru-RU')} ₽</strong>,{' '}
             чтобы получить <strong>бесплатную доставку</strong>!
           </p>
         )}

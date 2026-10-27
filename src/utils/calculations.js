@@ -9,7 +9,7 @@ export const calculateOrderTotals = (cartItems) => {
         totalWithReserve += (item.unit === 'Kilogram') ? itemTotal * 1.15 : itemTotal;
     });
 
-    const deliveryCost = (subtotal > 0 && subtotal < 3000) ? 200 : 0; // упрощенная логика
+    const deliveryCost = (subtotal > 0 && subtotal < 1500) ? 200 : 0; // упрощенная логика
 
     return {
         subtotal,

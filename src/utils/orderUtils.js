@@ -18,7 +18,7 @@ export const calculateOrderTotals = (cartItems) => {
 
   // Логика доставки
   let deliveryCost = 0;
-  if (subtotal > 0 && subtotal < 3000) {
+  if (subtotal > 0 && subtotal < 1500) {
     deliveryCost = 200;
   }
 

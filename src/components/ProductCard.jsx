@@ -13,7 +13,6 @@ const ProductCard = React.memo(({ product, ageConfirmed, onConfirmAge, isDiscoun
   const updateCartQuantity = useCartStore(state => state.updateCartQuantity);
   const quantity = useCartStore(state => state.items.find(item => item.id === id)?.quantityInCart || 0);
 
-
   const { imageSrc, isFallbackState, onImageError } = useProductImage(id, rawName);
   const isTechCard = product.productType === 'TechCard';
   const name = useMemo(() => Utils.capitalize(rawName), [rawName]);
@@ -83,7 +82,7 @@ const ProductCard = React.memo(({ product, ageConfirmed, onConfirmAge, isDiscoun
 
         <div className="product-card__content">
           <p className="product-card__name">{name}</p>
-          <p className="product-card__name">{id}</p>
+          {/*<p className="product-card__name">{id}</p>*/}
           <p className="product-card__price">{price} ₽</p>
           <p className="product-card__quantity"></p>
 

@@ -12,6 +12,7 @@ orders.json
 products.json
 # Build output
 /dist
+/public/img
 /out
 /.vite
 
